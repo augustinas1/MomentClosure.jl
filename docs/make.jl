@@ -13,9 +13,11 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Examples" => "examples.md"
     ],
 )
 
 deploydocs(;
     repo="github.com/augustinas1/MomentClosure.jl",
+    devbranch="main"
 )
