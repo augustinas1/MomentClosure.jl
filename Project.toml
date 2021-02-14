@@ -1,0 +1,13 @@
+name = "MomentClosure"
+uuid = "01a1b25a-ecf0-48c5-ae58-55bfd5393600"
+authors = ["Augustinas Sukys"]
+version = "0.1.0"
+
+[compat]
+julia = "1.5"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
