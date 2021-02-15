@@ -13,6 +13,5 @@ export cumulants_to_raw_moments, cumulants_to_central_moments,
 
 include("symbolic_utils.jl")
 include("moment_convert.jl")
-include("testing_utils.jl")
 
 end
