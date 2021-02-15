@@ -25,7 +25,7 @@ struct ReactionSystemMod
             else
             # initially using @parameters and @variables macros we have defined Num type symbols
             # which have to be converted to SymbolicUtils supported types for further manipulations
-                new(value(iv), value.(states), value.(ps), value.(a), value.(S))
+                new(value(iv), value.(states), value.(ps), simplify.(value.(a)), value.(S))
             end
         end
     end
@@ -73,7 +73,7 @@ end
 
 function propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaw=true)
     if typeof(rn) == ReactionSystem
-        [jumpratelaw(rx, combinatoric_ratelaw=combinatoric_ratelaw) for rx in reactions(rn)]
+        [simplify(jumpratelaw(rx, combinatoric_ratelaw=combinatoric_ratelaw)) for rx in reactions(rn)]
     else
         rn.a
     end

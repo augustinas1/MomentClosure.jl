@@ -1,10 +1,8 @@
 using MomentClosure
-using MomentClosure: define_μ, define_M, cleaning_tools
+using MomentClosure: define_μ, define_M
 using Test, SafeTestsets
 
 @testset "moment mappings" begin
-
-    clean_expr, expand_mod = MomentClosure.cleaning_tools()
 
     M = define_M(2, 4)
     κ = cumulants_to_central_moments(2,4)

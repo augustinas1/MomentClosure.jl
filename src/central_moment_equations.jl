@@ -106,7 +106,7 @@ function generate_central_moment_eqs(rn, m_order, exp_order=m_order+1; combinato
             derivs[k] = a[r]
             for i in 1:N
                 for d in 1:k[i]
-                    derivs[k] = expand_derivatives(Differential(n[i])(derivs[k]), simplify=true) # simplify = true/false
+                    derivs[k] = expand_derivatives(Differential(n[i])(derivs[k]), true) # simplify = true/false
                 end
             end
             derivs[k] = substitute(derivs[k], dict_n_to_μ)
@@ -169,7 +169,8 @@ function generate_central_moment_eqs(rn, m_order, exp_order=m_order+1; combinato
     end
 
 
-    @derivatives D'~t
+    #@derivatives D'~t
+    D = Differential(t)
     eqs = []
     for i in 1:N
         push!(eqs, D(μ[unit_vec[i]]) ~ du[i])

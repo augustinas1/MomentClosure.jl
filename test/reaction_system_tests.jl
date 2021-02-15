@@ -1,5 +1,5 @@
 using MomentClosure
-using MomentClosure: define_μ, define_M, cleaning_tools, value
+using MomentClosure: define_μ, define_M
 using Test, SafeTestsets
 using Catalyst
 
