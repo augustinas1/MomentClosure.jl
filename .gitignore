@@ -3,3 +3,9 @@
 *.jl.mem
 /Manifest.toml
 /docs/build/
+<<<<<<< Updated upstream
+=======
+
+*checkpoint.ipynb
+*.ipynb_checkpoints
+>>>>>>> Stashed changes
