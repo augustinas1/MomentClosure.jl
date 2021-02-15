@@ -28,7 +28,7 @@ end
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
 # Function whichs run SymbolicUtils.simplify until there
 # are no changes in the resulting expression (Operation)
-fully_simplify = Fixpoint(simplify);
+#fully_simplify = Fixpoint(simplify);
 # SymbolicUtils rule that expands a bracket
 expansion_rule = @acrule ~x * +(~~ys) => sum(map(y-> simplify(~x * y), ~~ys));
 # SymbolicUtils rule that expands all brackets and simplifies the expression until no changes occur
@@ -105,7 +105,13 @@ function cleaning_tools()
 end
 
 
-
+# I the current implementation of ModelingToolkit.jl,
+# the general symbolic type Num does not work well together with
+# simplify() and other methods from SymbolicUtils...
+# Although within the package's code there are certain methods
+# alleviating the problem, here we use ModelingToolkit macros to initialize the
+# variables as Num types (easier to define variables with subscripts) and then
+# change them to SymbolicUtils.jl types such as Term{Real} .val of Num variable gives Term{Real}
 
 function define_μ(N::Int, order::Int)
 
