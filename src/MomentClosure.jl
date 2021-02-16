@@ -21,7 +21,7 @@ export cumulants_to_raw_moments, cumulants_to_central_moments,
        clean_expr, expand_mod, simplify
        #ModelingToolkit.@parameters, ModelingToolkit.@variables
 
-include("symbolic_utils.jl")
+include("symbolic.jl")
 include("moment_convert.jl")
 include("reaction_systems.jl")
 include("stochastic_stoichiometry.jl")
