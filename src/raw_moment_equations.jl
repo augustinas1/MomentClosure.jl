@@ -123,10 +123,9 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
         end
     end
 
-    println("propensity functions are polynomials up to order ", max_pwr)
-
+    #println("propensity functions are polynomials up to order ", max_pwr)
     exp_order = max_pwr + m_order - 1
-    println("will encounter moments up to order ", exp_order)
+    #println("will encounter moments up to order ", exp_order)
 
     # iterator over all moments from lowest to highest moment order
     iter_all = construct_iter_all(N, exp_order)
