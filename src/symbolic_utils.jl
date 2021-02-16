@@ -17,13 +17,6 @@ function construct_iter_all(N::Int, order::Int)
 end
 
 
-#function trim_key(expr)
-
-    # Trim a string of form "(a, b, c, d, ...)" to "abcd..."
-#    filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
-
-#end
-
 # Trim a string of form "(a, b, c, d, ...)" to "abcd..."
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
 # Function whichs run SymbolicUtils.simplify until there
@@ -34,75 +27,6 @@ expansion_rule = @acrule ~x * +(~~ys) => sum(map(y-> simplify(~x * y), ~~ys));
 # SymbolicUtils rule that expands all brackets and simplifies the expression until no changes occur
 expand = Fixpoint(Prewalk(simplify(PassThrough(expansion_rule))));
 
-
-# Heavily borrowing code from SymbolicUtils simplify_rules.jl to build application-specific expression simplifiers that
-# would avoid constructing terms involving a sum of variables raised to some power (e.g. (x₁+x₂)^2)
-#=function cleaning_tools()
-
-    PLUS_RULES = [
-        @rule(~x::isnotflat(+) => flatten_term(+, ~x))
-        @rule(~x::needs_sorting(+) => sort_args(+, ~x))
-        @ordered_acrule(~a::is_literal_number + ~b::is_literal_number => ~a + ~b)
-
-        @acrule(*(~~x) + *(~β, ~~x) => *(1 + ~β, (~~x)...))
-        @acrule(*(~α, ~~x) + *(~β, ~~x) => *(~α + ~β, (~~x)...))
-        @acrule(*(~~x, ~α) + *(~~x, ~β) => *(~α + ~β, (~~x)...))
-
-        @acrule(~x + *(~β, ~x) => *(1 + ~β, ~x))
-        @acrule(*(~α::is_literal_number, ~x) + ~x => *(~α + 1, ~x))
-        @rule(+(~~x::hasrepeats) => +(merge_repeats(*, ~~x)...))
-
-        @ordered_acrule((~z::_iszero + ~x) => ~x)
-        @rule(+(~x) => ~x)
-    ]
-
-    TIMES_RULES = [
-        @rule(~x::isnotflat(*) => flatten_term(*, ~x))
-        @rule(~x::needs_sorting(*) => sort_args(*, ~x))
-
-        @ordered_acrule(~a::is_literal_number * ~b::is_literal_number => ~a * ~b)
-        #@rule(*(~~x::hasrepeats) => *(merge_repeats(^, ~~x)...))
-
-        @acrule((~y)^(~n) * ~y => (~y)^(~n+1))
-        @ordered_acrule((~x)^(~n) * (~x)^(~m) => (~x)^(~n + ~m))
-
-        @ordered_acrule((~z::_isone  * ~x) => ~x)
-        @ordered_acrule((~z::_iszero *  ~x) => ~z)
-        @rule(*(~x) => ~x)
-    ]
-
-    ASSORTED_RULES = [
-        @rule(identity(~x) => ~x)
-        @rule(-(~x) => -1*~x)
-        @rule(-(~x, ~y) => ~x + -1(~y))
-        @rule(~x::_isone \ ~y => ~y)
-        @rule(~x \ ~y => ~y / (~x))
-        @rule(~x / ~y => ~x * pow(~y, -1))
-        @rule(one(~x) => one(symtype(~x)))
-        @rule(zero(~x) => zero(symtype(~x)))
-        @rule(ifelse(~x::is_literal_number, ~y, ~z) => ~x ? ~y : ~z)
-    ]
-
-    function modified_simplifier()
-        rule_tree = [SymbolicUtils.If(istree, Chain(ASSORTED_RULES)),
-                     SymbolicUtils.If(SymbolicUtils.is_operation(+),
-                        Chain(PLUS_RULES)),
-                     SymbolicUtils.If(SymbolicUtils.is_operation(*),
-                        Chain(TIMES_RULES))] |> RestartedChain
-        rule_tree
-    end
-
-    #simplify_mod(expr) = simplify(expr, rewriter=Fixpoint(Postwalk(modified_simplifier())))
-    simplify_mod = Fixpoint(Postwalk(PassThrough(modified_simplifier()))) # TODO: check that this modification still works for gamma closure
-    expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> simplify_mod(~x * y), ~~ys));
-    expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod))); #TODO: check if this is better than expand() for our needs
-    flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x))
-    flatten_mod = Fixpoint(PassThrough(flatten_rule_mod))
-    clean_expr = Fixpoint(Chain([simplify_mod, expand_mod, flatten_mod]))
-
-    return clean_expr, expand_mod
-
-end=#
 
 PLUS_RULES = [
     @rule(~x::isnotflat(+) => flatten_term(+, ~x))
