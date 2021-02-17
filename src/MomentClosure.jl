@@ -12,6 +12,9 @@ using SymbolicUtils: @rule, @acrule, @ordered_acrule, isnotflat, flatten_term, i
                      needs_sorting, sort_args, is_literal_number, hasrepeats, merge_repeats,
                      _iszero, pow, one, _isone, zero, symtype, operation, arguments
 
+using Combinatorics: permutations
+using TupleTools: sort
+
 export cumulants_to_raw_moments, cumulants_to_central_moments,
        raw_to_central_moments, central_to_raw_moments,
        generate_central_moment_eqs, generate_raw_moment_eqs,
@@ -29,5 +32,10 @@ include("central_moment_equations.jl")
 include("raw_moment_equations.jl")
 include("closure_methods/closure.jl")
 include("closure_methods/zero_closure.jl")
+include("closure_methods/normal_closure.jl")
+include("closure_methods/log_normal_closure.jl")
+include("closure_methods/poisson_closure.jl")
+include("closure_methods/gamma_closure.jl")
+include("closure_methods/derivative_matching.jl")
 
 end

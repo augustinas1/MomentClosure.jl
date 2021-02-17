@@ -43,7 +43,7 @@ function fact(i)
 end
 
 
-function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, 
+function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
                                      m_order::Int, exp_order::Int=m_order+1;
                                      combinatoric_ratelaw=true)
     #= Generate the moment equations for the reaction network rn
