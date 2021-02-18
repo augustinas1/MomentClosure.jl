@@ -5,3 +5,4 @@ using SafeTestsets
 @safetestset "reaction systems" begin include("reaction_system_tests.jl") end
 @safetestset "moment eqs" begin include("moment_equations_tests.jl") end
 @safetestset "moment closure" begin include("closure_tests.jl") end
+@safetestset "conditional closure" begin include("conditional_closure_tests.jl") end
