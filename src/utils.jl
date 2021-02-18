@@ -89,3 +89,41 @@ function deterministic_IC(μ₀::Vector, sys::Union{RawMomentEquations, CentralM
     return vcat(μ_map, moment_map)
 
 end
+
+
+function format_moment_eqs(odes::ODESystem)
+
+    # Input argument is ODESystem
+    # Latexify applied on ODESystem directly introduces irrelevant multipliers (bug?)
+    # for example, μ₁ may be turned into 1μ₁...
+    # Here we reformat each ODE into a string expression and also remove the explicit
+    # time dependence "(t)" of each variable as well as floats' trailing zeros".0"
+    # then Latexify can be applied directly:
+    # latexify(exprs, cdot=false, env=:align/:mdtable)
+    # or latexify(exprs[1], cdot=false, env=:equation)
+    # or the expressions can be copypasted
+    # into Mathematica for example for further manipulation
+    exprs  = []
+    for i in 1:size(odes.eqs)[1]
+        key = odes.states[i]
+        eq = clean_expr(odes.eqs[i].rhs)
+        expr = "d"*string(key)*"/dt = "*string(eq)
+        expr = replace(expr, "(t)"=>"")
+        expr = replace(expr, ".0"=>"")
+        push!(exprs, expr)
+    end
+    exprs
+
+end
+
+function format_closure(closure::Dict{Any,Any})
+    exprs = []
+    for i in keys(closure)
+        eq = clean_expr(closure[i])
+        expr = string(i)*" = "*string(eq)
+        expr = replace(expr, "(t)"=>"")
+        expr = replace(expr, ".0"=>"")
+        push!(exprs, expr)
+    end
+    exprs
+end
