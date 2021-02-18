@@ -11,7 +11,8 @@ function close_eqs(sys::Union{RawMomentEquations, CentralMomentEquations},
 
 end
 
-function moment_closure(sys::Union{RawMomentEquations, CentralMomentEquations}, closure_name::String)
+function moment_closure(sys::Union{RawMomentEquations, CentralMomentEquations},
+        closure_name::String, binary_vars::Vector=[])
 
     if closure_name == "zero"
         zero_closure(sys)
@@ -23,8 +24,12 @@ function moment_closure(sys::Union{RawMomentEquations, CentralMomentEquations}, 
         poisson_closure(sys)
     elseif closure_name == "gamma"
         gamma_closure(sys)
-    elseif closure_name == "derivative_matching"
+    elseif closure_name == "derivative matching"
         derivative_matching(sys)
+    elseif closure_name == "conditional gaussian"
+        conditional_gaussian_closure(sys, binary_vars)
+    elseif closure_name == "conditional derivative matching"
+        conditional_derivative_matching(sys, binary_vars)
     else
         error(closure_name*" closure does not exist")
     end
