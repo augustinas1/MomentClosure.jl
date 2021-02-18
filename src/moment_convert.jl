@@ -121,7 +121,7 @@ end
 
 
 
-function raw_to_central_moments(N::Int, order::Int, μ=nothing)
+function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
 
     # Return a dictionary of central moments expressed in terms of raw moments
     # example use:
@@ -136,7 +136,13 @@ function raw_to_central_moments(N::Int, order::Int, μ=nothing)
     if μ == nothing
         μ = define_μ(N, order)
     elseif typeof(μ) != Dict{Any}{Any} || length(μ) != length(iter_all)
-        error("passed arguments are inconsistent (μ vs N & order)")
+        if bernoulli
+            iter_all = keys(μ)
+        else
+            error("passed arguments are inconsistent (μ vs N & order)")
+        end
+    else
+        iter_all = construct_iter_all(N, order)
     end
     raw_to_central = Dict()
 
