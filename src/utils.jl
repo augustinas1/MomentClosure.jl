@@ -1,57 +1,138 @@
-function compute_central_moment(sol, i_vec, mu=nothing)
+function sample_raw_moments(sol::EnsembleSolution, order::Int; naive::Bool=true)
+    # need to build a t x n matrix for each timepoint, where t is the number of realisations (trajectories)
+    # and n is the number of  variables
 
-    # trivial implementation of a biased multivariate central moment estimator
-    # if calculating variances it is more efficient to use timeseries_steps_meanvar()
-    # from DifferentialEquations.EnsembleAnalysis
-    # NOTE: the function as currently implemented uses DifferentialEquations
-    # Can be extremely slow...
+    # naive algorithm (naive=true), naivemoment(), performs much better in case of small N
+    # when N is large, big performance improvement is expected(?) using moment() (naive=false)
+    # this implementatation is experimental, need more testing to properly assert any
+    # statement about performance + understand why the naive algorithm is still very fast
+    # compared to the most trivial algorithm
 
-    # TODO: is "EnsembleAnalysis." required if not explicitly loaded?
+    # TODO: rewrite this as sample_central_moments right now appearst to be faster
 
-    inds = findall(x->x!=0, i_vec)
-    i_vec = i_vec[inds]
+    alg = naive ? naivemoment : moment
 
-    # NOTE: requires DifferentialEquations.EnsembleAnalysis
-    if mu==nothing
-        mu = EnsembleAnalysis.timeseries_steps_mean(sol)
-    end
+    no_t_pts = length(sol.u[1].t)
+    N = length(sol.u[1].u[1])
 
-    M = zeros(length(sol[1]))
-    for t in 1:length(sol[1])  # iterating over time steps
-        for path in 1:length(sol) # iterating over trajectories
-            M[t] += prod([(sol[path][t][idx] - mu[t][idx])^i for (idx, i) in zip(inds, i_vec)])
+    iter_all = MomentClosure.construct_iter_all(N, order)
+    iter_zero = Tuple(fill(0, N))
+
+    μ = Dict()
+
+    for m in 1:order
+
+        data = Array{Float64}(undef, fill(N, m)..., no_t_pts)
+
+        for t_pt in 1:no_t_pts
+            tslice = Array(hcat([s[t_pt] for s in sol]...)')
+            data[fill(:, m)..., t_pt] = Array(alg(tslice, m))
         end
-        M[t] = M[t]/(length(sol))
+
+        for iter in filter(x-> sum(x) == m, iter_all)
+            key = vcat([fill(i, m) for (i,m) in enumerate(iter)]...)
+            μ[iter] = data[key..., :]
+        end
+
     end
 
-    return DiffEqArray(M, sol[1].t)
+    μ[iter_zero] = fill(1.0, no_t_pts)
+
+    #typeof(sol) == EnsembleSolution does not work...
+
+    return μ
+end
+
+
+function sample_central_moments(sol::EnsembleSolution, order::Int; naive::Bool=true)
+
+    alg = naive ? naivemoment : moment
+
+    no_t_pts = length(sol.u[1].t)
+    N = length(sol.u[1].u[1])
+
+    iter_all = MomentClosure.construct_iter_all(N, order)
+    iter_zero = Tuple(fill(0, N))
+    iter_order = [filter(x-> sum(x) == m, iter_all) for m in 1:order]
+
+    keys = Dict([iter => vcat([fill(i, n) for (i,n) in enumerate(iter)]...) for iter in iter_all])
+    M = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_all])
+
+    for t_pt in 1:no_t_pts
+        tslice = Array(hcat([s[t_pt] for s in sol]...)')
+        μ = Dict()
+        μ[iter_zero] = 1
+        for m in 1:order
+            data = Array(alg(tslice, m))
+            for iter in iter_order[m]
+                μ[iter] = data[keys[iter]...]
+            end
+        end
+        M_temp = raw_to_central_moments(N, order, μ)
+        for (key, val) in M_temp
+            M[key][t_pt] = val
+        end
+    end
+
+    return M
 
 end
 
 
-function compute_raw_moment(sol, i_vec, mu=nothing)
+function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
 
-    # trivial implementation of a biased estimator of raw moments
-    # if calculating means it is more efficient
-    # to use timeseries_steps_meanvar() from DifferentialEquations.jl
-    # TODO: remove mu
+    no_t_pts = length(sol.u[1].t)
+    N = length(sol.u[1].u[1])
 
-    inds = findall(x->x!=0, i_vec)
-    i_vec = i_vec[inds]
+    iter_all = MomentClosure.construct_iter_all(N, order)
+    iter_order = [filter(x-> sum(x) == m, iter_all) for m in 1:order]
 
-    if mu==nothing
-        mu = EnsembleAnalysis.timeseries_steps_mean(sol)
-    end
+    if naive
 
-    M = zeros(length(sol[1]))
-    for t in 1:length(sol[1])  # iterating over time steps
-        for path in 1:length(sol) # iterating over trajectories
-            M[t] += prod([(sol[path][t][idx])^i for (idx, i) in zip(inds, i_vec)])
+        κ = Dict()
+
+        for m in 1:order
+
+            data = Array{Float64}(undef, fill(N, m)..., no_t_pts)
+
+            for t_pt in 1:no_t_pts
+                tslice = Array(hcat([s[t_pt] for s in sol]...)')
+                data[fill(:, m)..., t_pt] = Array(naivecumulant(tslice, m))
+            end
+
+            for iter in iter_order[m]
+                key = vcat([fill(i, m) for (i,m) in enumerate(iter)]...)
+                κ[iter] = data[key..., :]
+            end
+
         end
-        M[t] = M[t]/(length(sol))
+
+    else
+
+        iter_all = filter(x -> sum(x) > 0, iter_all)
+        keys = Dict([iter => vcat([fill(i, n) for (i,n) in enumerate(iter)]...) for iter in iter_all])
+        κ = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_all])
+
+        for t_pt in 1:no_t_pts
+
+            tslice = Array(hcat([s[t_pt] for s in sol]...)')
+            κ_tensor = cumulants(tslice, order)
+
+            for m in 1:order
+
+                data = Array(κ_tensor[m])
+
+                for iter in iter_order[m]
+                    κ[iter][t_pt] = data[keys[iter]...]
+                end
+
+            end
+
+        end
+
     end
 
-    return DiffEqArray(M, sol[1].t)
+    return κ
 
 end
 

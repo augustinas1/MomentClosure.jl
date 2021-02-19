@@ -5,6 +5,7 @@ import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies, 
 
 using ModelingToolkit
 using ModelingToolkit: value
+using SciMLBase: EnsembleSolution
 
 using SymbolicUtils
 using SymbolicUtils.Rewriters: Chain, RestartedChain, PassThrough, Prewalk, Postwalk, Fixpoint
@@ -14,6 +15,7 @@ using SymbolicUtils: @rule, @acrule, @ordered_acrule, isnotflat, flatten_term, i
 
 using Combinatorics: permutations
 using TupleTools: sort
+using Cumulants
 
 export cumulants_to_raw_moments, cumulants_to_central_moments,
        raw_to_central_moments, central_to_raw_moments,
@@ -23,7 +25,8 @@ export cumulants_to_raw_moments, cumulants_to_central_moments,
        @parameters, @variables, # ModelingToolkit variables needed for model initialisation
        clean_expr, expand_mod, simplify, # Symbolic manipulation tools (simplify borrowed from ModelingToolkit & SymbolicUtils)
        moment_closure, deterministic_IC,
-	   format_moment_eqs, format_closure
+	   format_moment_eqs, format_closure,
+	   sample_raw_moments, sample_central_moments, sample_cumulants
 
 include("symbolic.jl")
 include("moment_convert.jl")
