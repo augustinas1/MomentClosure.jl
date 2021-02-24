@@ -64,7 +64,7 @@ where we have introduced multi-index notation:
 
 ## Central moment equations
 
-As we have seen, the moment equations of $P(\mathbf{n}, t)$ can be obtained in a straightforward manner if the kinetics of the system are governed by the law of mass action where all propensity functions are polynomials in $\mathbf{n}$ [[1]](#1). Similarly, given all propensities are rational functions, a polynomial form can also be recovered [[2]](#2). However, problems arise when the propensities take more complicated non-polynomial functions. This can nevertheless be overcome by considering a more general method of moment expansion that enables us to obtain mean and central moment equations up to arbitrary order for virtually any chemical reaction network with any type of *smooth* (infinitely differentiable) propensity functions. Such framework was first independently formulated by Lee [3] and Ale et al. [4]—our derivation below closely follows these works.
+As we have seen, the moment equations of $P(\mathbf{n}, t)$ can be obtained in a straightforward manner if the kinetics of the system are governed by the law of mass action where all propensity functions are polynomials in $\mathbf{n}$ [1]. Similarly, given all propensities are rational functions, a polynomial form can also be recovered [2]. However, problems arise when the propensities take more complicated non-polynomial functions. This can nevertheless be overcome by considering a more general method of moment expansion that enables us to obtain mean and central moment equations up to arbitrary order for virtually any chemical reaction network with any type of *smooth* (infinitely differentiable) propensity functions. Such framework was first independently formulated by Lee [3] and Ale et al. [4]—our derivation below closely follows these works.
 
 We start by Taylor-expanding the propensity functions around the mean $\mathbf{μ} = \langle \mathbf{n} \rangle = (\mu_1, \dotsc, \mu_N)$. This allows us to consider any general propensity function under the assumption that it is infinitely differentiable (smooth). The expansion leads to
 ```math
@@ -115,9 +115,9 @@ Although raw moment equations for non-linear mass-action systems already require
 
 ## References
 
-[1] D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). https://doi.org/10.1088/1751-8121/aa54d9
+[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). https://doi.org/10.1088/1751-8121/aa54d9
 
-[2] P. Milner, C. S. Gillespie, and D. J. Wilkinson, "Moment closure approximations for stochastic kinetic models with rational rate laws", Mathematical Biosciences 231, 99-104 (2011). https://doi.org/10.1016/j.mbs.2011.02.006
+[2]: P. Milner, C. S. Gillespie, and D. J. Wilkinson, "Moment closure approximations for stochastic kinetic models with rational rate laws", Mathematical Biosciences 231, 99-104 (2011). https://doi.org/10.1016/j.mbs.2011.02.006
 
 [3]: A. Ale, P. Kirk, and M. P. H. Stumpf, "A general moment expansion method for stochastic kinetic models", The Journal of Chemical Physics 138, 174101 (2013). https://doi.org/10.1063/1.4802475
 

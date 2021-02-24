@@ -65,4 +65,4 @@ To be added
 
 [7]: A. Singh and J. P. Hespanha, "Lognormal Moment Closures for Biochemical Reactions", in Proceedings of the 45th IEEE Conference on Decision and Control, ISSN: 0191-2216 (Dec. 2006), pp. 2063-2068. https://doi.org/10.1109/CDC.2006.376994
 
-[8]: M. Soltani, C. A. Vargas-Garcia, and A. Singh, "Conditional Moment Closure Schemes for Studying Stochastic Dynamics of Genetic Circuits", IEEE Transactions on Biomedical Circuits and Systems 9, Conference Name: IEEE Transactions on Biomedical Circuits and Systems, 518-526 (2015). https://doi.org/10.1109/TBCAS.2015.2453158
+[8]: M. Soltani, C. A. Vargas-Garcia, and A. Singh, "Conditional Moment Closure Schemes for Studying Stochastic Dynamics of Genetic Circuits", IEEE Transactions on Biomedical Circuits and Systems 9, 518-526 (2015). https://doi.org/10.1109/TBCAS.2015.2453158
