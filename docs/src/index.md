@@ -18,20 +18,20 @@ MomentClosure.jl is a tool to automatically obtain time-evolution equations of m
 
 
 ## Features
-- Chemical reaction networks containing any number of molecular species and reactions with any type of *smooth* propensity functions are supported.
-- Models can be defined using [Catalyst](https://github.com/SciML/Catalyst.jl/issues/22) as [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/dev/api/catalyst_api/#ModelingToolkit.ReactionSystem). Alternatively, built-in functionality (heavily based on Catalyst) can be used for model initialisation.
-- Added (experimental and limited) support for reaction networks involving reaction products that are geometrically distributed random variables. An example of such network is an autoregulatory gene network with bursty protein production where the burst size follows a geometric distribution. To our knowledge, such models cannot be defined using Catalyst and hence modelled using the broader [SciML framework](https://github.com/SciML/). For this reason, we also include an implementation of the Gillespie's Stochastic Simulation Algorithm [[2]](#2) generally applicable to such reaction networks (yet to be added).
-- Equations describing the time evolution of means and central moments of the number of molecules of each species in the system can be generated up to arbitrary order [[3, 4]](#3). Note that non-polynomial propensity functions are Taylor expanded to a specified order. Raw moment equations can also be generated for mass-action systems (where all propensity functions are polynomials).
-- Currently implemented moment closure approximations include:
-	* zero (central-moment neglect) closure [[3, 5]](#3)
-	* normal closure [[5]](#5)
-	* poisson closure [[5]](#5)
-	* log-normal closure [[6]](#6)
-	* gamma closure [[6]](#6)
-	* derivative matching [7][7] or [[7]][7]
-	* conditional gaussian closure [[8]](#8)
-	* conditional derivative matching [[8]](#8)
-- Moment equations are constructed as a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) that can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solver. Moreover, [parameter estimation](https://diffeq.sciml.ai/stable/analysis/parameter_estimation/), [sensitivity analysis](https://diffeq.sciml.ai/stable/analysis/sensitivity/) and [bifurcation analysis](https://diffeq.sciml.ai/stable/analysis/bifurcation/) tools can be applied to further study the resulting system of equations.
+* Chemical reaction networks containing any number of molecular species and reactions with any type of *smooth* propensity functions are supported.
+* Models can be defined using [Catalyst](https://github.com/SciML/Catalyst.jl/issues/22) as [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/dev/api/catalyst_api/#ModelingToolkit.ReactionSystem). Alternatively, built-in functionality (heavily based on Catalyst) can be used for model initialisation.
+* Added (experimental and limited) support for reaction networks involving reaction products that are geometrically distributed random variables. An example of such network is an autoregulatory gene network with bursty protein production where the burst size follows a geometric distribution. To our knowledge, such models cannot be defined using Catalyst and hence modelled using the broader [SciML framework](https://github.com/SciML/). For this reason, we also include an implementation of the Gillespie's Stochastic Simulation Algorithm [[2]](#2) generally applicable to such reaction networks (yet to be added).
+* Equations describing the time evolution of means and central moments of the number of molecules of each species in the system can be generated up to arbitrary order [[3, 4]](#3). Note that non-polynomial propensity functions are Taylor expanded to a specified order. Raw moment equations can also be generated for mass-action systems (where all propensity functions are polynomials).
+* Currently implemented moment closure approximations include:
+  - zero (central-moment neglect) closure [[3, 5]](#3)
+  - normal closure [[5]](#5)
+  - poisson closure [[5]](#5)
+  - log-normal closure [[6]](#6)
+  - gamma closure [[6]](#6)
+  - derivative matching [7][7] or [[7]][7]
+  - conditional gaussian closure [[8]](#8)
+  - conditional derivative matching [[8]](#8)
+* Moment equations are constructed as a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) that can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solver. Moreover, [parameter estimation](https://diffeq.sciml.ai/stable/analysis/parameter_estimation/), [sensitivity analysis](https://diffeq.sciml.ai/stable/analysis/sensitivity/) and [bifurcation analysis](https://diffeq.sciml.ai/stable/analysis/bifurcation/) tools can be applied to further study the resulting system of equations.
 - [Latexify](https://github.com/korsbo/Latexify.jl) can be used to generate LaTeX expressions of the corresponding moment equations.
 
 
