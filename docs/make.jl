@@ -16,9 +16,7 @@ makedocs(;
         "Home" => "index.md",
         "Theory" => Any[
             "theory/moment_equations.md",
-            "theory/zero_closure.md",
-            "theory/normal_closure.md",
-            "theory/poisson_closure.md"
+            "theory/moment_closure_approximations.md"
         ],
         "Tutorials" => Any[
             "tutorials/model_initialisation.md",
