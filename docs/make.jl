@@ -15,7 +15,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Theory" => Any[
-            "theory/moment_equations.md",
+            "theory/moment_expansion.md",
             "theory/moment_closure_approximations.md"
         ],
         "Tutorials" => Any[

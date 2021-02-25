@@ -1,8 +1,10 @@
 # Moment Closure Approximations
 
+In the [previous section](moment_expansion.md), we have shown that for a non-linear system an infinite hierarchy of coupled moment equations is obtained that cannot be solved directly and therefore needs to be truncated in an approximate way. This can be achieved using moment closure approximations (MAs) using which all moments above a certain order $m$ are expressed in terms of $m^{\text{th}}$ and lower order moments using various (usually distributional) assumptions [1]. Doing so enables us to effectively *close* the moment hierarchy, leading to a finite set of ODEs which can then be solved numerically. In this section, we present some the commonly used MA methods that are implemented in MomentClosure. Please see the **Tutorials** section for examples showing different MAs applied to a variety of systems.
+
 ## Zero closure
 
-The simplest moment closure approximation (MA) is the "central-moment-neglect" MA (CMN-MA) [2], also referred to as "zero-closure" [3] or "low dispersion moment closure" [4], where CMN-MA at $m^{\text{th}}$ order means that the moment equations are truncated by setting all *central moments* above order $m$ to zero. For example, in the simple case of $2$nd order truncation, the moment equations for the means $\mu_i$ and covariances $C_{ij}$ become:
+The simplest MA is the "central-moment-neglect" MA (CMN-MA) [2], also referred to as "zero-closure" [3] or "low dispersion moment closure" [4], where CMN-MA at $m^{\text{th}}$ order means that the moment equations are truncated by setting all *central moments* above order $m$ to zero. For example, in the simple case of $2$nd order truncation, the moment equations for the means $\mu_i$ and covariances $C_{ij}$ become:
 ```math
 \begin{align*}
     \frac{d \mu_i}{dt} &= \sum_{r} S_{ir} \Big( a_r(\mathbf{μ}) + \frac{1}{2}\sum_{i_1, i_2} \frac{\partial^2  a_r({\mathbf{μ}})}{\partial n_{i_1} \partial n_{i_2}} M_{i_1, i_2} \Big), \\
@@ -15,7 +17,7 @@ The simplest moment closure approximation (MA) is the "central-moment-neglect" M
 
 ## Normal closure
 
-Another popular MA is the "normal moment-closure", pioneered by Goodman [5] and Whittle [6], where all *cumulants* $\kappa_{\mathbf{i}}$ above order $m$ are set to zero, approximating the probability distribution of the system with the normal distribution [Schnoerr2015]:
+Another popular MA is the "normal moment-closure", pioneered by Goodman [5] and Whittle [6], where all *cumulants* $\kappa_{\mathbf{i}}$ above order $m$ are set to zero, approximating the probability distribution of the system with the normal distribution [2]:
 ```math
 \begin{align*}
     \kappa_{\mathbf{i}} = 0, \quad \text{for} \; |\mathbf{i}| > m.
@@ -25,9 +27,9 @@ In order to truncate the higher order central or raw moments $M_{\mathbf{i}}$ us
 
 Note that a different implementation of normal closure can be found in literature [3], where the higher order central moments are expressed in terms of a sum of product of covariances using [Isserlis' theorem](https://en.wikipedia.org/wiki/Isserlis%27_theorem). However, one could argue that such formulation is not advisable as it assumes stronger "Gaussianity" of the underlying distribution than setting the higher order cumulants to zero which is less of an approximation on the form of the distribution and hence is preferable in the development of MAs. For example, in case we are truncating the moment equations at $4$th order, the truncation-order central moments would be expressed only in terms of covariances whereas our formulation using cumulants would explicitly include information about the computed values of third central moments, which is expected to improve numerical stability and lead to more accurate moment estimates.
 
-##Poisson closure
+## Poisson closure
 
-Although the Poisson distribution lacks a general formulation for multiple variables [3], "Poisson moment-closure" has been formulated [2, 8] assuming that the joint multivariate distribution is a product of univariate Poisson distributions, i.e., $n_i \sim \text{Poisson}(\mu_i)$. The cumulants of a univariate Poisson distribution are equal to the mean, hence in Poisson closure we set all higher order diagonal cumulants to the corresponding mean values and mixed cumulants to zero [2], which in our notation can be expressed as:
+Although the Poisson distribution lacks a general formulation for multiple variables [3], "Poisson MA" has been formulated [2, 8] assuming that the joint multivariate distribution is a product of univariate Poisson distributions, i.e., $n_i \sim \text{Poisson}(\mu_i)$. The cumulants of a univariate Poisson distribution are equal to the mean, hence in Poisson closure we set all higher order diagonal cumulants to the corresponding mean values and mixed cumulants to zero [2], which in our notation can be expressed as:
 ```math
 \begin{align*}
     \kappa_{\mathbf{i}} &= \mu_k, \quad \text{if} \; |\mathbf{i}| > m \; \text{and} \; i_1,\dotsc,i_N = k \; \text{or} \; 0 \quad \text{for some} \; k \in \{1,\dotsc,N\}, \\
@@ -36,9 +38,9 @@ Although the Poisson distribution lacks a general formulation for multiple varia
 ```
 Similarly to normal closure, the higher order central/raw moments can be expressed in terms of cumulants as described in [7].
 
-##Log-normal closure
+## Log-normal closure
 
-"Log-normal closure", first applied by Keeling [9], allows one to truncate the moment equations under the assumption that the distribution of the underlying stochastic process is log-normal.
+"Log-normal" MA, first applied by Keeling [9], allows one to truncate the moment equations under the assumption that the distribution of the underlying stochastic process is log-normal.
 A positive multi-dimensional random variable $\mathbf{n}$ follows a log-normal distribution if its logarithm is normally distributed, so that $\mathbf{y} = \ln \mathbf{n}$, and $\mathbf{y} \sim \mathcal{N}(\mathbf{\nu}, \Sigma)$, where $\mathbf{\nu}$ and $\Sigma$ denote the vector of means and the covariance matrix respectively. By considering the moment generating function of the normal distribution, $\mathcal{N}(\mathbf{\nu}, \Sigma)$, one can show that the raw moments are given by [3, 10]:
 ```math
 \begin{align*}
@@ -56,7 +58,7 @@ It follows that
 ```
 Note that central moments can be obtained from raw moments by utilising their general multivariate relationship [11].
 
-##Gamma closure
+## Gamma closure
 
 The method of "gamma closure" was originally implemented by Lakatos et al. [3], where the authors acknowledged the ambiguity arising in defining multivariate gamma distributions, and, building upon previous definitions in the literature (e.g. [12] and [13]), proposed a new formulation of a multivariate gamma distribution. Here we reproduce the definition by closely following the description in [3] and elucidating some of the derivation steps.
 
@@ -127,7 +129,7 @@ Similarly, from Eq. ([a](#mjx-eqn-a)) it follows that
     \langle n_i n_j \rangle = \beta_i \beta_j \left( \sum_{\substack{k, l \\ (k, l) \neq (j, i)}}^N  \alpha_{ik} \alpha_{jl} + (\alpha_{ij})_2 \right),
 \end{align*}
 ```
-which together with Eq. ([b](#mjx-eqn-a)) allows us to express the covariance as:
+which together with Eq. ([b](#mjx-eqn-b)) allows us to express the covariance as:
 ```math
 \begin{align*}
     C_{ij} &= \langle n_i n_j \rangle - \beta_i \beta_j \left( \sum_{k,l} \alpha_{ik} \alpha_{jl} \right)  \\
@@ -145,7 +147,66 @@ Finally, from the equations above we can obtain all shape and scale parameters:
 
 ## Derivative matching
 
-Derivative matching [14, 15] is a moment closure method based on matching time derivatives of the exact (not closed) moment equations with that of the approximate (closed) moment equations at some initial time and initial conditions.
+The derivative matching MA [14, 15] is based on expressing moments above order $m$ in terms of lower order moments in such a way that their time derivatives match those of the *exact* moments at some initial time and initial conditions. We outline the approach below, closely following the complete exposition found in the original papers of Singh and Hespanha [14, 15].
+
+The [raw moment equations](@ref raw_moment_eqs) up to order $m$ for any mass-action reaction network containing *at most* bimolecular (second order) reactions can be written down concisely in the matrix form:
+```math
+\begin{align*}
+    \frac{d\mathbf{μ}}{dt} = \hat{\mathbf{a}} + A\mathbf{μ} + B \bar{\mathbf{μ}} \;,
+\end{align*}
+```
+where $\mathbf{μ}$ is a vector containing all raw moments of the system up to order $m$ and $\bar{\mathbf{μ}}$ consists of all $(m+1)^{\text{th}}$ order raw moments which the equations depend on. The constant vector $\hat{\mathbf{a}}$ and constant matrices $A$ and $B$ are chosen appropriately for the system at hand. In this case, an MA can be defined as a procedure where each moment in $\bar{\mathbf{μ}}$, $\bar{μ}_{\mathbf{i}}$, is approximated by a *moment closure function* $\varphi_{\mathbf{i}} (\mathbf{μ})$ of moments up to order $m$. Then the moment equations can be rewritten as
+```math
+    \frac{d\mathbf{ν}}{dt} = \hat{\mathbf{a}} + A\mathbf{ν} + B\bar{\mathbf{φ}}(\mathbf{ν}) \;,
+```
+where the state of the system is now denoted by $\mathbf{ν}$ instead of $\mathbf{μ}$, stressing the fact that we are considering the approximation of the true moment dynamics, and $\bar{\mathbf{φ}}(\mathbf{ν})$ is the corresponding vector of moment closure functions.
+
+The idea behind derivative matching is to determine a map $\bar{\mathbf{φ}}$ so that the time derivatives between the exact moments, $\mathbf{μ}(t)$, and the approximate moments, $\mathbf{ν}(t)$, would match at some initial time $t_0$ under the initial condition $\mathbf{μ}(t_0) = \mathbf{ν}(t_0)$:
+```math
+\begin{align*}
+    \left. \frac{d^i \mathbf{μ}}{dt} \right\rvert_{t=t_0} = \left. \frac{d^i \mathbf{ν}}{dt} \right\rvert_{t=t_0}
+\end{align*}
+```
+If these conditions hold, one can expect from a Taylor series approximation argument that $\mathbf{μ}(t)$ and $\mathbf{ν}(t)$ will stay close at least locally in time and hence the MA will be sufficiently accurate.
+
+In order to move forward, Singh and Hespanha present what can be understood as essentially an ansatz. Firstly, moment closure functions for each $\mathbf{i}$, where $|\mathbf{i}| > m$, are chosen to have a separable form given by
+```math
+\begin{align*}
+    φ_{\mathbf{i}}(\mathbf{μ}) = \prod_{\substack{1 \leq j_1+\dotsb+j_N \leq m}} \left( μ_{\mathbf{j}} \right)^{γ_{\mathbf{j}}} = \prod_{|\mathbf{j}|=1}^{m} \left( μ_{\mathbf{j}} \right)^{γ_{\mathbf{j}}} \;,
+\end{align*}
+```
+where $γ_{\mathbf{j}}$ are constants (unique for each vector $\mathbf{i}$) that can be determined by solving the following linear equation system:
+```math
+\begin{align*}
+    C^{\mathbf{i}}_{\mathbf{j}} = \sum_{|\mathbf{k}|=1}^m \gamma_{\mathbf{k}} C^{\mathbf{k}}_{\mathbf{j}} \;, \quad \text{for each } \mathbf{j} \; \text{where } |\mathbf{j}|\leq m \,,
+\end{align*}
+```
+were we have introduced multi-index scalars
+```math
+\begin{align*}
+    C^{\mathbf{u}}_{\mathbf{v}} &= C^{u_1}_{v_1}C^{u_2}_{v_2} \dotsm C^{u_N}_{v_N},
+\end{align*}
+```
+with each element is defined as
+```math
+\begin{align*}
+C^{a}_{b} &=
+\begin{cases}
+  \frac{a!}{(a-b)!b!}, & a \geq b \\
+  0, & a \lt b
+\end{cases}\;
+\end{align*}
+```
+and $a!$ denoting the factorial of $a$.
+
+Using the specific construction of $\bar{\mathbf{φ}}$ described above, it can be shown [15] that for every *deterministic* initial condition, i.e., $\mathbf{n}(t_0) = \mathbf{n}_0$ with probability one, we will have
+```math
+\begin{align*}
+    \mathbf{μ}(t_0) = \mathbf{ν}(t_0) &\implies \left. \frac{d \mathbf{μ}}{dt} \right\rvert_{t=t_0} = \left. \frac{d \mathbf{ν}}{dt} \right\rvert_{t=t_0} \\
+    &\implies \left. \frac{d^2\mathbf{μ}}{dt^2} \right\rvert_{t=t_0} = \left. \frac{d^2 \mathbf{ν}}{dt^2} \right\rvert_{t=t_0} + \mathbf{ϵ}(\mathbf{n}_0) \;,
+\end{align*}
+```
+where all elements of $\mathbf{ϵ}(\mathbf{n}_0)$ are zero except the ones corresponding to $m^{\text{th}}$ order raw moments—these elements are second order polynomials in $\mathbf{n}_0$. Note, however, that these results hold only for mass-action systems containing no higher than second order chemical reactions. While the derivative matching MA can be applied in the same way to systems containing higher order polynomial and non-polynomial propensity functions, it has not been rigorously analysed in such scenarios, where, naturally, we expect significantly larger approximation errors.
 
 ## Conditional closures
 
