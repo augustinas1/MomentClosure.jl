@@ -187,17 +187,16 @@ were we have introduced multi-index scalars
     C^{\mathbf{u}}_{\mathbf{v}} &= C^{u_1}_{v_1}C^{u_2}_{v_2} \dotsm C^{u_N}_{v_N},
 \end{align*}
 ```
-with each element is defined as
+with each element defined as
 ```math
 \begin{align*}
 C^{a}_{b} &=
 \begin{cases}
   \frac{a!}{(a-b)!b!}, & a \geq b \\
   0, & a \lt b
-\end{cases}\;
+\end{cases}\;.
 \end{align*}
 ```
-and $a!$ denoting the factorial of $a$.
 
 Using the specific construction of $\bar{\mathbf{φ}}$ described above, it can be shown [15] that for every *deterministic* initial condition, i.e., $\mathbf{n}(t_0) = \mathbf{n}_0$ with probability one, we will have
 ```math

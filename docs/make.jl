@@ -26,8 +26,12 @@ makedocs(;
             "tutorials/P53_system.md",
             "tutorials/derivative_matching_example.md",
             "tutorials/gene_network.md"
+        ],
+        "API" => Any[
+            "api/momentclosure_api.md"
         ]
     ],
+
 )
 
 deploydocs(;
