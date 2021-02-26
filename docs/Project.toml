@@ -1,3 +1,4 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 MomentClosure = "01a1b25a-ecf0-48c5-ae58-55bfd5393600"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
