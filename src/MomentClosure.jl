@@ -3,8 +3,11 @@ module MomentClosure
 import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies, numreactions, numparams,
                  substoichmat, prodstoichmat
 
+using Reexport
 using ModelingToolkit
 using ModelingToolkit: value
+@reexport using ModelingToolkit: @parameters, @variables
+
 using SciMLBase: EnsembleSolution
 
 using SymbolicUtils
@@ -17,13 +20,9 @@ using Combinatorics: permutations
 using TupleTools: sort
 using Cumulants
 
-export cumulants_to_raw_moments, cumulants_to_central_moments,
-       raw_to_central_moments, central_to_raw_moments,
-       generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
+export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
        get_S_mat, propensities, ReactionSystemMod,
        species, params, speciesmap, paramsmap, numspecies, numreactions, numparams,
-       @parameters, @variables, # ModelingToolkit variables needed for model initialisation
-       clean_expr, expand_mod, simplify, # Symbolic manipulation tools (simplify borrowed from ModelingToolkit & SymbolicUtils)
        moment_closure, deterministic_IC,
 	   format_moment_eqs, format_closure,
 	   sample_raw_moments, sample_central_moments, sample_cumulants

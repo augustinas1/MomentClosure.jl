@@ -1,5 +1,5 @@
 using MomentClosure
-using MomentClosure: value, define_M, define_μ
+using MomentClosure: value, define_M, define_μ, expand_mod
 using Test
 using Catalyst
 

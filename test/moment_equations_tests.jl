@@ -1,5 +1,6 @@
 using MomentClosure
-using MomentClosure: value, expected_coeff
+using MomentClosure: value, expected_coeff, expand_mod
+using ModelingToolkit: simplify
 using Test
 
 @parameters b
