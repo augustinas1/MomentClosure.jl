@@ -1,11 +1,12 @@
-using MomentClosure
+using MomentClosure, ModelingToolkit
 using Documenter
 
 makedocs(;
-    modules=[MomentClosure],
+    modules=[MomentClosure, ModelingToolkit],
     authors="Augustinas Sukys",
     repo="https://github.com/augustinas1/MomentClosure.jl/blob/{commit}{path}#L{line}",
     sitename="MomentClosure.jl",
+    doctest=false,
     format=Documenter.HTML(;
         mathengine=Documenter.Writers.HTMLWriter.MathJax2(),
         prettyurls=get(ENV, "CI", "false") == "true",

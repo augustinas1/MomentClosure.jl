@@ -20,6 +20,8 @@ using Combinatorics: permutations
 using TupleTools: sort
 using Cumulants
 
+using DocStringExtensions
+
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
        get_S_mat, propensities, ReactionSystemMod,
        species, params, speciesmap, paramsmap, numspecies, numreactions, numparams,

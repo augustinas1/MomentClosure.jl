@@ -4,13 +4,6 @@ CurrentModule = MomentClosure
 
 # MomentClosure
 
-```@index
-```
-
-```@autodocs
-Modules = [MomentClosure]
-```
-
 MomentClosure.jl is a tool to automatically obtain time-evolution equations of moments up to an arbitrary order for virtually any chemical reaction network implementing a wide array of moment closure approximations commonly used in stochastic biochemical kinetics [1]. MomentClosure is (attempted to be) fairly well-integrated within the broader Julia ecosystem utilising a number of familiar packages:
 - MomentClosure can be immediately applied to reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl/issues/22).
 - Moment equations are generated as a [ModelingToolkit](https://github.com/SciML/ModelingToolkit.jl) [`ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) (with some extra help from [SymbolicUtils](https://github.com/JuliaSymbolics/SymbolicUtils.jl)).
