@@ -56,7 +56,6 @@ exprs = format_moment_eqs(closed_sys)
 # order of array elements can vary
 ind = findfirst(!isnothing, match.(Ref(r"dμ₀₂/dt"), exprs))
 expr1 = exprs[ind]
-display(expr1)
 expr2 = "dμ₀₂/dt = γ_p*μ₀₁ + b*k_p*μ₁₀ + 2b*k_p*μ₁₁ + 2k_p*μ₁₀*(b^2) - (2γ_p*(μ₀₂))"
 @test expr1 == expr2
 exprs = format_closure(closure)
