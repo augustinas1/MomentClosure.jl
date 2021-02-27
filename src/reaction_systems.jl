@@ -63,74 +63,81 @@ end
 # order to keep the APIs consistent
 
 """
-    species(rn)
+    species(rn::ReactionSystemMod)
 Given a [`ReactionSystemMod`](@ref), return a vector of species variables expressed as
-[`Term{Real}`](https://mtk.sciml.ai/stable/IR/#Types-1). Similar to Catalyst's
-[`species`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.species) for a `ReactionSystem`.
+[`Term{Real}`](https://mtk.sciml.ai/stable/IR/#Types-1). Extension of Catalyst's
+[`species`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.species) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function species(rn::ReactionSystemMod)
     rn.states
 end
 
 """
-    params(rn)
+    params(rn::ReactionSystemMod)
 Given a [`ReactionSystemMod`](@ref), return a vector of parameter variables
-expressed as `Sym{ModelingToolkit.Parameter{Real}`. Similar to Catalyst's
-[`params`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.params) for a `ReactionSystem`.
+expressed as `Sym{ModelingToolkit.Parameter{Real}`. Extension of  Catalyst's
+[`params`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.params) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function params(rn::ReactionSystemMod)
     rn.ps
 end
 
 """
-    speciesmap(rn)
+    speciesmap(rn::ReactionSystemMod)
 Given a [`ReactionSystemMod`](@ref), return a Dictionary mapping from species to
-species indices. Similar to Catalyst's
-[`speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap) for a `ReactionSystem`.
+species indices. Extension of Catalyst's
+[`speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function speciesmap(rn::ReactionSystemMod)
     Dict(S => i for (i,S) in enumerate(species(rn)))
 end
 
 """
-    paramsmap(rn)
+    paramsmap(rn::ReactionSystemMod)
 Given a [`ReactionSystemMod`](@ref), return a Dictionary mapping from parameters to
-parameter indices.  Similar to Catalyst's
-[`paramsmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.paramsmap) for a `ReactionSystem`.
+parameter indices.  Extension of Catalyst's
+[`paramsmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.paramsmap) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function paramsmap(rn::ReactionSystemMod)
     Dict(p => i for (i,p) in enumerate(params(rn)))
 end
 
 """
-    numspecies(rn)
-Return the number of species within the given [`ReactionSystemMod`](@ref). Similar to Catalyst's
-[`numspecies`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numspecies) for a `ReactionSystem`.
+    numspecies(rn::ReactionSystemMod)
+Return the number of species within the given [`ReactionSystemMod`](@ref). Extension of Catalyst's
+[`numspecies`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numspecies) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function numspecies(rn::ReactionSystemMod)
     length(rn.states)
 end
 
 """
-    numreactions(rn)
-Return the number of reactions within the given [`ReactionSystemMod`](@ref). Similar to Catalyst's
-[`numreactions`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numreactions) for a `ReactionSystem`.
+    numreactions(rn::ReactionSystemMod)
+Return the number of reactions within the given [`ReactionSystemMod`](@ref). Extension of Catalyst's
+[`numreactions`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numreactions) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function numreactions(rn::ReactionSystemMod)
     length(rn.a)
 end
 
 """
-    numparams(rn)
-Return the number of parameters within the given [`ReactionSystemMod`](@ref). Similar to Catalyst's
-[`numparams`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numparams) for a `ReactionSystem`.
+    numparams(rn::ReactionSystemMod)
+Return the number of parameters within the given [`ReactionSystemMod`](@ref). Extension of Catalyst's
+[`numparams`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numparams) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function numparams(rn::ReactionSystemMod)
     length(rn.ps)
 end
 
 """
-    get_S_mat(rn)
+    get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod})
 Return the (net) stoichiometric matrix of the given [`ReactionSystem`]
 (https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 or [`ReactionSystemMod`](@ref).
@@ -144,7 +151,7 @@ function get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod})
 end
 
 """
-    propensities(rn; combinatoric_ratelaw=true)
+    propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaw=true)
 Return a vector of propensity functions of all reactions in the given [`ReactionSystem`]
 (https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 or [`ReactionSystemMod`](@ref).

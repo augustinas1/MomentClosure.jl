@@ -18,13 +18,13 @@ ReactionSystemMod
 To keep the API consistent with Catalyst, we provide a number of identical [basic functions](https://catalyst.sciml.ai/stable/api/catalyst_api/#Basic-properties) allowing easy access to network properties:
 
 ```@docs
-MomentClosure.species
-MomentClosure.speciesmap
-MomentClosure.params
-MomentClosure.paramsmap
-MomentClosure.numspecies
-MomentClosure.numparams
-MomentClosure.numreactions
+species
+speciesmap
+params
+paramsmap
+numspecies
+numparams
+numreactions
 ```
 
 Moreover, we include two slight extensions of the Catalyst API:
