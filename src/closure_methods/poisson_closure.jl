@@ -16,7 +16,7 @@ function poisson_closure(sys::Union{RawMomentEquations, CentralMomentEquations})
     # construct the corresponding truncated expressions of higher order central moments
     for order in sys.m_order+1:sys.q_order
 
-        iter_r = filter(x -> sum(x) == order, sys.iter_exp)
+        iter_r = filter(x -> sum(x) == order, sys.iter_q)
         for r in iter_r
             # the last term in the symbolic expression of cumulant κᵣ is Mᵣ (μᵣ)
             # therefore, as we here set κᵣ = 0, only simple manipulation is needed
@@ -24,7 +24,7 @@ function poisson_closure(sys::Union{RawMomentEquations, CentralMomentEquations})
             # poisson closure - set diagonal higher order cumulants to the corresponding
             # mean value and mixed higher order cumulants to zero
             if sum(r) in r #diagonality condition
-                eᵣ = sys.unit_vec[findfirst(!iszero, r)]
+                eᵣ = sys.iter_1[findfirst(!iszero, r)]
                 closed_moment = sys.μ[eᵣ]-(K[r]-moments[r])
             else
                 closed_moment = -(K[r]-moments[r])

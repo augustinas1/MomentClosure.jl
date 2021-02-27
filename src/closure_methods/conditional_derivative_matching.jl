@@ -25,7 +25,7 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
     for order in sys.m_order+1:sys.q_order
 
         # building the closed moment expressions order by order (due to such hierarchical functional dependency)
-        iter_order = filter(x -> sum(x) == order, sys.iter_exp)
+        iter_order = filter(x -> sum(x) == order, sys.iter_q)
 
         for iter in iter_order
 
@@ -114,7 +114,7 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
         #central_to_raw = central_to_raw_moments(sys, sys.m_order)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         μ_central = Dict()
-        for iter in vcat(sys.iter_m, sys.iter_exp)
+        for iter in vcat(sys.iter_m, sys.iter_q)
             μ_central[μ[iter]] = central_to_raw[iter]
         end
 
@@ -123,7 +123,7 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
             μ_M_exp[i] = μ_central[μ[i]]
         end
         μ_M = copy(μ_M_exp)
-        for i in sys.iter_exp
+        for i in sys.iter_q
             μ_M[i] = closure_μ[μ[i]]
             μ_M[i] = substitute(μ_M[i], μ_central)
             μ_M[i] = simplify(μ_M[i])
@@ -138,7 +138,7 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
         # central moments from the obtained raw moment expressions
         raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ_M_exp, bernoulli=true)
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ_M, bernoulli=true)
-        for i in sys.iter_exp
+        for i in sys.iter_q
             closure_exp[sys.M[i]] = simplify(raw_to_central_exp[i])
             closure[sys.M[i]] = simplify(raw_to_central[i])
         end

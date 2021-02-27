@@ -5,28 +5,24 @@
 struct CentralMomentEquations
     """Moment ODEs describing the evolution of central moments"""
     odes::ODESystem
-    # TODO: merge μ and M to `moments` to make it simpler
     """Symbolic variables defining the means"""
     μ::Dict
     """Symbolic variables defining the central moments"""
     M::Dict
     """Number of Species"""
     N::Int
-    """Parameter variables"""
-    ps::Vector
-    """Order of moment ODEs"""
+    """Order of moment equations"""
     m_order::Int
-    """Order of moment expansion"""
+    """Expansion order"""
     q_order::Int
-    # TODO: try to get rid of all the iterators in the struct
     """Iterator over all index combinations up to order q_order"""
     iter_all::Vector
     """Iterator over all index combinations up to order m_order"""
     iter_m::Vector
     """Iterator over all index combinations of order greater than m_order up to q_order"""
-    iter_exp::Vector
+    iter_q::Vector
     """Iterator over index combinations of order 1"""
-    unit_vec::Vector
+    iter_1::Vector
 end
 
 function fact(i)
@@ -69,9 +65,9 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     # iterator over central moments up to order m
     iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
     # iterator over central moments of order greater than m up to q_order
-    iter_exp = filter(x -> m_order < sum(x) <= q_order, iter_all)
+    iter_q = filter(x -> m_order < sum(x) <= q_order, iter_all)
     # iterator over the first order central moments
-    unit_vec = filter(x -> sum(x) == 1, iter_all)
+    iter_1 = filter(x -> sum(x) == 1, iter_all)
 
     #= Define the first order raw moments μ and
        central moments Mᵢ as symbolic variables
@@ -96,7 +92,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     # messier code here because no trust in Dict preserving insertion order
     #dict_n_to_μ = #Dict(zip(n, μ)
     dict_n_to_μ = Dict()
-    for iter in unit_vec
+    for iter in iter_1
         ind = findall(x -> x==1, iter)[end]
         dict_n_to_μ[n[ind]] = μ[iter]
     end
@@ -164,7 +160,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         end
         for j in 1:N
             if i[j] > 0
-                dM[i] -= i[j]*du[j]*M[i.-unit_vec[j]]
+                dM[i] -= i[j]*du[j]*M[i.-iter_1[j]]
             end
         end
         dM[i] = simplify(dM[i])
@@ -175,12 +171,22 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     D = Differential(t)
     eqs = []
     for i in 1:N
-        push!(eqs, D(μ[unit_vec[i]]) ~ du[i])
+        push!(eqs, D(μ[iter_1[i]]) ~ du[i])
     end
     for i in iter_m
         push!(eqs, D(M[i]) ~ dM[i])
     end
 
-    return CentralMomentEquations(ODESystem(eqs), μ, M, N, rn.ps, m_order, q_order,
-                                  iter_all, iter_m, iter_exp, unit_vec)
+    CentralMomentEquations(
+        ODESystem(eqs),
+        μ,
+        M,
+        N,
+        m_order,
+        q_order,
+        iter_all,
+        iter_m,
+        iter_q,
+        iter_1
+    )
 end

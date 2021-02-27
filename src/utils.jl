@@ -148,7 +148,7 @@ function deterministic_IC(μ₀::Vector, sys::Union{RawMomentEquations, CentralM
     end
     no_states = length(closed_sys.states)
 
-    μ_map = [sys.μ[iter] => μ₀[i] for (i, iter) in enumerate(sys.unit_vec)]
+    μ_map = [sys.μ[iter] => μ₀[i] for (i, iter) in enumerate(sys.iter_1)]
     if typeof(sys) == CentralMomentEquations
         if string(closed_sys.states[N+1])[1] != 'M'
             error("the central moment equations and their closed counterparts are inconsistent")

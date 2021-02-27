@@ -83,16 +83,16 @@ function bernoulli_moment_eqs(sys::Union{RawMomentEquations,CentralMomentEquatio
     # construct a new Raw/Central/MomentEquations system saving only the clean iterators
     clean_iter = setdiff(sys.iter_all, redundant_iter)
     iter_m = filter(x -> 2 <= sum(x) <= sys.m_order, clean_iter)
-    iter_exp = filter(x -> sys.m_order < sum(x) <= sys.q_order, clean_iter)
+    iter_q = filter(x -> sys.m_order < sum(x) <= sys.q_order, clean_iter)
 
     # TODO: fix μ, M -> moment and remove all these (switch to basic indices)
     field_values = [getfield(sys, field) for field in fieldnames(typeof(sys))]
     ind_iter_m = findall(x -> x==:iter_m, fieldnames(typeof(sys)))[1]
-    ind_iter_exp = findall(x -> x==:iter_exp, fieldnames(typeof(sys)))[1]
+    ind_iter_q = findall(x -> x==:iter_q, fieldnames(typeof(sys)))[1]
     ind_iter_all = findall(x -> x==:iter_all, fieldnames(typeof(sys)))[1]
 
     field_values[ind_iter_m] = iter_m     #sys.iter_m
-    field_values[ind_iter_exp] = iter_exp #sys.iter_exp
+    field_values[ind_iter_q] = iter_q #sys.iter_q
     field_values[ind_iter_all] = clean_iter #sys.iter_all
     new_system = typeof(sys)(ODESystem(clean_eqs), field_values[2:end]...)
 

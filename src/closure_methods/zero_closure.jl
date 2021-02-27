@@ -4,7 +4,7 @@ function zero_closure(sys::Union{RawMomentEquations, CentralMomentEquations})
     closure_exp = Dict()
 
     if typeof(sys) == CentralMomentEquations
-        for i in sys.iter_exp
+        for i in sys.iter_q
             closure[sys.M[i]] = 0
             closure_exp[sys.M[i]] = 0
         end
@@ -12,7 +12,7 @@ function zero_closure(sys::Union{RawMomentEquations, CentralMomentEquations})
         μ = copy(sys.μ)
         μ_symbolic = copy(sys.μ)
         raw_to_central = raw_to_central_moments(sys.N, sys.q_order)
-        for i in sys.iter_exp
+        for i in sys.iter_q
             μ[i] = simplify(-(raw_to_central[i]-μ[i]))
             closure[sys.μ[i]] = simplify(expand(μ[i]))
 

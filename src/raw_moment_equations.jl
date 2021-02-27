@@ -75,22 +75,20 @@ struct RawMomentEquations
     odes::ODESystem
     """Symbolic variables defining the raw moments"""
     μ::Dict
-    """Number of Species"""
+    """Number of species within the system"""
     N::Int
-    """Parameter variables"""
-    ps::Vector
-    """Order of moment ODEs"""
+    """Order of moment equations"""
     m_order::Int
-    """Order of moment expansion"""
+    """Expansion order"""
     q_order::Int
     """Iterator over all index combinations up to order q_order"""
     iter_all::Vector
     """Iterator over all index combinations up to order m_order"""
     iter_m::Vector
     """Iterator over all index combinations of order greater than m_order up to q_order"""
-    iter_exp::Vector
+    iter_q::Vector
     """Iterator over index combinations of order 1"""
-    unit_vec::Vector
+    iter_1::Vector
 end
 
 
@@ -132,14 +130,14 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
     # iterator over raw moments up to order m
     iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
     # iterator over raw moments of order rgrater than m up to q_order
-    iter_exp = filter(x -> m_order < sum(x) <= q_order, iter_all)
+    iter_q = filter(x -> m_order < sum(x) <= q_order, iter_all)
     # iterator over the first order moments
-    unit_vec = filter(x -> sum(x) == 1, iter_all)
+    iter_1 = filter(x -> sum(x) == 1, iter_all)
 
     μ = define_μ(N, q_order)
 
     dμ = Dict()
-    for i in vcat(unit_vec, iter_m)
+    for i in vcat(iter_1, iter_m)
         dμ[i] = 0
         for r = 1:R
             iter_j = filter(x -> all(x .<= i) && sum(x) <= sum(i) - 1, iter_all)
@@ -161,21 +159,20 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
     @parameters t
     D = Differential(t)
     eqs = []
-    for i in vcat(unit_vec, iter_m)
+    for i in vcat(iter_1, iter_m)
         push!(eqs, D(μ[i]) ~ dμ[i])
     end
 
-    return RawMomentEquations(
+    RawMomentEquations(
         ODESystem(eqs),
         μ,
         N,
-        rn.ps,
         m_order,
         q_order,
         iter_all,
         iter_m,
-        iter_exp,
-        unit_vec,
+        iter_q,
+        iter_1,
     )
 
 end

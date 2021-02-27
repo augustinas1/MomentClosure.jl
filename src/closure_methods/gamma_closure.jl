@@ -101,9 +101,9 @@ function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; c
     symbolic_sub = Dict()
     β = Array{Any}(undef, N)
     for i in 1:N
-        eᵢ = sys.unit_vec[i]
+        eᵢ = sys.iter_1[i]
         for j in i+1:N
-            eⱼ = sys.unit_vec[j]
+            eⱼ = sys.iter_1[j]
             symbolic_sub[αs[i, j]] = M[eᵢ .+ eⱼ] * μ[eᵢ] * μ[eⱼ] / M[2 .* eᵢ] /M[2 .* eⱼ]
         end
         symbolic_sub[x[i]] = μ[eᵢ]^2 / M[2 .* eᵢ]
@@ -116,11 +116,11 @@ function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; c
 
     # TupleTools come in handy here
     perms_ind = collect(permutations(collect(1:N)))
-    unique_iter_exp = unique(sort(i) for i in sys.iter_exp)
+    unique_iter_q = unique(sort(i) for i in sys.iter_q)
     # line below reproduces Lakatos
-    #unique_iter_exp = unique(sort(i) for i in vcat(sys.iter_m, sys.iter_exp))
+    #unique_iter_q = unique(sort(i) for i in vcat(sys.iter_m, sys.iter_q))
 
-    for iter in unique_iter_exp
+    for iter in unique_iter_q
         #t = @elapsed begin
         #println(iter)
         # construct iterator through the product of sums in the Eq. for raw moments
@@ -175,7 +175,7 @@ function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; c
         for (iter_perm, iter_perm_ind) in zip(unique_perms, unique_perms_ind)
             iter_perm = Tuple(iter_perm)
             sub = Dict()
-            for i in sys.unit_vec
+            for i in sys.iter_1
                 sub[μ_symbolic[i]] = μ_symbolic[i[iter_perm_ind]]
             end
             for i in iter_2nd_order
@@ -193,7 +193,7 @@ function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; c
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         closure_M = Dict()
-        for i in sys.iter_exp
+        for i in sys.iter_q
             # TODO: check if simplify withing raw_to_central is speed bottleneck if clean=false
             closure_exp[M[i]] = raw_to_central[i]
             expr = simplify(central_to_raw[i]-M[i])
@@ -205,7 +205,7 @@ function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; c
     else
         raw_to_central = raw_to_central_moments(N, 2)
         M_to_μ = [M[i] => raw_to_central[i] for i in filter(x -> sum(x)==2, sys.iter_all)]
-        for i in sys.iter_exp
+        for i in sys.iter_q
             closure_exp[sys.μ[i]] = substitute(μ[i], M_to_μ)
             expr = substitute(closure[sys.μ[i]], M_to_μ)
             closure[sys.μ[i]] = simplify(expr)

@@ -31,14 +31,14 @@ function cumulants_to_raw_moments(N::Int, max_order::Int)
 
     μ = define_μ(N, max_order)
     iter_all = construct_iter_all(N, max_order)
-    unit_vec = filter(x -> sum(x) == 1, iter_all)
+    iter_1 = filter(x -> sum(x) == 1, iter_all)
 
     K = Dict()
     μ_star = Dict()
 
     μ_star[Tuple(fill(0, N))] = 1.0
     for i in 1:N
-        eᵢ = unit_vec[i]
+        eᵢ = iter_1[i]
         K[eᵢ] = μ[eᵢ]
         μ_star[eᵢ] = -μ[eᵢ]
     end
@@ -49,7 +49,7 @@ function cumulants_to_raw_moments(N::Int, max_order::Int)
         for r in iter_order
 
             ind = findall(x -> x!= 0, r)[end]
-            r_sub = r .- unit_vec[ind]
+            r_sub = r .- iter_1[ind]
             iter_i = filter(x -> all(x .<= r_sub), iter_all)
 
             suma = 0.0
@@ -96,13 +96,13 @@ function cumulants_to_central_moments(N::Int, max_order::Int)
     M_star = Dict()
 
     iter_all = construct_iter_all(N, max_order)
-    unit_vec = filter(x -> sum(x) == 1, iter_all)
+    iter_1 = filter(x -> sum(x) == 1, iter_all)
     μ = define_μ(N, 1)
     M = define_M(N, max_order)
 
     M_star[Tuple(zeros(N))] = 1.0
     for i in 1:N
-        eᵢ = unit_vec[i]
+        eᵢ = iter_1[i]
         K[eᵢ] = μ[eᵢ]
         M_star[eᵢ] = 0.0
     end
@@ -114,7 +114,7 @@ function cumulants_to_central_moments(N::Int, max_order::Int)
         for r in iter_order
 
             ind = findall(x -> x!= 0, r)[end]
-            r_sub = r .- unit_vec[ind]
+            r_sub = r .- iter_1[ind]
             iter_i = filter(x -> all(x .<= r_sub), iter_all)
             # find the cumulant \kappa_{\bm{r}}}
             suma = 0.0
@@ -136,7 +136,7 @@ function cumulants_to_central_moments(N::Int, max_order::Int)
                 end
                 suma += factor*(-K[r.-i])*M_star[i]
             end
-            suma -= -μ[unit_vec[ind]]*M_star[r_sub]
+            suma -= -μ[iter_1[ind]]*M_star[r_sub]
             M_star[r] = simplify(suma)
 
         end
