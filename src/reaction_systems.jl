@@ -1,4 +1,4 @@
-# System of chemical reactions similar in structure to ModelingToolkit.jl ReactionSystem (parts of code borrowed from there)
+# System of chemical reactions similar in structure to ModelingToolkit.jl ReactionSystem
 # allow stochastic variables (sampled from the geometric distribution) as stoichometry matrix coefficients (hence Mod)
 # Note that this construction is very limited compared to ReactionSystem and is not integrated within the broader framework of ModelingToolkit.jl
 # parts of code adapted from
@@ -58,37 +58,83 @@ struct ReactionSystemMod
 
 end
 
-# extending a number of ReactionSystem functions to support ReactionSystemMod
+# Implementing a number of basic functions allowing easy access to reaction network properties.
+# The functions are identical to the Catalyst ones (full credit to the developers) in
+# order to keep the APIs consistent
 
-#import Catalyst: species, speciesmap, numspecies, numreactions, numparams
+"""
+    species(rn)
+Given a [`ReactionSystemMod`](@ref), return a vector of species variables expressed as
+[`Term{Real}`](https://mtk.sciml.ai/stable/IR/#Types-1). Similar to Catalyst's
+[`species`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.species) for a `ReactionSystem`.
+"""
 function species(rn::ReactionSystemMod)
     rn.states
 end
 
+"""
+    params(rn)
+Given a [`ReactionSystemMod`](@ref), return a vector of parameter variables
+expressed as `Sym{ModelingToolkit.Parameter{Real}`. Similar to Catalyst's
+[`params`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.params) for a `ReactionSystem`.
+"""
 function params(rn::ReactionSystemMod)
     rn.ps
 end
 
+"""
+    speciesmap(rn)
+Given a [`ReactionSystemMod`](@ref), return a Dictionary mapping from species to
+species indices. Similar to Catalyst's
+[`speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap) for a `ReactionSystem`.
+"""
 function speciesmap(rn::ReactionSystemMod)
     Dict(S => i for (i,S) in enumerate(species(rn)))
 end
 
+"""
+    paramsmap(rn)
+Given a [`ReactionSystemMod`](@ref), return a Dictionary mapping from parameters to
+parameter indices.  Similar to Catalyst's
+[`paramsmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.paramsmap) for a `ReactionSystem`.
+"""
 function paramsmap(rn::ReactionSystemMod)
     Dict(p => i for (i,p) in enumerate(params(rn)))
 end
 
+"""
+    numspecies(rn)
+Return the number of species within the given [`ReactionSystemMod`](@ref). Similar to Catalyst's
+[`numspecies`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numspecies) for a `ReactionSystem`.
+"""
 function numspecies(rn::ReactionSystemMod)
     length(rn.states)
 end
 
+"""
+    numreactions(rn)
+Return the number of reactions within the given [`ReactionSystemMod`](@ref). Similar to Catalyst's
+[`numreactions`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numreactions) for a `ReactionSystem`.
+"""
 function numreactions(rn::ReactionSystemMod)
     length(rn.a)
 end
 
+"""
+    numparams(rn)
+Return the number of parameters within the given [`ReactionSystemMod`](@ref). Similar to Catalyst's
+[`numparams`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numparams) for a `ReactionSystem`.
+"""
 function numparams(rn::ReactionSystemMod)
     length(rn.ps)
 end
 
+"""
+    get_S_mat(rn)
+Return the (net) stoichiometric matrix of the given [`ReactionSystem`]
+(https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
+or [`ReactionSystemMod`](@ref).
+"""
 function get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod})
     if typeof(rn) == ReactionSystem
         prodstoichmat(rn)' - substoichmat(rn)'
@@ -97,6 +143,19 @@ function get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod})
     end
 end
 
+"""
+    propensities(rn; combinatoric_ratelaw=true)
+Return a vector of propensity functions of all reactions in the given [`ReactionSystem`]
+(https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
+or [`ReactionSystemMod`](@ref).
+
+Notes:
+- `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
+  for a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
+  (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
+  *Note* that this field is irrelevant using `ReactionSystemMod` as then the
+  propensities are defined directly by the user.
+"""
 function propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaw=true)
     if typeof(rn) == ReactionSystem
         [simplify(jumpratelaw(rx, combinatoric_ratelaw=combinatoric_ratelaw)) for rx in reactions(rn)]
