@@ -82,12 +82,12 @@ struct RawMomentEquations
     """Order of moment ODEs"""
     m_order::Int
     """Order of moment expansion"""
-    exp_order::Int
-    """Iterator over all index combinations up to order exp_order"""
+    q_order::Int
+    """Iterator over all index combinations up to order q_order"""
     iter_all::Vector
     """Iterator over all index combinations up to order m_order"""
     iter_m::Vector
-    """Iterator over all index combinations of order greater than m_order up to exp_order"""
+    """Iterator over all index combinations of order greater than m_order up to q_order"""
     iter_exp::Vector
     """Iterator over index combinations of order 1"""
     unit_vec::Vector
@@ -124,19 +124,19 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
     end
 
     #println("propensity functions are polynomials up to order ", max_pwr)
-    exp_order = max_pwr + m_order - 1
-    #println("will encounter moments up to order ", exp_order)
+    q_order = max_pwr + m_order - 1
+    #println("will encounter moments up to order ", q_order)
 
     # iterator over all moments from lowest to highest moment order
-    iter_all = construct_iter_all(N, exp_order)
+    iter_all = construct_iter_all(N, q_order)
     # iterator over raw moments up to order m
     iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
-    # iterator over raw moments of order rgrater than m up to exp_order
-    iter_exp = filter(x -> m_order < sum(x) <= exp_order, iter_all)
+    # iterator over raw moments of order rgrater than m up to q_order
+    iter_exp = filter(x -> m_order < sum(x) <= q_order, iter_all)
     # iterator over the first order moments
     unit_vec = filter(x -> sum(x) == 1, iter_all)
 
-    μ = define_μ(N, exp_order)
+    μ = define_μ(N, q_order)
 
     dμ = Dict()
     for i in vcat(unit_vec, iter_m)
@@ -171,7 +171,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
         N,
         rn.ps,
         m_order,
-        exp_order,
+        q_order,
         iter_all,
         iter_m,
         iter_exp,

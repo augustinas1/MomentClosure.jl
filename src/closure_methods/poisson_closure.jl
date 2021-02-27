@@ -4,17 +4,17 @@ function poisson_closure(sys::Union{RawMomentEquations, CentralMomentEquations})
     closure_exp = Dict()
     N = sys.N
 
-    # build symbolic expressions of cumulants up to exp_order in terms of central/raw moments
+    # build symbolic expressions of cumulants up to q_order in terms of central/raw moments
     if typeof(sys) == CentralMomentEquations
         moments = copy(sys.M)
-        K = cumulants_to_central_moments(N, sys.exp_order)
+        K = cumulants_to_central_moments(N, sys.q_order)
     else
         moments = copy(sys.μ)
-        K = cumulants_to_raw_moments(N, sys.exp_order)
+        K = cumulants_to_raw_moments(N, sys.q_order)
     end
 
     # construct the corresponding truncated expressions of higher order central moments
-    for order in sys.m_order+1:sys.exp_order
+    for order in sys.m_order+1:sys.q_order
 
         iter_r = filter(x -> sum(x) == order, sys.iter_exp)
         for r in iter_r

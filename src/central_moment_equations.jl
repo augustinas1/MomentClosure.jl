@@ -17,13 +17,13 @@ struct CentralMomentEquations
     """Order of moment ODEs"""
     m_order::Int
     """Order of moment expansion"""
-    exp_order::Int
+    q_order::Int
     # TODO: try to get rid of all the iterators in the struct
-    """Iterator over all index combinations up to order exp_order"""
+    """Iterator over all index combinations up to order q_order"""
     iter_all::Vector
     """Iterator over all index combinations up to order m_order"""
     iter_m::Vector
-    """Iterator over all index combinations of order greater than m_order up to exp_order"""
+    """Iterator over all index combinations of order greater than m_order up to q_order"""
     iter_exp::Vector
     """Iterator over index combinations of order 1"""
     unit_vec::Vector
@@ -44,15 +44,15 @@ end
 
 
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
-                                     m_order::Int, exp_order::Int=m_order+1;
+                                     m_order::Int, q_order::Int=m_order+1;
                                      combinatoric_ratelaw=true)
     #= Generate the moment equations for the reaction network rn
        up to order of moment expansion m and the order of Taylor
        expansion of propensity functions =#
 
      # TODO: test this bit is working
-    if (m_order >= exp_order)
-        error("exp_order must be equal or greater than m_order")
+    if (m_order >= q_order)
+        error("q_order must be equal or greater than m_order")
     end
 
     N = numspecies(rn) # no. of molecular species in the network
@@ -65,11 +65,11 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     S = get_S_mat(rn)
 
     # iterator over all moments from lowest to highest moment order
-    iter_all = construct_iter_all(N, exp_order)
+    iter_all = construct_iter_all(N, q_order)
     # iterator over central moments up to order m
     iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
-    # iterator over central moments of order greater than m up to exp_order
-    iter_exp = filter(x -> m_order < sum(x) <= exp_order, iter_all)
+    # iterator over central moments of order greater than m up to q_order
+    iter_exp = filter(x -> m_order < sum(x) <= q_order, iter_all)
     # iterator over the first order central moments
     unit_vec = filter(x -> sum(x) == 1, iter_all)
 
@@ -82,10 +82,10 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     μ = define_μ(N, 1)
     μ = delete!(μ, Tuple(zeros(N)))
 
-    M = define_M(N, exp_order)
+    M = define_M(N, q_order)
 
     #= Obtain all derivatives of the propensity functions with respect
-    to all molecular species up to order defined by exp_order.
+    to all molecular species up to order defined by q_order.
     For example, Da[2][(1, 2)] is equivalent to (∂³/∂n₁∂n₂²) a₂(μ) =#
 
     Da = []
@@ -153,7 +153,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
                     factor_j *= expected_coeff(S[k, r], i[k]-j[k]) * binomial(i[k], j[k])
                 end
                 # m+1 -> MA_order
-                iter_k = filter(x -> sum(x) <= exp_order-sum(j), iter_all)
+                iter_k = filter(x -> sum(x) <= q_order-sum(j), iter_all)
                 suma = 0.0
                 for k in iter_k
                     suma += Da[r][k]*M[j.+k]*1//fact(k)
@@ -181,6 +181,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         push!(eqs, D(M[i]) ~ dM[i])
     end
 
-    return CentralMomentEquations(ODESystem(eqs), μ, M, N, rn.ps, m_order, exp_order,
+    return CentralMomentEquations(ODESystem(eqs), μ, M, N, rn.ps, m_order, q_order,
                                   iter_all, iter_m, iter_exp, unit_vec)
 end

@@ -7,7 +7,7 @@ function log_normal_closure(sys::Union{RawMomentEquations, CentralMomentEquation
     if typeof(sys) == CentralMomentEquations
         M = copy(sys.M)
         μ = central_to_raw_moments(N, sys.m_order)
-        μ_symbolic = define_μ(N, sys.exp_order)
+        μ_symbolic = define_μ(N, sys.q_order)
     else
         M = raw_to_central_moments(N, 2)
         μ = copy(sys.μ)
@@ -52,8 +52,8 @@ function log_normal_closure(sys::Union{RawMomentEquations, CentralMomentEquation
     if typeof(sys) == CentralMomentEquations
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained log-normal raw moment expressions
-        raw_to_central = raw_to_central_moments(N, sys.exp_order, μ)
-        central_to_raw = central_to_raw_moments(N, sys.exp_order)
+        raw_to_central = raw_to_central_moments(N, sys.q_order, μ)
+        central_to_raw = central_to_raw_moments(N, sys.q_order)
         closure_M = Dict()
         for i in sys.iter_exp
             closure_exp[M[i]] = raw_to_central[i]

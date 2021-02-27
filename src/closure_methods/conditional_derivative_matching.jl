@@ -9,7 +9,7 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
     sys = bernoulli_moment_eqs(sys, binary_vars)
 
     # define symbolic raw moment expressions
-    μ = typeof(sys) == CentralMomentEquations ? define_μ(N, sys.exp_order) : copy(sys.μ)
+    μ = typeof(sys) == CentralMomentEquations ? define_μ(N, sys.q_order) : copy(sys.μ)
 
     # closure of higher order raw moments without explicit form of truncated moments
     # e.g. μ₁₄ would still be a function of μ₁₃ even though μ₁₃ is also truncated
@@ -22,7 +22,7 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
 
     # by nonbernoulli we denote moments which cannot be written in the conditional form
     nonbernoulli_iters = filter(x -> sum(x[binary_vars]) == 0, sys.iter_all)
-    for order in sys.m_order+1:sys.exp_order
+    for order in sys.m_order+1:sys.q_order
 
         # building the closed moment expressions order by order (due to such hierarchical functional dependency)
         iter_order = filter(x -> sum(x) == order, sys.iter_exp)
@@ -112,7 +112,7 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
     if typeof(sys) == CentralMomentEquations
 
         #central_to_raw = central_to_raw_moments(sys, sys.m_order)
-        central_to_raw = central_to_raw_moments(N, sys.exp_order)
+        central_to_raw = central_to_raw_moments(N, sys.q_order)
         μ_central = Dict()
         for iter in vcat(sys.iter_m, sys.iter_exp)
             μ_central[μ[iter]] = central_to_raw[iter]
@@ -136,8 +136,8 @@ function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralM
         closure_exp = Dict()
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained raw moment expressions
-        raw_to_central_exp = raw_to_central_moments(N, sys.exp_order, μ_M_exp, bernoulli=true)
-        raw_to_central = raw_to_central_moments(N, sys.exp_order, μ_M, bernoulli=true)
+        raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ_M_exp, bernoulli=true)
+        raw_to_central = raw_to_central_moments(N, sys.q_order, μ_M, bernoulli=true)
         for i in sys.iter_exp
             closure_exp[sys.M[i]] = simplify(raw_to_central_exp[i])
             closure[sys.M[i]] = simplify(raw_to_central[i])

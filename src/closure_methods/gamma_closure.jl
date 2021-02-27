@@ -57,7 +57,7 @@ function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; c
     if typeof(sys) == CentralMomentEquations
         M = copy(sys.M)
         μ = central_to_raw_moments(N, sys.m_order)
-        μ_symbolic = define_μ(N, sys.exp_order)
+        μ_symbolic = define_μ(N, sys.q_order)
     else
         # consider covariances explicitly as M (without converting to raw moments)
         # and converting at the end leads to much more tractable expressions
@@ -190,8 +190,8 @@ function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; c
     # construct the corresponding truncated expressions of higher order
     # central moments from the obtained gamma raw moment expressions
     if typeof(sys) == CentralMomentEquations
-        raw_to_central = raw_to_central_moments(N, sys.exp_order, μ)
-        central_to_raw = central_to_raw_moments(N, sys.exp_order)
+        raw_to_central = raw_to_central_moments(N, sys.q_order, μ)
+        central_to_raw = central_to_raw_moments(N, sys.q_order)
         closure_M = Dict()
         for i in sys.iter_exp
             # TODO: check if simplify withing raw_to_central is speed bottleneck if clean=false

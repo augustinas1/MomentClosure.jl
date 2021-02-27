@@ -20,20 +20,20 @@ function derivative_matching(sys::Union{RawMomentEquations, CentralMomentEquatio
     # construct the raw moments up to mth order from the solved-for central moments
     if typeof(sys) == CentralMomentEquations
         closed_μ = central_to_raw_moments(N, sys.m_order)
-        μ = central_to_raw_moments(N, sys.exp_order)
+        μ = central_to_raw_moments(N, sys.q_order)
     else
         μ = sys.μ
         closed_μ = copy(μ)
     end
-    μ_symbolic = define_μ(sys.N, sys.exp_order)
+    μ_symbolic = define_μ(sys.N, sys.q_order)
 
     # note that derivative matching is originally constructed by truncating at order of m_order+1
-    # so if exp_order > m_order + 1, we have to consider m_order+1, m_order+2, and so on in sequence
+    # so if q_order > m_order + 1, we have to consider m_order+1, m_order+2, and so on in sequence
     # to build up the truncated raw moment expressions
 
     iter_k = vcat(sys.unit_vec, sys.iter_m)
 
-    for order in sys.m_order+1:sys.exp_order
+    for order in sys.m_order+1:sys.q_order
 
         # iterator through all moments of lower order
         iter_k = vcat(iter_k, filter(x -> sum(x) == order-1, sys.iter_exp))
@@ -81,8 +81,8 @@ function derivative_matching(sys::Union{RawMomentEquations, CentralMomentEquatio
     if typeof(sys) == CentralMomentEquations
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained raw moment expressions
-        raw_to_central = raw_to_central_moments(N, sys.exp_order, closed_μ)
-        central_to_raw = central_to_raw_moments(N, sys.exp_order)
+        raw_to_central = raw_to_central_moments(N, sys.q_order, closed_μ)
+        central_to_raw = central_to_raw_moments(N, sys.q_order)
         closure_M = Dict()
         for i in sys.iter_exp
             closure_exp[sys.M[i]] = raw_to_central[i]

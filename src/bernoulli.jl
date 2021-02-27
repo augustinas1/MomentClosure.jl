@@ -49,16 +49,16 @@ function bernoulli_moment_eqs(sys::Union{RawMomentEquations,CentralMomentEquatio
         μ = copy(sys.μ)
         iter_sub = [μ[key] => μ[val] for (key, val) in redundant_iter_sub]
     else typeof(sys) == CentralMomentEquations
-        μ = define_μ(N, sys.exp_order)
+        μ = define_μ(N, sys.q_order)
         μ_redundant_sub = [μ[key] => μ[val] for (key, val) in redundant_iter_sub]
 
         clean_iter = setdiff(sys.iter_all[N+2:end], redundant_iter)
-        #central_to_raw = central_to_raw_moments(sys, sys.exp_order)
-        central_to_raw = central_to_raw_moments(N, sys.exp_order)
+        #central_to_raw = central_to_raw_moments(sys, sys.q_order)
+        central_to_raw = central_to_raw_moments(N, sys.q_order)
         μ_clean_sub = Dict([μ[iter] => central_to_raw[iter] for iter in clean_iter])
 
         #raw_to_central = raw_to_central_moments(sys, μ)
-        raw_to_central = raw_to_central_moments(N, sys.exp_order)
+        raw_to_central = raw_to_central_moments(N, sys.q_order)
         iter_sub = Dict()
         for iter in redundant_iter
             M_temp = raw_to_central[iter]
@@ -83,7 +83,7 @@ function bernoulli_moment_eqs(sys::Union{RawMomentEquations,CentralMomentEquatio
     # construct a new Raw/Central/MomentEquations system saving only the clean iterators
     clean_iter = setdiff(sys.iter_all, redundant_iter)
     iter_m = filter(x -> 2 <= sum(x) <= sys.m_order, clean_iter)
-    iter_exp = filter(x -> sys.m_order < sum(x) <= sys.exp_order, clean_iter)
+    iter_exp = filter(x -> sys.m_order < sum(x) <= sys.q_order, clean_iter)
 
     # TODO: fix μ, M -> moment and remove all these (switch to basic indices)
     field_values = [getfield(sys, field) for field in fieldnames(typeof(sys))]

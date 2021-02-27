@@ -11,7 +11,7 @@ function zero_closure(sys::Union{RawMomentEquations, CentralMomentEquations})
     else
         μ = copy(sys.μ)
         μ_symbolic = copy(sys.μ)
-        raw_to_central = raw_to_central_moments(sys.N, sys.exp_order)
+        raw_to_central = raw_to_central_moments(sys.N, sys.q_order)
         for i in sys.iter_exp
             μ[i] = simplify(-(raw_to_central[i]-μ[i]))
             closure[sys.μ[i]] = simplify(expand(μ[i]))
