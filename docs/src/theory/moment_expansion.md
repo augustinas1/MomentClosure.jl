@@ -115,10 +115,10 @@ Although raw moment equations for non-linear mass-action systems already require
 
 ## References
 
-[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). https://doi.org/10.1088/1751-8121/aa54d9
+[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). [https://doi.org/10.1088/1751-8121/aa54d9](https://doi.org/10.1088/1751-8121/aa54d9)
 
-[2]: P. Milner, C. S. Gillespie, and D. J. Wilkinson, "Moment closure approximations for stochastic kinetic models with rational rate laws", Mathematical Biosciences 231, 99-104 (2011). https://doi.org/10.1016/j.mbs.2011.02.006
+[2]: P. Milner, C. S. Gillespie, and D. J. Wilkinson, "Moment closure approximations for stochastic kinetic models with rational rate laws", Mathematical Biosciences 231, 99-104 (2011). [https://doi.org/10.1016/j.mbs.2011.02.006](https://doi.org/10.1016/j.mbs.2011.02.006)
 
-[3]: A. Ale, P. Kirk, and M. P. H. Stumpf, "A general moment expansion method for stochastic kinetic models", The Journal of Chemical Physics 138, 174101 (2013). https://doi.org/10.1063/1.4802475
+[3]: A. Ale, P. Kirk, and M. P. H. Stumpf, "A general moment expansion method for stochastic kinetic models", The Journal of Chemical Physics 138, 174101 (2013). [https://doi.org/10.1063/1.4802475](https://doi.org/10.1063/1.4802475)
 
-[4]: C. H. Lee, "A Moment Closure Method for Stochastic Chemical Reaction Networks with General Kinetics", MATCH Communications in Mathematical and in Computer Chemistry 70, 785-800 (2013). https://match.pmf.kg.ac.rs/electronic_versions/Match70/n3/match70n3_785-800.pdf
+[4]: C. H. Lee, "A Moment Closure Method for Stochastic Chemical Reaction Networks with General Kinetics", MATCH Communications in Mathematical and in Computer Chemistry 70, 785-800 (2013). [https://match.pmf.kg.ac.rs/electronic_versions/Match70/n3/match70n3_785-800.pdf](https://match.pmf.kg.ac.rs/electronic_versions/Match70/n3/match70n3_785-800.pdf)

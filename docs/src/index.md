@@ -44,18 +44,18 @@ To be added
 
 ## References
 
-[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). https://doi.org/10.1088/1751-8121/aa54d9
+[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). [https://doi.org/10.1088/1751-8121/aa54d9](https://doi.org/10.1088/1751-8121/aa54d9)
 
-[2]: D. T. Gillespie, "A general method for numerically simulating the stochastic time evolution of coupled chemical reactions", Journal of Computational Physics 22, 403-434 (1976). https://doi.org/10.1016/0021-9991(76)90041-3
+[2]: D. T. Gillespie, "A general method for numerically simulating the stochastic time evolution of coupled chemical reactions", Journal of Computational Physics 22, 403-434 (1976). [https://doi.org/10.1016/0021-9991(76)90041-3](https://doi.org/10.1016/0021-9991(76)90041-3)
 
-[3]: A. Ale, P. Kirk, and M. P. H. Stumpf, "A general moment expansion method for stochastic kinetic models", The Journal of Chemical Physics 138, 174101 (2013). https://doi.org/10.1063/1.4802475
+[3]: A. Ale, P. Kirk, and M. P. H. Stumpf, "A general moment expansion method for stochastic kinetic models", The Journal of Chemical Physics 138, 174101 (2013). [https://doi.org/10.1063/1.4802475](https://doi.org/10.1063/1.4802475)
 
-[4]: C. H. Lee, "A Moment Closure Method for Stochastic Chemical Reaction Networks with General Kinetics", MATCH Communications in Mathematical and in Computer Chemistry 70, 785-800 (2013). https://match.pmf.kg.ac.rs/electronic_versions/Match70/n3/match70n3_785-800.pdf
+[4]: C. H. Lee, "A Moment Closure Method for Stochastic Chemical Reaction Networks with General Kinetics", MATCH Communications in Mathematical and in Computer Chemistry 70, 785-800 (2013). [https://match.pmf.kg.ac.rs/electronic_versions/Match70/n3/match70n3_785-800.pdf](https://match.pmf.kg.ac.rs/electronic_versions/Match70/n3/match70n3_785-800.pdf)
 
-[5]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Comparison of different moment-closure approximations for stochastic chemical kinetics", The Journal of Chemical Physics 143, 185101 (2015). https://doi.org/10.1063/1.4934990
+[5]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Comparison of different moment-closure approximations for stochastic chemical kinetics", The Journal of Chemical Physics 143, 185101 (2015). [https://doi.org/10.1063/1.4934990](https://doi.org/10.1063/1.4934990)
 
-[6]: E. Lakatos, A. Ale, P. D. W. Kirk, and M. P. H. Stumpf, "Multivariate moment closure techniques for stochastic kinetic models", The Journal of Chemical Physics 143, 094107 (2015). https://doi.org/10.1063/1.4929837
+[6]: E. Lakatos, A. Ale, P. D. W. Kirk, and M. P. H. Stumpf, "Multivariate moment closure techniques for stochastic kinetic models", The Journal of Chemical Physics 143, 094107 (2015). [https://doi.org/10.1063/1.4929837](https://doi.org/10.1063/1.4929837)
 
-[7]: A. Singh and J. P. Hespanha, "Lognormal Moment Closures for Biochemical Reactions", in Proceedings of the 45th IEEE Conference on Decision and Control, ISSN: 0191-2216 (Dec. 2006), pp. 2063-2068. https://doi.org/10.1109/CDC.2006.376994
+[7]: A. Singh and J. P. Hespanha, "Lognormal Moment Closures for Biochemical Reactions", in Proceedings of the 45th IEEE Conference on Decision and Control, ISSN: 0191-2216 (Dec. 2006), pp. 2063-2068. [https://doi.org/10.1109/CDC.2006.376994](https://doi.org/10.1109/CDC.2006.376994)
 
-[8]: M. Soltani, C. A. Vargas-Garcia, and A. Singh, "Conditional Moment Closure Schemes for Studying Stochastic Dynamics of Genetic Circuits", IEEE Transactions on Biomedical Circuits and Systems 9, 518-526 (2015). https://doi.org/10.1109/TBCAS.2015.2453158
+[8]: M. Soltani, C. A. Vargas-Garcia, and A. Singh, "Conditional Moment Closure Schemes for Studying Stochastic Dynamics of Genetic Circuits", IEEE Transactions on Biomedical Circuits and Systems 9, 518-526 (2015). [https://doi.org/10.1109/TBCAS.2015.2453158](https://doi.org/10.1109/TBCAS.2015.2453158)
