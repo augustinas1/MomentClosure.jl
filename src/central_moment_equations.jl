@@ -12,7 +12,8 @@ helper parameters (important for internal functionality).
 $(FIELDS)
 """
 struct CentralMomentEquations <: MomentEquations
-    """Moment ODEs describing the evolution of central moments."""
+    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    consisting of the time-evolution equations of central moments."""
     odes::ODESystem
     """Symbolic variables defining the means."""
     μ::Dict

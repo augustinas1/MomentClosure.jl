@@ -137,63 +137,56 @@ function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
 end
 
 
-function deterministic_IC(μ₀::Vector, sys::MomentEquations, closed_sys::ODESystem)
+function deterministic_IC(μ₀::Vector, eqs::MomentEquations)
 
     # sys as an argument is not strictly needed but it helps to implement checks that all arguments are consistent
     # closed_sys also needs to be included in case bernoulli variables were eliminated (so sys and closed_sys have a different no. of states)
 
+    if eqs isa ClosedMomentEquations
+        sys = eqs.open_eqs
+    else
+        sys = eqs
+    end
+
+    odes = eqs.odes
     N = sys.N
     if N != length(μ₀)
-        error("length of μ₀ and number of species are inconsistent")
+        error("length of μ₀ and number of species in the system are inconsistent")
     end
-    no_states = length(closed_sys.states)
 
     μ_map = [sys.μ[iter] => μ₀[i] for (i, iter) in enumerate(sys.iter_1)]
+
+    no_states = length(odes.states)
     if typeof(sys) == CentralMomentEquations
-        if string(closed_sys.states[N+1])[1] != 'M'
-            error("the central moment equations and their closed counterparts are inconsistent")
-        end
-        moment_map = [closed_sys.states[i] => 0.0 for i in N+1:no_states]
+        moment_map = [odes.states[i] => 0.0 for i in N+1:no_states]
     else
-        if string(closed_sys.states[N+1])[1] != 'μ'
-            error("the raw moment equations and their closed counterparts are inconsistent")
-        end
-        reverse_μ = Dict(iter => μ for (μ, iter) in sys.μ)
+        reverse_μ = Dict(μ => iter for (iter, μ) in sys.μ)
         #moment_map = []
         #for i in sys.N+1:length(closed_sys.states)
         #    iter = reverse_μ[closed_sys.states[i]]
         #    push!(moment_map, closed_sys.states[i] => prod(μ₀ .^ iter))
         #end
-        moment_map = [closed_sys.states[i] => prod(μ₀ .^ reverse_μ[closed_sys.states[i]]) for i in N+1:no_states]
+        moment_map = [odes.states[i] => prod(μ₀ .^ reverse_μ[odes.states[i]]) for i in N+1:no_states]
     end
 
-    return vcat(μ_map, moment_map)
+    vcat(μ_map, moment_map)
 
 end
 
 """
-    format_moment_eqs(odes::ODESystem)
+    format_moment_eqs(eqs::MomentEquations)
 
-Given a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
-containing the moment equations, return an array of formatted strings representing
-the ODEs that can be visualised using [Latexify](https://github.com/korsbo/Latexify.jl).
-Although Latexify can be applied directly on the `ODESystem`, `format_moment_eqs`
-makes it visually more appealing: simplifies the symbolic expressions further
-(expanding all terms), makes the time-dependence of all moment variables implicit
-(removes all `(t)`) and removes all trailing zeros (`2.0` → `2`).
+Given `MomentEquations`, return an array of formatted strings representing
+each ODE that can be visualised using [Latexify](https://github.com/korsbo/Latexify.jl).
+Although Latexify can be applied directly on [`ModelingToolkit.ODESystem`]
+(https://mtk.sciml.ai/stable/systems/ODESystem/) (accessed by `eqs.odes`),
+`format_moment_eqs` makes it visually more appealing: simplifies the symbolic
+expressions further (expanding all terms), makes the time-dependence of moment
+variables implicit (removes all `(t)`) and removes all trailing zeros (`2.0` → `2`).
 """
-function format_moment_eqs(odes::ODESystem)
+function format_moment_eqs(eqs::MomentEquations)
 
-    # Input argument is ODESystem
-    # Latexify applied on ODESystem directly introduces irrelevant multipliers (bug?)
-    # for example, μ₁ may be turned into 1μ₁...
-    # Here we reformat each ODE into a string expression and also remove the explicit
-    # time dependence "(t)" of each variable as well as floats' trailing zeros".0"
-    # then Latexify can be applied directly:
-    # latexify(exprs, cdot=false, env=:align/:mdtable)
-    # or latexify(exprs[1], cdot=false, env=:equation)
-    # or the expressions can be copypasted
-    # into Mathematica for example for further manipulation
+    odes = eqs.odes
     exprs  = []
     for i in 1:size(odes.eqs)[1]
         key = odes.states[i]
@@ -207,8 +200,16 @@ function format_moment_eqs(odes::ODESystem)
 
 end
 
+"""
+    format_closure(eqs::ClosedMomentEquations)
 
-function format_closure(closure::Dict{Any,Any})
+Given [`ClosedMomentEquations`](@ref), return an array of formatted strings
+representing closure functions for each higher order moment. The symbolic
+expressions are formatted similarly to [`format_moment_eqs`](@ref) and can
+be visualised using [Latexify](https://github.com/korsbo/Latexify.jl).
+"""
+function format_closure(eqs::ClosedMomentEquations)
+    closure = eqs.closure
     exprs = []
     for i in keys(closure)
         eq = clean_expr(closure[i])

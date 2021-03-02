@@ -9,7 +9,7 @@ $(FIELDS)
 """
 struct RawMomentEquations <: MomentEquations
     """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
-    containing the time-evolution equations of raw moments."""
+    consisting of the time-evolution equations of raw moments."""
     odes::ODESystem
     """Symbolic variables defining the raw moments."""
     μ::Dict

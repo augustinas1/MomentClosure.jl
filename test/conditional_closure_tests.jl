@@ -35,30 +35,30 @@ expr2 = simplify(value.(expr2))
 
 @test_throws ErrorException moment_closure(sys, "conditional derivative matching", [])
 
-closed_sys, closure = moment_closure(sys, "conditional gaussian", binary_vars)
-expr1 = closure[μ[1,4]]
+closed_eqs = moment_closure(sys, "conditional gaussian", binary_vars)
+expr1 = closed_eqs.closure[μ[1,4]]
 expr2 = 4*μ[1,1]*μ[1,3]*μ[1,0]^-1 + 3*μ[1,2]^2*μ[1,0]^-1 - 12*μ[1,2]*μ[1,1]^2*μ[1,0]^-2 + 6*μ[1,1]^4*μ[1,0]^-3
 @test isequal(expr1, expr2)
-expr1 = closure[μ[1,3]]
+expr1 = closed_eqs.closure[μ[1,3]]
 expr2 = 3*μ[1,2]*μ[1,1]*μ[1,0]^-1 - 2*μ[1,1]^3*μ[1,0]^-2
 @test isequal(expr1, expr2)
 
-closed_sys, closure = moment_closure(sys, "conditional derivative matching", binary_vars)
-expr1 = closure[μ[1,4]]
+closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
+expr1 = closed_eqs.closure[μ[1,4]]
 expr2 = μ[1,3]^4*μ[1,1]^4*μ[1,0]^-1*μ[1,2]^-6
 @test isequal(expr1, expr2)
-expr1 = closure[μ[1,3]]
+expr1 = closed_eqs.closure[μ[1,3]]
 expr2 = μ[1,2]^3*μ[1,0]*μ[1,1]^-3
 @test isequal(expr1, expr2)
 
 # Testing formatting utilities
-exprs = format_moment_eqs(closed_sys)
+exprs = format_moment_eqs(closed_eqs)
 # order of array elements can vary
 ind = findfirst(!isnothing, match.(Ref(r"dμ₀₂/dt"), exprs))
 expr1 = exprs[ind]
 expr2 = "dμ₀₂/dt = γ_p*μ₀₁ + b*k_p*μ₁₀ + 2b*k_p*μ₁₁ + 2k_p*μ₁₀*(b^2) - (2γ_p*(μ₀₂))"
 @test expr1 == expr2
-exprs = format_closure(closure)
+exprs = format_closure(closed_eqs)
 ind = findfirst(!isnothing, match.(Ref(r"μ₀₅ = "), exprs))
 expr1 = exprs[ind]
 expr2 = "μ₀₅ = ((μ₀₁)^-5)*((μ₀₂)^10)*((μ₀₃)^-10)*((μ₀₄)^5)"
@@ -77,14 +77,14 @@ expr2 = b*k_p*μ[1,0] - k_off*M[1,3] - k_on*M[1,1] - M[1,1]*γ_p - b*k_p*μ[1,0]
 @test isequal(expr1, expr2)
 @test length(sys_clean.odes.eqs) == 6
 
-closed_sys, closure = moment_closure(sys, "conditional gaussian", binary_vars)
-expr1 = expand_mod(closure[M[0,5]])
+closed_eqs = moment_closure(sys, "conditional gaussian", binary_vars)
+expr1 = expand_mod(closed_eqs.closure[M[0,5]])
 expr2 = 45*μ[0,1]^5 + 10*M[0,2]*M[0,3] + 90*M[0,2]*μ[0,1]^3 + 5*M[0,4]*μ[0,1] + 30*μ[0,1]*M[0,2]^2 -
     45*μ[0,1]*(M[0,2]+μ[0,1]^2)^2
 @test isequal(expr1, expr2)
 
-closed_sys, closure = moment_closure(sys, "conditional derivative matching", binary_vars)
-expr1 = expand_mod(closure[M[1,3]])
+closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
+expr1 = expand_mod(closed_eqs.closure[M[1,3]])
 expr2 = μ[1,0]*(M[1,1]+μ[0,1]*μ[1,0])^-3*(M[1,2]+M[0,2]*μ[1,0]+μ[1,0]*μ[0,1]^2+2*M[1,1]*μ[0,1])^3 -
     M[0,3]*μ[1,0] - 3*M[1,1]*μ[0,1]^2 - 3*M[1,2]*μ[0,1] - μ[1,0]*μ[0,1]^3- 3*M[0,2]*μ[0,1]*μ[1,0]
 @test isequal(expr1, expr2)
