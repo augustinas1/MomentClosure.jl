@@ -1,1 +1,1 @@
-# Gene network
+# [Gene network](@id gene_network_example)
