@@ -1,4 +1,4 @@
-function close_eqs(sys::Union{RawMomentEquations, CentralMomentEquations},
+function close_eqs(sys::MomentEquations,
                    closure, closure_symbolic)
 
     closed_eqs = []
@@ -11,7 +11,7 @@ function close_eqs(sys::Union{RawMomentEquations, CentralMomentEquations},
 
 end
 
-function moment_closure(sys::Union{RawMomentEquations, CentralMomentEquations},
+function moment_closure(sys::MomentEquations,
         closure_name::String, binary_vars::Vector=[])
 
     if closure_name == "zero"

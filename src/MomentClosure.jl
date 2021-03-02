@@ -29,6 +29,8 @@ export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eq
 	   format_moment_eqs, format_closure,
 	   sample_raw_moments, sample_central_moments, sample_cumulants
 
+abstract type MomentEquations end
+
 include("reaction_systems.jl")
 include("symbolic.jl")
 include("moment_convert.jl")

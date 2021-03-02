@@ -34,7 +34,7 @@ function gamma_factorial(a, i)
 end
 
 
-function gamma_closure(sys::Union{RawMomentEquations, CentralMomentEquations}; clean=true)
+function gamma_closure(sys::MomentEquations; clean=true)
 
     # optional argument clean
     # - clean = true

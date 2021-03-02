@@ -25,7 +25,7 @@ end
 
 
 
-function bernoulli_moment_eqs(sys::Union{RawMomentEquations,CentralMomentEquations}, binary_vars::Vector)
+function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
 
     # Construct moment equations removing the redundant ones
     # noting the properties of the Bernoulli variables in the system

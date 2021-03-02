@@ -1,4 +1,4 @@
-function normal_closure(sys::Union{RawMomentEquations, CentralMomentEquations})
+function normal_closure(sys::MomentEquations)
 
     closure = Dict()
     closure_exp = Dict()

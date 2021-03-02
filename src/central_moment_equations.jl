@@ -2,26 +2,36 @@
    equations for any chemical reaction network with any type of
    (infinitely differentiable) propensities up to arbitrary order =#
 
-struct CentralMomentEquations
-    """Moment ODEs describing the evolution of central moments"""
+"""
+$(TYPEDEF)
+
+Central moment equations generated for the given system plus a number of
+helper parameters (important for internal functionality).
+
+# Fields
+$(FIELDS)
+"""
+struct CentralMomentEquations <: MomentEquations
+    """Moment ODEs describing the evolution of central moments."""
     odes::ODESystem
-    """Symbolic variables defining the means"""
+    """Symbolic variables defining the means."""
     μ::Dict
-    """Symbolic variables defining the central moments"""
+    """Symbolic variables defining the central moments."""
     M::Dict
-    """Number of Species"""
+    """Number of species within the system."""
     N::Int
-    """Order of moment equations"""
+    """Order of moment equations."""
     m_order::Int
-    """Expansion order"""
+    """Expansion order."""
     q_order::Int
-    """Iterator over all index combinations up to order q_order"""
+    """Vector of all index combinations up to `q_order`."""
     iter_all::Vector
-    """Iterator over all index combinations up to order m_order"""
+    """Vector of all index combinations up to `m_order`."""
     iter_m::Vector
-    """Iterator over all index combinations of order greater than m_order up to q_order"""
+    """Vector of all index combinations of order greater than `m_order`
+    up to `q_order`."""
     iter_q::Vector
-    """Iterator over index combinations of order 1"""
+    """Vector of index combinations of order 1."""
     iter_1::Vector
 end
 
@@ -38,7 +48,25 @@ function fact(i)
 
 end
 
+"""
+    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int, q_order=nothing; combinatoric_ratelaw = true)
 
+Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
+or [`ReactionSystemMod`](@ref), return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
+
+Notes:
+- if `q_order` is not specified by the user, it is assumed that the reaction network
+  contains *only* polynomial propensity functions and hence `q_order` is determined
+  automatically as in [`generate_raw_moment_eqs`](@ref). However, `q_order` must
+  be specified if non-polynomial propensities are included. Note that the expansion
+  order ``q`` denotes the highest order of central moments which will be included
+  in the ODEs [(due to the Taylor expansion of propensity functions)](@ref central_moment_eqs).
+- `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
+  of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
+  (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
+  *Note* that this field is irrelevant using `ReactionSystemMod` as then the
+  propensities are defined directly by the user.
+"""
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
                                      m_order::Int, q_order=nothing;
                                      combinatoric_ratelaw=true)
@@ -168,7 +196,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         end
         dM[i] = simplify(dM[i])
     end
-
 
     D = Differential(rn.iv)
     eqs = []

@@ -1,26 +1,51 @@
-struct RawMomentEquations
-    """Moment ODEs describing the evolution of raw moments"""
+"""
+$(TYPEDEF)
+
+Raw moment equations generated for the given system plus a number of
+helper parameters (important for internal functionality).
+
+# Fields
+$(FIELDS)
+"""
+struct RawMomentEquations <: MomentEquations
+    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    containing the time-evolution equations of raw moments."""
     odes::ODESystem
-    """Symbolic variables defining the raw moments"""
+    """Symbolic variables defining the raw moments."""
     μ::Dict
-    """Number of species within the system"""
+    """Number of species within the system."""
     N::Int
-    """Order of moment equations"""
+    """Order of moment equations."""
     m_order::Int
-    """Expansion order"""
+    """Expansion order."""
     q_order::Int
-    """Iterator over all index combinations up to order q_order"""
+    """Vector of all index combinations (Tuples) up to `q_order`."""
     iter_all::Vector
-    """Iterator over all index combinations up to order m_order"""
+    """Vector of all index combinations (Tuples) up to `m_order`."""
     iter_m::Vector
-    """Iterator over all index combinations of order greater than m_order up to q_order"""
+    """Vector of all index combinations (Tuples) of order greater than `m_order`
+    up to `q_order`."""
     iter_q::Vector
-    """Iterator over index combinations of order 1"""
+    """Vector of index combinations (Tuples)of order 1."""
     iter_1::Vector
 end
 
 """
+    generate_raw_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int; combinatoric_ratelaw = true)
 
+Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
+or [`ReactionSystemMod`](@ref), return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
+
+Notes:
+- The expansion order ``q``, denoted by `q_order` throughout the docs, is automatically
+  determined from the given polynomial form of the propensity functions, see the
+  [tutorial](@ref main_tutorial) and the [theory section](@ref raw_moment_eqs) for
+  more details on how `q_order` is obtained.
+- `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
+  of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
+  (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
+  *Note* that this field is irrelevant using `ReactionSystemMod` as then the
+  propensities are defined directly by the user.
 """
 function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
                                  m_order::Int; combinatoric_ratelaw = true)

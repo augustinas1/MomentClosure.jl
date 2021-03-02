@@ -10,7 +10,7 @@ function multi_binomial(a, b)
     end
 end
 
-function derivative_matching(sys::Union{RawMomentEquations, CentralMomentEquations})
+function derivative_matching(sys::MomentEquations)
 
     closure_exp = Dict()
     closure = Dict() # additional dict to hold not expanded symbolic expressions

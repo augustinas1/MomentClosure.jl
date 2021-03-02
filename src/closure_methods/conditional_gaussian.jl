@@ -1,4 +1,4 @@
-function conditional_gaussian_closure(sys::Union{RawMomentEquations, CentralMomentEquations},
+function conditional_gaussian_closure(sys::MomentEquations,
                                       binary_vars::Vector=[])
 
     if isempty(binary_vars)

@@ -137,7 +137,7 @@ function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
 end
 
 
-function deterministic_IC(μ₀::Vector, sys::Union{RawMomentEquations, CentralMomentEquations}, closed_sys::ODESystem)
+function deterministic_IC(μ₀::Vector, sys::MomentEquations, closed_sys::ODESystem)
 
     # sys as an argument is not strictly needed but it helps to implement checks that all arguments are consistent
     # closed_sys also needs to be included in case bernoulli variables were eliminated (so sys and closed_sys have a different no. of states)
@@ -171,7 +171,17 @@ function deterministic_IC(μ₀::Vector, sys::Union{RawMomentEquations, CentralM
 
 end
 
+"""
+    format_moment_eqs(odes::ODESystem)
 
+Given a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+containing the moment equations, return an array of formatted strings representing
+the ODEs that can be visualised using [Latexify](https://github.com/korsbo/Latexify.jl).
+Although Latexify can be applied directly on the `ODESystem`, `format_moment_eqs`
+makes it visually more appealing: simplifies the symbolic expressions further
+(expanding all terms), makes the time-dependence of all moment variables implicit
+(removes all `(t)`) and removes all trailing zeros (`2.0` → `2`).
+"""
 function format_moment_eqs(odes::ODESystem)
 
     # Input argument is ODESystem
@@ -196,6 +206,7 @@ function format_moment_eqs(odes::ODESystem)
     exprs
 
 end
+
 
 function format_closure(closure::Dict{Any,Any})
     exprs = []

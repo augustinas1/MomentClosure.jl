@@ -158,7 +158,7 @@ or [`ReactionSystemMod`](@ref).
 
 Notes:
 - `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
-  for a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
+  of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
   *Note* that this field is irrelevant using `ReactionSystemMod` as then the
   propensities are defined directly by the user.

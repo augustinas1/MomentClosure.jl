@@ -1,5 +1,4 @@
-function conditional_derivative_matching(sys::Union{RawMomentEquations, CentralMomentEquations},
-                                         binary_vars::Vector=[])
+function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vector=[])
 
     if isempty(binary_vars)
         error("conditional closure does not work if there are no binary species")
