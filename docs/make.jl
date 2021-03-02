@@ -20,13 +20,10 @@ makedocs(;
             "theory/moment_closure_approximations.md"
         ],
         "Tutorials" => Any[
-            "tutorials/model_initialisation.md",
-            "tutorials/SSA.md",
-            "tutorials/moment_closure.md",
-            "tutorials/Brusselator.md",
-            "tutorials/P53_system.md",
+            "tutorials/using_momentclosure.md",
+            "tutorials/P53_system_example.md",
             "tutorials/derivative_matching_example.md",
-            "tutorials/gene_network.md"
+            "tutorials/gene_network_example.md"
         ],
         "API" => Any[
             "api/momentclosure_api.md"
