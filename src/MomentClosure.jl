@@ -29,9 +29,9 @@ export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eq
 	   format_moment_eqs, format_closure,
 	   sample_raw_moments, sample_central_moments, sample_cumulants
 
+include("reaction_systems.jl")
 include("symbolic.jl")
 include("moment_convert.jl")
-include("reaction_systems.jl")
 include("stochastic_stoichiometry.jl")
 include("central_moment_equations.jl")
 include("raw_moment_equations.jl")

@@ -40,22 +40,27 @@ end
 
 
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
-                                     m_order::Int, q_order::Int=m_order+1;
+                                     m_order::Int, q_order=nothing;
                                      combinatoric_ratelaw=true)
     #= Generate the moment equations for the reaction network rn
        up to order of moment expansion m and the order of Taylor
        expansion of propensity functions =#
-
-     # TODO: test this bit is working
-    if (m_order >= q_order)
-        error("q_order must be equal or greater than m_order")
-    end
 
     N = numspecies(rn) # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
 
     # propensity functions of all reactions in the network
     a = propensities(rn, combinatoric_ratelaw=combinatoric_ratelaw)
+
+    # quite messy solution to check whether all propensity functions are polynomials
+    if q_order == nothing
+        try
+            temp1, temp2, poly_order = polynomial_propensities(a, rn)
+            q_order = poly_order + m_order - 1
+        catch e
+            error("non-polynomial rates (OR A BUG): please specify q_order.\n" * string(e))
+        end
+    end
 
     # net stoichiometric matrix
     S = get_S_mat(rn)
@@ -89,7 +94,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     # define the number of molecules of each species as a variable (required for the differentiation)
     n = species(rn)
 
-    # messier code here because no trust in Dict preserving insertion order
+    # messier code here because don't trust in Dict preserving insertion order
     #dict_n_to_μ = #Dict(zip(n, μ)
     dict_n_to_μ = Dict()
     for iter in iter_1
@@ -97,6 +102,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         dict_n_to_μ[n[ind]] = μ[iter]
     end
 
+    # TODO: set entries to zero by default using info from polynomial_propensities
     # save derivatives in a dictionary
     derivs = Dict()
     for r in 1:R
@@ -113,10 +119,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     end
 
     # generate the equations for the first raw moments (means)
-
     du = []
     for r in 1:R
-        #suma = Num(0)
         suma = 0
         for j in iter_all
             suma = suma + Da[r][j]*M[j]*1//fact(j)
@@ -128,7 +132,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         for i in 1:N
             if r == 1
                 push!(du, S[i,r]*suma)
-                #du[i] = S[i, r]*suma
             else
                 du[i] = S[i, r]*suma + du[i]
             end
@@ -167,8 +170,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     end
 
 
-    #@derivatives D'~t
-    D = Differential(t)
+    D = Differential(rn.iv)
     eqs = []
     for i in 1:N
         push!(eqs, D(μ[iter_1[i]]) ~ du[i])

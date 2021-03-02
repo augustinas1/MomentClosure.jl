@@ -90,13 +90,9 @@ flatten_mod = Fixpoint(PassThrough(flatten_rule_mod))
 clean_expr = Fixpoint(Chain([simplify_mod, expand_mod, flatten_mod]))
 
 
-# I the current implementation of ModelingToolkit.jl,
-# the general symbolic type Num does not work well together with
-# simplify() and other methods from SymbolicUtils...
-# Although within the package's code there are certain methods
-# alleviating the problem, here we use ModelingToolkit macros to initialize the
-# variables as Num types (easier to define variables with subscripts) and then
-# change them to SymbolicUtils.jl types such as Term{Real} .val of Num variable gives Term{Real}
+# Note that throughout we use ModelingToolkit to initialise the variables
+# but then change their Num type into SymbolicUtils Term{Real} as it's
+# easier to handle in symbolic expressions
 
 function define_μ(N::Int, order::Int)
 
@@ -148,5 +144,116 @@ function define_M(N::Int, order::Int)
     M = Ms
 
     M
+
+end
+
+
+## Set of functions to deconstruct polynomial propensities ##
+
+#=
+    Consider a polynomial propensity function: a₁ = x^2 + c₁*y²*x,
+    where x(t) and y(t) are the molecule numbers variables and c₁ is reaction parameter
+    First we need to split a₁ into separate terms, i.e. x^2 and c₁*y²*x. Then we
+    determine the independent multiplication factor in each term (1 and c₁). Finally,
+    we obtain the power each variable is raised to in each term (x to power 2 in term 1;
+    x to power 1 and y to power 2 in term 2). Having this information we can proceed
+    in constructing raw moment equations. IF any propensity function is non-polynomial
+    then the function `polynomial_propensities` will throw an error. NOTE that terms such
+    as (x-y)^2 will also not work as SymbolicUtils does not expand them automatically.
+    NOTE: this code might easily break with a newer ModelingToolkit/SymbolicUtils version
+    TODO: try to make this functionality less cumbersome and test more rigorously
+=#
+
+
+function polynomial_terms(expr, terms)
+    expr = expand_mod(expr)
+    if istree(expr)
+        if operation(expr) == +
+            for arg in arguments(expr)
+                polynomial_terms(arg, terms)
+            end
+        else
+            push!(terms, expr)
+        end
+    else
+        push!(terms, expr)
+    end
+end
+
+function factorise_term(expr, factors, powers, rn)
+    if istree(expr)
+        args = arguments(expr)
+        if length(args) == 1
+            if args[1] == rn.iv
+                idx = speciesmap(rn)[expr]
+                if powers[idx] != 0
+                    error("Same variable occurring multiple times is unexpected in: ", expr)
+                else
+                    powers[idx] = 1
+                end
+            else
+                error("Unexpected symbolic expression: ", expr)
+            end
+        else
+            op = operation(expr)
+            if op == ^
+                if length(args) == 2
+                    # this is fragile (any change in SymbolicUtils/ModelingToolkit might break it)
+                    if args[1] isa Term{Real} && args[2] isa Int && args[2] >= 0  # x(t)^i where i is Int>0
+                        idx = speciesmap(rn)[args[1]]
+                        if powers[idx] != 0
+                            error("Same variable occurring multiple times is unexpected in: ", expr)
+                        else
+                            powers[idx] = args[2]
+                        end
+                    elseif args[1] isa SymbolicUtils.Add{Real,Int64,Dict{Any,Number}}
+                        error("binomial expansion is not supported for: ", expr)
+                    elseif !isa(args[1], Term{Real}) && !isa(args[2], Term{Real})
+                        push!(factors, expr)
+                    else
+                        error("Unexpected expression with ^: ", expr)
+                    end
+                else
+                    error("Only expressions x^n (two symbols) are supported ", expr)
+                end
+            elseif op == *
+                for arg in args
+                    factorise_term(arg, factors, powers, rn)
+                end
+            else
+                error("Operation in a polynomial term is unexpected: ", op)
+            end
+        end
+    else
+        push!(factors, expr)
+    end
+
+end
+
+function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSystemMod})
+
+    R = numreactions(rn)
+    term_factors = [[] for i = 1:R]
+    term_powers = [[] for i = 1:R]
+    max_power = 0
+    for (ind, expr) in enumerate(a)
+        terms = []
+        polynomial_terms(expr, terms)
+        for term in terms
+            factors = []
+            powers = zeros(Int, numspecies(rn))
+            try
+                factorise_term(term, factors, powers, rn)
+            catch e
+                error("Non-polynomial propensity was included?\n" * string(e))
+            end
+            factor = isempty(factors) ? 1 : prod(factors)
+            max_power = sum(powers) > max_power ? sum(powers) : max_power
+            push!(term_factors[ind], factor)
+            push!(term_powers[ind], powers)
+        end
+    end
+
+    term_factors, term_powers, max_power
 
 end

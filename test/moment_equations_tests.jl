@@ -29,6 +29,11 @@ expr2 = c₂*μ[1,0] + c₁*M[1,1]*(Ω^-2) + c₁*μ[0,1]*μ[1,0]*Ω^-2 - c₁*M
 expr2 = simplify(value.(expr2))
 @test isequal(expand_mod(expr1), expr2)
 
+sys = generate_central_moment_eqs(rn, 2)
+expr1 = sys.odes.eqs[2].rhs
+@test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
+@test isequal(expand_mod(expr1), expr2)
+
 sys = generate_raw_moment_eqs(rn, 2)
 μ = sys.μ
 expr1 = sys.odes.eqs[4].rhs
