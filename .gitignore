@@ -3,6 +3,7 @@
 *.jl.mem
 /Manifest.toml
 /docs/build/
+*local_make.jl
 
 *checkpoint.ipynb
 *.ipynb_checkpoints
