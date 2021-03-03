@@ -25,7 +25,7 @@ using DocStringExtensions
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
        get_S_mat, propensities, ReactionSystemMod,
        species, params, speciesmap, paramsmap, numspecies, numreactions, numparams,
-       moment_closure, deterministic_IC,
+       moment_closure, deterministic_ic,
 	   format_moment_eqs, format_closure,
 	   sample_raw_moments, sample_central_moments, sample_cumulants
 
@@ -37,9 +37,9 @@ include("moment_convert.jl")
 include("stochastic_stoichiometry.jl")
 include("central_moment_equations.jl")
 include("raw_moment_equations.jl")
-include("utils.jl")
-include("bernoulli.jl")
 include("closure_methods/closure.jl")
+include("bernoulli.jl")
+include("utils.jl")
 include("closure_methods/zero_closure.jl")
 include("closure_methods/normal_closure.jl")
 include("closure_methods/log_normal_closure.jl")

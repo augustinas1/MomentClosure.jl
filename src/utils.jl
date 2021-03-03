@@ -137,7 +137,7 @@ function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
 end
 
 
-function deterministic_IC(μ₀::Vector, eqs::MomentEquations)
+function deterministic_ic(μ₀::Vector, eqs::MomentEquations)
 
     # sys as an argument is not strictly needed but it helps to implement checks that all arguments are consistent
     # closed_sys also needs to be included in case bernoulli variables were eliminated (so sys and closed_sys have a different no. of states)
@@ -161,11 +161,6 @@ function deterministic_IC(μ₀::Vector, eqs::MomentEquations)
         moment_map = [odes.states[i] => 0.0 for i in N+1:no_states]
     else
         reverse_μ = Dict(μ => iter for (iter, μ) in sys.μ)
-        #moment_map = []
-        #for i in sys.N+1:length(closed_sys.states)
-        #    iter = reverse_μ[closed_sys.states[i]]
-        #    push!(moment_map, closed_sys.states[i] => prod(μ₀ .^ iter))
-        #end
         moment_map = [odes.states[i] => prod(μ₀ .^ reverse_μ[odes.states[i]]) for i in N+1:no_states]
     end
 
@@ -190,7 +185,8 @@ function format_moment_eqs(eqs::MomentEquations)
     exprs  = []
     for i in 1:size(odes.eqs)[1]
         key = odes.states[i]
-        eq = clean_expr(odes.eqs[i].rhs)
+        eq = odes.eqs[i].rhs
+        eq = isa(eq, Number) ? eq : clean_expr(eq)
         expr = "d"*string(key)*"/dt = "*string(eq)
         expr = replace(expr, "(t)"=>"")
         expr = replace(expr, ".0"=>"")
@@ -212,7 +208,8 @@ function format_closure(eqs::ClosedMomentEquations)
     closure = eqs.closure
     exprs = []
     for i in keys(closure)
-        eq = clean_expr(closure[i])
+        eq = closure[i]
+        eq = isa(eq, Number) ? eq : clean_expr(eq)
         expr = string(i)*" = "*string(eq)
         expr = replace(expr, "(t)"=>"")
         expr = replace(expr, ".0"=>"")

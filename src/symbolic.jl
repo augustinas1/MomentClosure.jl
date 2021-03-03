@@ -148,6 +148,21 @@ function define_M(N::Int, order::Int)
 end
 
 
+function extract_variables(eqs::Array{Equation, 1}, ps::Array)
+
+    vars = []
+    for eq in eqs
+        var = ModelingToolkit.var_from_nested_derivative(eq.lhs)[1]
+        push!(vars, var)
+    end
+    vars2 = unique(vcat(get_variables.(eqs)...))
+    vars2 = setdiff(vars2, vcat(vars, ps))
+    vars = vcat(vars, vars2)
+
+    vars
+
+end
+
 ## Set of functions to deconstruct polynomial propensities ##
 
 #=

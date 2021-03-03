@@ -18,14 +18,19 @@ end
 
 function close_eqs(sys::MomentEquations, closure::Dict, closure_symbolic::Dict)
 
-    closed_eqs = []
+    closed_eqs = Equation[]
     for eq in sys.odes.eqs
         closed_rhs = substitute(eq.rhs, closure)
         closed_rhs = simplify(closed_rhs)
         push!(closed_eqs, Equation(eq.lhs, closed_rhs))
     end
 
-    ClosedMomentEquations(ODESystem(closed_eqs), closure_symbolic, sys)
+    iv = sys.odes.iv
+    ps = sys.odes.ps
+    vars = extract_variables(closed_eqs, ps)
+    odes = ODESystem(closed_eqs, iv, vars, ps)
+
+    ClosedMomentEquations(odes, closure_symbolic, sys)
 
 end
 

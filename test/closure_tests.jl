@@ -25,9 +25,9 @@ expr2 = simplify(value.(expr2))
 @test isequal(expand_mod(expr1), expand_mod(expr2))
 
 # check that deterministic_IC is working with central moments
-IC_values = Dict(deterministic_IC([2, 5], closed_eqs))
-@test length(IC_values) == 5
-@test IC_values[μ[1,0]] == 2 && IC_values[μ[0,1]] == 5 && IC_values[M[1,1]] == 0
+ic_values = Dict(deterministic_ic([2, 5], closed_eqs))
+@test length(ic_values) == 5
+@test ic_values[μ[1,0]] == 2 && ic_values[μ[0,1]] == 5 && ic_values[M[1,1]] == 0
 
 closed_eqs = moment_closure(sys, "normal")
 @test isequal(closed_eqs.closure[M[0,4]], 3*M[0,2]^2)
@@ -71,9 +71,9 @@ expr2 = simplify(value.(expr2))
 @test isequal(expand_mod(expr1), expr2)
 
 # check that deterministic_IC is working with raw moments
-IC_values = Dict(deterministic_IC([2, 5], closed_eqs))
-@test length(IC_values) == 5
-@test IC_values[μ[1,0]] == 2 && IC_values[μ[0,1]] == 5 && IC_values[μ[1,1]] == 10
+ic_values = Dict(deterministic_ic([2, 5], closed_eqs))
+@test length(ic_values) == 5
+@test ic_values[μ[1,0]] == 2 && ic_values[μ[0,1]] == 5 && ic_values[μ[1,1]] == 10
 
 closed_eqs = moment_closure(sys, "log-normal")
 expr1 = closed_eqs.closure[μ[1,3]]

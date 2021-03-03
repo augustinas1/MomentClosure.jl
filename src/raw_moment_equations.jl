@@ -90,13 +90,16 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
     end
 
     D = Differential(rn.iv)
-    eqs = []
+    eqs = Equation[]
     for i in vcat(iter_1, iter_m)
         push!(eqs, D(μ[i]) ~ dμ[i])
     end
 
+    vars = extract_variables(eqs, params(rn))
+    odes = ODESystem(eqs, rn.iv, vars, rn.ps)
+
     RawMomentEquations(
-        ODESystem(eqs),
+        odes,
         μ,
         N,
         m_order,
