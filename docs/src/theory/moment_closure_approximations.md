@@ -2,7 +2,7 @@
 
 In the [previous section](moment_expansion.md), we have shown that for a non-linear system an infinite hierarchy of coupled moment equations is obtained that cannot be solved directly and therefore needs to be truncated in an approximate way. This can be achieved using moment closure approximations (MAs) using which all moments above a certain order $m$ are expressed in terms of $m^{\text{th}}$ and lower order moments using various (usually distributional) assumptions [1]. Doing so enables us to effectively *close* the moment hierarchy, leading to a finite set of ODEs which can then be solved numerically. In this section, we present some the commonly used MA methods that are implemented in MomentClosure. Please see the **Tutorials** section for examples showing different MAs applied to a variety of systems.
 
-## Zero Closure
+## [Zero Closure](@id zero_closure)
 
 The simplest MA is the "central-moment-neglect" MA (CMN-MA) [2], also referred to as "zero-closure" [3] or "low dispersion moment closure" [4], where CMN-MA at $m^{\text{th}}$ order means that the moment equations are truncated by setting all *central moments* above order $m$ to zero. For example, in the simple case of $2$nd order truncation, the moment equations for the means $\mu_i$ and covariances $C_{ij}$ become:
 ```math
@@ -27,7 +27,7 @@ In order to truncate the higher order central or raw moments $M_{\mathbf{i}}$ us
 
 Note that a different implementation of normal closure can be found in literature [3], where the higher order central moments are expressed in terms of a sum of product of covariances using [Isserlis' theorem](https://en.wikipedia.org/wiki/Isserlis%27_theorem). However, one could argue that such formulation is not advisable as it assumes stronger "Gaussianity" of the underlying distribution than setting the higher order cumulants to zero which is less of an approximation on the form of the distribution and hence is preferable in the development of MAs. For example, in case we are truncating the moment equations at $4$th order, the truncation-order central moments would be expressed only in terms of covariances whereas our formulation using cumulants would explicitly include information about the computed values of third central moments, which is expected to improve numerical stability and lead to more accurate moment estimates.
 
-## Poisson Closure
+## [Poisson Closure](@id poisson_closure)
 
 Although the Poisson distribution lacks a general formulation for multiple variables [3], "Poisson MA" has been formulated [2, 8] assuming that the joint multivariate distribution is a product of univariate Poisson distributions, i.e., $n_i \sim \text{Poisson}(\mu_i)$. The cumulants of a univariate Poisson distribution are equal to the mean, hence in Poisson closure we set all higher order diagonal cumulants to the corresponding mean values and mixed cumulants to zero [2], which in our notation can be expressed as:
 ```math
@@ -38,7 +38,7 @@ Although the Poisson distribution lacks a general formulation for multiple varia
 ```
 Similarly to normal closure, the higher order central/raw moments can be expressed in terms of cumulants as described in [7].
 
-## Log-normal Closure
+## [Log-normal Closure](@id log-normal_closure)
 
 "Log-normal" MA, first applied by Keeling [9], allows one to truncate the moment equations under the assumption that the distribution of the underlying stochastic process is log-normal.
 A positive multi-dimensional random variable $\mathbf{n}$ follows a log-normal distribution if its logarithm is normally distributed, so that $\mathbf{y} = \ln \mathbf{n}$, and $\mathbf{y} \sim \mathcal{N}(\mathbf{\nu}, \Sigma)$, where $\mathbf{\nu}$ and $\Sigma$ denote the vector of means and the covariance matrix respectively. By considering the moment generating function of the normal distribution, $\mathcal{N}(\mathbf{\nu}, \Sigma)$, one can show that the raw moments are given by [3, 10]:
@@ -58,7 +58,7 @@ It follows that
 ```
 Note that central moments can be obtained from raw moments by utilising their general multivariate relationship [11].
 
-## Gamma Closure
+## [Gamma Closure](@id gamma_closure)
 
 The method of "gamma closure" was originally implemented by Lakatos et al. [3], where the authors acknowledged the ambiguity arising in defining multivariate gamma distributions, and, building upon previous definitions in the literature (e.g. [12] and [13]), proposed a new formulation of a multivariate gamma distribution. Here we reproduce the definition by closely following the description in [3] and elucidating some of the derivation steps.
 
@@ -145,7 +145,7 @@ Finally, from the equations above we can obtain all shape and scale parameters:
 \end{align*}
 ```
 
-## Derivative Matching
+## [Derivative Matching](@id derivative_matching)
 
 The derivative matching MA [14, 15] is based on expressing moments above order $m$ in terms of lower order moments in such a way that their time derivatives match those of the *exact* moments at some initial time and initial conditions. We outline the approach below, closely following the complete exposition found in the original papers of Singh and Hespanha [14, 15].
 
@@ -211,9 +211,9 @@ where all elements of $\mathbf{ϵ}(\mathbf{n}_0)$ are zero except the ones corre
 
 Discussion of [16].
 
-### Conditional Normal Closure
+### [Conditional Gaussian Closure](@id conditional_gaussian_closure)
 
-### Conditional Derivative Matching
+### [Conditional Derivative Matching](@id conditional_derivative_matching)
 
 ## References
 

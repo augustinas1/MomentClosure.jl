@@ -1,7 +1,3 @@
-```@meta
-CurrentModule = MomentClosure
-```
-
 # MomentClosure
 
 MomentClosure.jl is a tool to automatically obtain time-evolution equations of moments up to an arbitrary order for virtually any chemical reaction network implementing a wide array of moment closure approximations commonly used in stochastic biochemical kinetics [1]. MomentClosure is (attempted to be) fairly well-integrated within the broader Julia ecosystem utilising a number of familiar packages:

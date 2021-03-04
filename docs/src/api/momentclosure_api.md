@@ -5,7 +5,7 @@ CurrentModule = MomentClosure
 
 ## Model definition
 
-MomentClosure is fully compatible with reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl) and stored as a [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). Nevertheless, we have implemented a *limited* extension of `ModelingToolkit.ReactionSystem`, called `ReactionSystemMod`, that allows us to consider systems containing reactions whose products can be independent geometrically distributed random variables. For example, such reactions can be encountered in certain models of [autoregulatory gene networks](gene_network_example.md). Moreover, `ReactionSystemMod` provides an alternative to Catalyst as the model is now constructed directly in terms of user-defined reaction propensity functions and the stoichiometric matrix, with system parameters and species defined using ModelingToolkit [`@parameters`](https://mtk.sciml.ai/stable/highlevel/#ModelingToolkit.@parameters) and [`@variables`](https://mtk.sciml.ai/stable/highlevel/#ModelingToolkit.@variables) respectively. However, we stress that defining models using Catalyst is preferred whenever possible due to its much richer integration within the broader [SciML](https://github.com/SciML/) ecosystem.
+MomentClosure is fully compatible with reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl) and stored as a [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). Nevertheless, we have implemented a *limited* extension of `ModelingToolkit.ReactionSystem`, called `ReactionSystemMod`, that allows us to consider systems containing reactions whose products can be independent geometrically distributed random variables. For example, such reactions can be encountered in certain models of [autoregulatory gene networks](@ref gene_network_example). Moreover, `ReactionSystemMod` provides an alternative to Catalyst as the model is now constructed directly in terms of user-defined reaction propensity functions and the stoichiometric matrix, with system parameters and species defined using ModelingToolkit [`@parameters`](https://mtk.sciml.ai/stable/highlevel/#ModelingToolkit.@parameters) and [`@variables`](https://mtk.sciml.ai/stable/highlevel/#ModelingToolkit.@variables) respectively. However, we stress that defining models using Catalyst is preferred whenever possible due to its much richer integration within the broader [SciML](https://github.com/SciML/) ecosystem.
 
 ```@docs
 ModelingToolkit.@parameters
@@ -45,10 +45,23 @@ CentralMomentEquations
 
 ## Moment Closure
 
+```@docs
+moment_closure
+ClosedMomentEquations
+deterministic_IC
+```
 
-## Displaying equations and closures
+## Displaying Equations and Closures
 
 ```@docs
 format_moment_eqs
 format_closure
+```
+
+## Stochastic Simulation Utilities
+
+```@docs
+sample_raw_moments
+sample_central_moments
+sample_cumulants
 ```
