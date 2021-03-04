@@ -98,7 +98,8 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
     ## fixing ODE system to preserve consistent ordering of parameters
     iv = sys.odes.iv
     ps = sys.odes.ps
-    vars = extract_variables(clean_eqs, ps)
+    #vars = extract_variables(clean_eqs, ps)
+    vars = extract_variables(clean_eqs, N, sys.q_order)
     odes = ODESystem(clean_eqs, iv, vars, ps)
 
     new_system = typeof(sys)(odes, field_values[2:end]...)

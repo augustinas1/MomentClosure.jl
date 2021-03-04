@@ -94,9 +94,7 @@ clean_expr = Fixpoint(Chain([simplify_mod, expand_mod, flatten_mod]))
 # but then change their Num type into SymbolicUtils Term{Real} as it's
 # easier to handle in symbolic expressions
 
-function define_μ(N::Int, order::Int)
-
-    iter = construct_iter_all(N, order)
+function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
 
     indices = []
     for i in iter
@@ -106,22 +104,17 @@ function define_μ(N::Int, order::Int)
     @parameters t
     @variables μ[indices](t)
 
-    μs = Dict()
+    μs = OrderedDict()
     for (i, idx) in enumerate(iter)
-        μs[idx] = μ[i].val
+        μs[idx] = sum(idx) == 0 ? 1 : μ[i].val
     end
-    μ = μs
 
-    μ[Tuple(zeros(Int, N))] = 1
-
-    μ
+    μs
 
 end
 
 
-function define_M(N::Int, order::Int)
-
-    iter = construct_iter_all(N, order)
+function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
 
     indices = []
     for i in iter
@@ -131,7 +124,7 @@ function define_M(N::Int, order::Int)
     @parameters t
     @variables M[indices](t)
 
-    Ms = Dict()
+    Ms = OrderedDict()
     for (i, idx) in enumerate(iter)
         if sum(idx)==0
             Ms[idx] = 1
@@ -141,23 +134,22 @@ function define_M(N::Int, order::Int)
             Ms[idx] = M[i].val
         end
     end
-    M = Ms
 
-    M
+    Ms
 
 end
 
 
-function extract_variables(eqs::Array{Equation, 1}, ps::Array)
+function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
 
-    vars = []
-    for eq in eqs
-        var = ModelingToolkit.var_from_nested_derivative(eq.lhs)[1]
-        push!(vars, var)
-    end
-    vars2 = unique(vcat(get_variables.(eqs)...))
-    vars2 = setdiff(vars2, vcat(vars, ps))
-    vars = vcat(vars, vars2)
+    iters = construct_iter_all(N, q_order)
+    iter_μ = filter(x -> sum(x) > 0, iters)
+    iter_M = filter(x -> sum(x) > 1, iters)
+    μs = values(define_μ(N, q_order, iter_μ))
+    Ms = values(define_M(N, q_order, iter_M))
+    vars = vcat(μs..., Ms...)
+    eq_vars = unique(vcat(get_variables.(eqs)...))
+    vars = intersect!(vars, eq_vars)
 
     vars
 

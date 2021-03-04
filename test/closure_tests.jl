@@ -25,7 +25,7 @@ expr2 = simplify(value.(expr2))
 @test isequal(expand_mod(expr1), expand_mod(expr2))
 
 # check that deterministic_IC is working with central moments
-ic_values = Dict(deterministic_ic([2, 5], closed_eqs))
+ic_values = Dict(deterministic_IC([2, 5], closed_eqs))
 @test length(ic_values) == 5
 @test ic_values[μ[1,0]] == 2 && ic_values[μ[0,1]] == 5 && ic_values[M[1,1]] == 0
 
@@ -71,7 +71,7 @@ expr2 = simplify(value.(expr2))
 @test isequal(expand_mod(expr1), expr2)
 
 # check that deterministic_IC is working with raw moments
-ic_values = Dict(deterministic_ic([2, 5], closed_eqs))
+ic_values = Dict(deterministic_IC([2, 5], closed_eqs))
 @test length(ic_values) == 5
 @test ic_values[μ[1,0]] == 2 && ic_values[μ[0,1]] == 5 && ic_values[μ[1,1]] == 10
 

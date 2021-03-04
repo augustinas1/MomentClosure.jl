@@ -2,40 +2,6 @@
    equations for any chemical reaction network with any type of
    (infinitely differentiable) propensities up to arbitrary order =#
 
-"""
-$(TYPEDEF)
-
-Central moment equations generated for the given system plus a number of
-helper parameters (important for internal functionality).
-
-# Fields
-$(FIELDS)
-"""
-struct CentralMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
-    consisting of the time-evolution equations of central moments."""
-    odes::ODESystem
-    """Symbolic variables defining the means."""
-    μ::Dict
-    """Symbolic variables defining the central moments."""
-    M::Dict
-    """Number of species within the system."""
-    N::Int
-    """Order of moment equations."""
-    m_order::Int
-    """Expansion order."""
-    q_order::Int
-    """Vector of all index combinations up to `q_order`."""
-    iter_all::Vector
-    """Vector of all index combinations up to `m_order`."""
-    iter_m::Vector
-    """Vector of all index combinations of order greater than `m_order`
-    up to `q_order`."""
-    iter_q::Vector
-    """Vector of index combinations of order 1."""
-    iter_1::Vector
-end
-
 function fact(i)
 
     #= Calculate a multi-variate factorial of moment vector i,
@@ -109,8 +75,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
 
     @parameters t # need to define time as a parameter
 
-    μ = define_μ(N, 1)
-    μ = delete!(μ, Tuple(zeros(N)))
+    μ = define_μ(N, 1, iter_1)
+    #μ = delete!(μ, Tuple(zeros(N)))
 
     M = define_M(N, q_order)
 
@@ -119,17 +85,9 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     For example, Da[2][(1, 2)] is equivalent to (∂³/∂n₁∂n₂²) a₂(μ) =#
 
     Da = []
-
     # define the number of molecules of each species as a variable (required for the differentiation)
     n = species(rn)
-
-    # messier code here because don't trust in Dict preserving insertion order
-    #dict_n_to_μ = #Dict(zip(n, μ)
-    dict_n_to_μ = Dict()
-    for iter in iter_1
-        ind = findall(x -> x==1, iter)[end]
-        dict_n_to_μ[n[ind]] = μ[iter]
-    end
+    dict_n_to_μ = Dict(zip(n, values(μ)))
 
     # TODO: set entries to zero by default using info from polynomial_propensities
     # save derivatives in a dictionary
@@ -207,7 +165,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         push!(eqs, D(M[i]) ~ dM[i])
     end
 
-    vars = extract_variables(eqs, params(rn))
+    #vars = extract_variables(eqs, params(rn))
+    vars = extract_variables(eqs, N, q_order)
     odes = ODESystem(eqs, rn.iv, vars, rn.ps)
 
     CentralMomentEquations(

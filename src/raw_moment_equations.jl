@@ -1,36 +1,4 @@
 """
-$(TYPEDEF)
-
-Raw moment equations generated for the given system plus a number of
-helper parameters (important for internal functionality).
-
-# Fields
-$(FIELDS)
-"""
-struct RawMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
-    consisting of the time-evolution equations of raw moments."""
-    odes::ODESystem
-    """Symbolic variables defining the raw moments."""
-    μ::Dict
-    """Number of species within the system."""
-    N::Int
-    """Order of moment equations."""
-    m_order::Int
-    """Expansion order."""
-    q_order::Int
-    """Vector of all index combinations (Tuples) up to `q_order`."""
-    iter_all::Vector
-    """Vector of all index combinations (Tuples) up to `m_order`."""
-    iter_m::Vector
-    """Vector of all index combinations (Tuples) of order greater than `m_order`
-    up to `q_order`."""
-    iter_q::Vector
-    """Vector of index combinations (Tuples)of order 1."""
-    iter_1::Vector
-end
-
-"""
     generate_raw_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int; combinatoric_ratelaw = true)
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
@@ -95,7 +63,8 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
         push!(eqs, D(μ[i]) ~ dμ[i])
     end
 
-    vars = extract_variables(eqs, params(rn))
+    #vars = extract_variables(eqs, params(rn))
+    vars = extract_variables(eqs, N, q_order)
     odes = ODESystem(eqs, rn.iv, vars, rn.ps)
 
     RawMomentEquations(
