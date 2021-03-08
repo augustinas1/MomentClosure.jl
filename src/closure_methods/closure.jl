@@ -1,4 +1,4 @@
-function close_eqs(sys::MomentEquations, closure::Dict, closure_symbolic::Dict)
+function close_eqs(sys::MomentEquations, closure::OrderedDict, closure_symbolic::OrderedDict)
 
     closed_eqs = Equation[]
     for eq in sys.odes.eqs
@@ -11,7 +11,6 @@ function close_eqs(sys::MomentEquations, closure::Dict, closure_symbolic::Dict)
     ps = sys.odes.ps
 
     vars = extract_variables(closed_eqs, sys.N, sys.q_order)
-    #vars = extract_variables(closed_eqs, ps)
     odes = ODESystem(closed_eqs, iv, vars, ps)
 
     ClosedMomentEquations(odes, closure_symbolic, sys)

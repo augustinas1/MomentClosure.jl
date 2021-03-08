@@ -1,7 +1,7 @@
 function normal_closure(sys::MomentEquations)
 
-    closure = Dict()
-    closure_exp = Dict()
+    closure = OrderedDict()
+    closure_exp = OrderedDict()
     N = sys.N
 
     # build symbolic expressions of cumulants up to q_order in terms of central/raw moments

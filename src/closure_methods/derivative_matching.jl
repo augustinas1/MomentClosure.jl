@@ -12,8 +12,8 @@ end
 
 function derivative_matching(sys::MomentEquations)
 
-    closure_exp = Dict()
-    closure = Dict() # additional dict to hold not expanded symbolic expressions
+    closure_exp = OrderedDict()
+    closure = OrderedDict() # additional dict to hold not expanded symbolic expressions
 
     N = sys.N
 
@@ -83,7 +83,7 @@ function derivative_matching(sys::MomentEquations)
         # central moments from the obtained raw moment expressions
         raw_to_central = raw_to_central_moments(N, sys.q_order, closed_μ)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
-        closure_M = Dict()
+        closure_M = OrderedDict()
         for i in sys.iter_q
             closure_exp[sys.M[i]] = raw_to_central[i]
             expr = simplify(central_to_raw[i]-sys.M[i])

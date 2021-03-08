@@ -1,7 +1,7 @@
 function log_normal_closure(sys::MomentEquations)
 
-    closure = Dict()
-    closure_exp = Dict() # here it does not play a role
+    closure = OrderedDict()
+    closure_exp = OrderedDict() # here it does not play a role
 
     N = sys.N
     if typeof(sys) == CentralMomentEquations
@@ -54,7 +54,7 @@ function log_normal_closure(sys::MomentEquations)
         # central moments from the obtained log-normal raw moment expressions
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
-        closure_M = Dict()
+        closure_M = OrderedDict()
         for i in sys.iter_q
             closure_exp[M[i]] = raw_to_central[i]
             closure_M[M[i]] = simplify(closure[μ_symbolic[i]]-(central_to_raw[i]-M[i]))

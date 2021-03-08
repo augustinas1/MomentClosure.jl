@@ -1,7 +1,7 @@
 function zero_closure(sys::MomentEquations)
 
-    closure = Dict()
-    closure_exp = Dict()
+    closure = OrderedDict()
+    closure_exp = OrderedDict()
 
     if typeof(sys) == CentralMomentEquations
         for i in sys.iter_q

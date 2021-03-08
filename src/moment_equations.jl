@@ -79,7 +79,7 @@ struct ClosedMomentEquations <: MomentEquations
     consisting of the time-evolution equations of *closed* moments."""
     odes::ODESystem
     """Dictionary of moment closure functions for each higher order moment."""
-    closure::Dict
+    closure::OrderedDict
     """Original raw or central moment equations (before closure was applied)."""
     open_eqs::MomentEquations
 end

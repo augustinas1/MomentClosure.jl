@@ -15,10 +15,10 @@ function conditional_gaussian_closure(sys::MomentEquations,
 
     # closure of higher order raw moments without explicit form of truncated moments
     # e.g. μ₁₄ would still be a function of μ₁₃ even though μ₁₃ is also truncated
-    closure_μ = Dict()
+    closure_μ = OrderedDict()
     # closure of higher order raw moments explicitly expanding closed lower order moments
     # the form we use in the end when solving the ODEs
-    closure_μ_exp = Dict()
+    closure_μ_exp = OrderedDict()
 
     # perform conditional gaussian closure on raw moments μ
 
@@ -109,8 +109,8 @@ function conditional_gaussian_closure(sys::MomentEquations,
             μ_M_exp[i] = simplify(μ_M_exp[i])
         end
         #display(μ_M_exp)
-        closure = Dict()
-        closure_exp = Dict()
+        closure = OrderedDict()
+        closure_exp = OrderedDict()
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained raw moment expressions
         raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ_M_exp, bernoulli=true)

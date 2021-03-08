@@ -45,10 +45,10 @@ function gamma_closure(sys::MomentEquations, clean=true)
     #   sacrificing numerical stability for much faster results which will produce significantly
     #   more cumbersome expressions
 
-    closure = Dict()
+    closure = OrderedDict()
     # closure_symbolic saves raw moment closure expressions, potentially of interest when dealing
     # with CentralMomentEquations (identical to closure if RawMomentEquations were passed)
-    closure_exp = Dict()
+    closure_exp = OrderedDict()
 
     # gamma closure leads to very convoluted expressions (especially for RawMomentEquations)
     # which SymbolicUtils.simplify() unfortunately struggles to simplify to a satisfying degree
@@ -192,7 +192,7 @@ function gamma_closure(sys::MomentEquations, clean=true)
     if typeof(sys) == CentralMomentEquations
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
-        closure_M = Dict()
+        closure_M = OrderedDict()
         for i in sys.iter_q
             # TODO: check if simplify withing raw_to_central is speed bottleneck if clean=false
             closure_exp[M[i]] = raw_to_central[i]
