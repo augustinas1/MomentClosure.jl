@@ -1,3 +1,4 @@
+
 function sample_raw_moments(sol::EnsembleSolution, order::Int; naive::Bool=true)
     # need to build a t x n matrix for each timepoint, where t is the number of realisations (trajectories)
     # and n is the number of  variables
@@ -9,6 +10,7 @@ function sample_raw_moments(sol::EnsembleSolution, order::Int; naive::Bool=true)
     # compared to the most trivial algorithm
 
     # TODO: rewrite this as sample_central_moments right now appearst to be faster
+    # TODO: use internal SciMLBase functionality to simplify the code here further?
 
     alg = naive ? naivemoment : moment
 
@@ -216,4 +218,21 @@ function format_closure(eqs::ClosedMomentEquations)
         push!(exprs, expr)
     end
     exprs
+end
+
+
+@latexrecipe function f(eqs::MomentEquations, type=:equations; inds::Array)
+
+    env --> :align
+    starred --> true
+    cdot --> false
+
+    if type == :equations
+        return format_moment_eqs(eqs)
+    elseif type == :closure
+        return format_closure(eqs)
+    else
+        error("supported arguments are only `:equations` or `:closure`")
+    end
+
 end

@@ -29,7 +29,6 @@ export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eq
        get_S_mat, propensities, ReactionSystemMod,
        species, params, speciesmap, paramsmap, numspecies, numreactions, numparams,
        moment_closure, deterministic_IC, ODEProblem,
-	   format_moment_eqs, format_closure,
 	   sample_raw_moments, sample_central_moments, sample_cumulants
 
 include("reaction_systems.jl")
