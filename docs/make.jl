@@ -2,7 +2,7 @@ using MomentClosure, ModelingToolkit
 using Documenter
 
 makedocs(;
-    modules=[MomentClosure, ModelingToolkit],
+    modules=[MomentClosure, ModelingToolkit, Symbolics],
     authors="Augustinas Sukys",
     repo="https://github.com/augustinas1/MomentClosure.jl/blob/{commit}{path}#L{line}",
     sitename="MomentClosure.jl",

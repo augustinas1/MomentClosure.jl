@@ -6,7 +6,8 @@ import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies, 
 using Reexport
 using ModelingToolkit
 using ModelingToolkit: value
-@reexport using ModelingToolkit: @parameters, @variables
+@reexport using ModelingToolkit: @parameters
+@reexport using Symbolics: @variables
 
 using SciMLBase
 
@@ -20,6 +21,7 @@ using OrderedCollections: OrderedDict
 using Combinatorics: permutations
 using TupleTools: sort
 using Cumulants
+using Latexify
 
 using DocStringExtensions
 
