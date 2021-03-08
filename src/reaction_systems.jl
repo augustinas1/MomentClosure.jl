@@ -61,6 +61,7 @@ end
 # Implementing a number of basic functions allowing easy access to reaction network properties.
 # The functions are identical to the Catalyst ones (full credit to the developers) in
 # order to keep the APIs consistent
+# TODO: use getters
 
 """
     species(rn::ReactionSystemMod)
@@ -165,7 +166,7 @@ Notes:
 """
 function propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaw=true)
     if typeof(rn) == ReactionSystem
-        [simplify(jumpratelaw(rx, combinatoric_ratelaw=combinatoric_ratelaw)) for rx in reactions(rn)]
+        simplify.(jumpratelaw.(reactions(rn), combinatoric_ratelaw=combinatoric_ratelaw))
     else
         rn.a
     end
