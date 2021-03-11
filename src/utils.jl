@@ -139,7 +139,7 @@ function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
 end
 
 
-function deterministic_IC(μ₀::Vector, eqs::MomentEquations)
+function deterministic_IC(μ₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 
     # sys as an argument is not strictly needed but it helps to implement checks that all arguments are consistent
     # closed_sys also needs to be included in case bernoulli variables were eliminated (so sys and closed_sys have a different no. of states)
@@ -153,7 +153,7 @@ function deterministic_IC(μ₀::Vector, eqs::MomentEquations)
     odes = eqs.odes
     N = sys.N
     if N != length(μ₀)
-        error("length of μ₀ and number of species in the system are inconsistent")
+        error("length of the passed IC vector and the number of species in the system are inconsistent")
     end
 
     μ_map = [sys.μ[iter] => μ₀[i] for (i, iter) in enumerate(sys.iter_1)]

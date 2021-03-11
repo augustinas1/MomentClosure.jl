@@ -145,10 +145,18 @@ function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
     iters = construct_iter_all(N, q_order)
     iter_μ = filter(x -> sum(x) > 0, iters)
     iter_M = filter(x -> sum(x) > 1, iters)
+
     μs = values(define_μ(N, q_order, iter_μ))
     Ms = values(define_M(N, q_order, iter_M))
     vars = vcat(μs..., Ms...)
+
+    # extract variables from rhs of each equation
     eq_vars = unique(vcat(get_variables.(eqs)...))
+    # need this as get_variables does not extract var from `Differential(t)(var(t))`
+    diff_vars = [var_from_nested_derivative(eq.lhs)[1] for eq in eqs]
+    # filter out the unique ones
+    eq_vars = unique(vcat(eq_vars..., diff_vars...))
+    # this should preserve the correct ordering
     vars = intersect!(vars, eq_vars)
 
     vars

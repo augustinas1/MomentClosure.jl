@@ -5,7 +5,7 @@ import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies, 
 
 using Reexport
 using ModelingToolkit
-using ModelingToolkit: value
+using ModelingToolkit: value, var_from_nested_derivative
 @reexport using ModelingToolkit: @parameters
 @reexport using Symbolics: @variables
 
