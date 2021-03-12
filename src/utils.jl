@@ -138,11 +138,20 @@ function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
 
 end
 
+"""
+    deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 
-function deterministic_IC(μ₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
+Given an array of initial molecule numbers and the corresponding moment equations,
+return a mapping of each moment to its initial value under deterministic initial conditions.
 
-    # sys as an argument is not strictly needed but it helps to implement checks that all arguments are consistent
-    # closed_sys also needs to be included in case bernoulli variables were eliminated (so sys and closed_sys have a different no. of states)
+# Notes
+- The means are set to initial molecule numbers (as they take the values specified in
+  `u₀` with probability one). The higher order raw moments are products of the corresponding
+  powers of the means whereas the higher order central moments are simply zero.
+- The ordering of `u₀` elements must be consistent with the ordering of species
+  in the corresponding reaction system (can be checked with the `speciesmap` function).
+"""
+function deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 
     if eqs isa ClosedMomentEquations
         sys = eqs.open_eqs
@@ -152,18 +161,18 @@ function deterministic_IC(μ₀::Array{T, 1}, eqs::MomentEquations) where T<:Rea
 
     odes = eqs.odes
     N = sys.N
-    if N != length(μ₀)
+    if N != length(u₀)
         error("length of the passed IC vector and the number of species in the system are inconsistent")
     end
 
-    μ_map = [sys.μ[iter] => μ₀[i] for (i, iter) in enumerate(sys.iter_1)]
+    μ_map = [sys.μ[iter] => u₀[i] for (i, iter) in enumerate(sys.iter_1)]
 
     no_states = length(odes.states)
     if typeof(sys) == CentralMomentEquations
         moment_map = [odes.states[i] => 0.0 for i in N+1:no_states]
     else
         reverse_μ = Dict(μ => iter for (iter, μ) in sys.μ)
-        moment_map = [odes.states[i] => prod(μ₀ .^ reverse_μ[odes.states[i]]) for i in N+1:no_states]
+        moment_map = [odes.states[i] => prod(u₀ .^ reverse_μ[odes.states[i]]) for i in N+1:no_states]
     end
 
     vcat(μ_map, moment_map)
