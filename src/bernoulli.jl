@@ -53,11 +53,9 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
         μ_redundant_sub = [μ[key] => μ[val] for (key, val) in redundant_iter_sub]
 
         clean_iter = setdiff(sys.iter_all[N+2:end], redundant_iter)
-        #central_to_raw = central_to_raw_moments(sys, sys.q_order)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         μ_clean_sub = Dict([μ[iter] => central_to_raw[iter] for iter in clean_iter])
 
-        #raw_to_central = raw_to_central_moments(sys, μ)
         raw_to_central = raw_to_central_moments(N, sys.q_order)
         iter_sub = Dict()
         for iter in redundant_iter

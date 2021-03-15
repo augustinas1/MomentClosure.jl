@@ -120,7 +120,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
             else
                 du[i] = S[i, r]*suma + du[i]
             end
-            #du[i] = simplify(du[i], polynorm=true)
             du[i] = polynormalize(du[i])
         end
     end
@@ -151,10 +150,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
                 dM[i] -= i[j]*du[j]*M[i.-iter_1[j]]
             end
         end
-        #dM[i] = simplify(dM[i], polynorm=true)
-        # polynorm=true makes it significantly slower
-        #dM[i] = simplify(dM[i])
-        #dM[i] = expand_expr(dM[i])
         dM[i] = polynormalize(dM[i])
     end
 

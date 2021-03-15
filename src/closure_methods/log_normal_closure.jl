@@ -46,7 +46,6 @@ function log_normal_closure(sys::MomentEquations)
         closure_M = OrderedDict()
         for i in sys.iter_q
             closure_exp[M[i]] = raw_to_central[i]
-            #closure_M[M[i]] = simplify(closure[μ_symbolic[i]]-(central_to_raw[i]-M[i]))
             closure_M[M[i]] = closure[μ_symbolic[i]]-(central_to_raw[i]-M[i])
             closure_M[M[i]] = simplify(closure_M[M[i]])
         end
@@ -54,8 +53,6 @@ function log_normal_closure(sys::MomentEquations)
     else
         closure_exp = closure
     end
-
-    #TODO: polynorm true or false depending if raw or central
 
     close_eqs(sys, closure_exp, closure, false)
 

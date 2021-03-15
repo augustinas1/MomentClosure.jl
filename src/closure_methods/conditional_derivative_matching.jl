@@ -65,7 +65,6 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
 
                 γ = A\b
                 conditional_μ = prod([μ[iter_k[i]]^Int(γ[i]) for i in 1:length_k])
-                #conditional_μ = simplify(μ[bernoulli_iter]*conditional_μ)
                 conditional_μ = μ[bernoulli_iter]*conditional_μ
                 conditional_μ = simplify(conditional_μ, polynorm=true)
 
@@ -73,13 +72,10 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
                 iter_conditional = filter(x -> 0 < sum(x) <= sum(r), nonbernoulli_iters)
                 conditional_sub = Dict([Pair(μ[iter], μ[iter.+bernoulli_iter]/μ[bernoulli_iter])
                                        for iter in iter_conditional])
-                #conditional_μ = simplify(expand(substitute(conditional_μ, conditional_sub)))
                 conditional_μ = substitute(conditional_μ, conditional_sub)
                 conditional_μ = simplify(conditional_μ)
 
                 closure_μ[μ[iter]] = conditional_μ
-                #closure_μ_exp[μ[iter]] = simplify(substitute(conditional_μ, closure_μ_exp))
-                #closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
                 closure_μ_exp[μ[iter]] = substitute(conditional_μ, closure_μ_exp)
                 closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]])
             else
@@ -101,12 +97,9 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
                 end
                 γ = A\b
                 moment = prod([μ[iter_k[i]]^Int(γ[i]) for i in 1:length_k])
-                #moment = simplify(moment)
                 moment = simplify(moment)
 
                 closure_μ[μ[iter]] = moment
-                #closure_μ_exp[μ[iter]] = simplify(substitute(moment, closure_μ_exp))
-                #closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
                 closure_μ_exp[μ[iter]] = substitute(moment, closure_μ_exp)
                 closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]])
 
@@ -116,7 +109,6 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
 
     if typeof(sys) == CentralMomentEquations
 
-        #central_to_raw = central_to_raw_moments(sys, sys.m_order)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         μ_central = Dict()
         for iter in vcat(sys.iter_m, sys.iter_q)

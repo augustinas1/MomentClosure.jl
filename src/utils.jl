@@ -9,7 +9,7 @@ function sample_raw_moments(sol::EnsembleSolution, order::Int; naive::Bool=true)
     # statement about performance + understand why the naive algorithm is still very fast
     # compared to the most trivial algorithm
 
-    # TODO: rewrite this as sample_central_moments right now appearst to be faster
+    # TODO: rewrite this as sample_central_moments right now appears to be faster
     # TODO: use internal SciMLBase functionality to simplify the code here further?
 
     alg = naive ? naivemoment : moment
