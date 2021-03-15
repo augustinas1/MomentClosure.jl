@@ -20,7 +20,7 @@ where $a_{r}(\mathbf{n})$ is the propensity function of the $r^{\text{th}}$ reac
 Modelling using the CME framework is common in the study of biochemical and gene networks within cells. Although such master equations are rather simple in structure, for most systems there are no known analytical solutions and their stochastic simulations can be very computationally expensive. One possible approach to investigate the system at hand is to approximate the whole probability distribution solution of the CME in terms of its first few moments (e.g. mean and variance).
 
 ## [Raw Moment Equations](@id raw_moment_eqs)
-From Eq. ([1](#mjx-eqn-1)) we can obtain a system of ordinary differential equations (ODEs) governing the time-evolution of the *raw* moments of the system up to specified order $m$, given by $\mu_{\mathbf{i}} = \mu_{i_1, \dotsc, i_N} = \langle n_1^{i_1} \dotsm n_N^{i_N} \rangle$, where the indices $\mathbf{i}=(i_1, \dotsc, i_N)$ are restricted such that $|\mathbf{i}| = \sum_{j=1}^N i_j \leq m$. Note that first order raw moments are simply the means. For example, when N = 3, the mean molecule number of second species in the system is given by $\mu_2 = \mu_{0, 1, 0} = \langle n_2 \rangle$ (when $N=3$). We chose to relax the notation throughout so that the means can be indicated by a single index of the molecular species (used in this section) or by the corresponding unit vector (used in the code).
+From Eq. ([1](#mjx-eqn-1)) we can obtain a system of ordinary differential equations (ODEs) governing the time-evolution of the *raw* moments of the system up to specified *moment expansion order* $m$, given by $\mu_{\mathbf{i}} = \mu_{i_1, \dotsc, i_N} = \langle n_1^{i_1} \dotsm n_N^{i_N} \rangle$, where the indices $\mathbf{i}=(i_1, \dotsc, i_N)$ are restricted such that $|\mathbf{i}| = \sum_{j=1}^N i_j \leq m$. Note that first order raw moments are simply the means. For example, when N = 3, the mean molecule number of second species in the system is given by $\mu_2 = \mu_{0, 1, 0} = \langle n_2 \rangle$ (when $N=3$). We chose to relax the notation throughout so that the means can be indicated by a single index of the molecular species (used in this section) or by the corresponding one-hot vector (used in the code).
 
 To find the first moment equations, we multiply the CME by $n_i$ and sum over all possible states:
 ``` math
@@ -37,7 +37,7 @@ Applying a transformation $\mathbf{n}-S_r \rightarrow \mathbf{n}$ on the first t
     &= \sum_{r} S_{ir} \langle a_r(\mathbf{n}) \rangle\;. \tag{2}
 \end{align*}
 ```
-The derivation can be extended to the multivariate case of higher order moments $\mu_{\mathbf{i}}$ of arbitrary order $m$:
+The derivation can be extended to the multivariate case of higher order moments $\mu_{\mathbf{i}}$ with $|\mathbf{i}| \leq m$:
 ``` math
 \begin{align*}
     \frac{\mu_{\mathbf{i}}}{dt} &= \sum_{\mathbf{n}} n_1^{i_1}\dotsm n_N^{i_N} \frac{dP(\mathbf{n}, t)}{dt} \\
@@ -82,7 +82,7 @@ where $q$ controls the expansion order and we have simplified the expression by 
 D^{\,\mathbf{j}} f &= \frac{\partial^{|\mathbf{j}|}}{\partial n_1^{j_1} \dotsm \partial n_N^{j_N}} f \;.
 \end{align*}
 ```
-Now we can obtain equations governing the time-evolution of the means $μ_i$ and the central moments of arbitrary order $m$, $M_{\mathbf{i}} = M_{i_1, \dotsc, i_N} = \langle (n_1 - \mu_1)^{i_1}\dotsm(n_N - \mu_N)^{i_N} \rangle$, where again $|\mathbf{i}| = m$. We first consider the equations for the means immediately starting from Eq. ([2](#mjx-eqn-2)):
+Now we can obtain equations governing the time-evolution of the means $μ_i$ and the central moments $M_{\mathbf{i}} = M_{i_1, \dotsc, i_N} = \langle (n_1 - \mu_1)^{i_1}\dotsm(n_N - \mu_N)^{i_N} \rangle$, where again $|\mathbf{i}| \leq m$. We first consider the equations for the means immediately starting from Eq. ([2](#mjx-eqn-2)):
 ``` math
 \begin{align*}
     \frac{d\mu_i}{dt} &= \sum_{r} S_{ir} \langle a_r(\mathbf{n}) \rangle \\
@@ -110,7 +110,7 @@ where we have also defined
     M_{\mathbf{j}+\mathbf{k}} &= M_{j_1+k_1,\dotsc,j_N+k_N} \;.
 \end{align*}
 ```
-Although raw moment equations for non-linear mass-action systems already require approximate treatment using moment closure, here we have an additional complication: if a system contains *non-polynomial* propensity functions, the equations for both means and central moments will in principle depend on an *infinite* number of higher order central moments. Hence the *expansion order* $q$ is of utmost importance as it controls the degree of approximation: the Taylor expansion of propensity functions is performed up to $q^{\text{th}}$ order so that $m^{\text{th}}$ central moment equations will depend on central moments of order $q>m$ and lower. Finally, moment closure approximations can be applied similarly as in the case of raw moment equations.
+Although raw moment equations for non-linear mass-action systems already require approximate treatment using moment closure, here we have an additional complication: if a system contains *non-polynomial* propensity functions, the equations for both means and central moments will in principle depend on an *infinite* number of higher order central moments. Hence the *Taylor expansion order* $q$ is of utmost importance as it controls the degree of approximation: the propensity functions are expanded up to $q^{\text{th}}$ order so that $m^{\text{th}}$ central moment equations will depend on central moments of order $q>m$ and lower. Finally, moment closure approximations can be applied similarly as in the case of raw moment equations.
 
 
 ## References
