@@ -64,7 +64,7 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
             M_temp = raw_to_central[iter]
             M_temp = simplify(substitute(M_temp, μ_redundant_sub))
             M_temp = substitute(M_temp, μ_clean_sub)
-            M_temp = simplify(expand(M_temp))
+            M_temp = simplify(M_temp)
             iter_sub[sys.M[iter]] = M_temp
         end
 
@@ -75,7 +75,7 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
     for (i, eq) in enumerate(sys.odes.eqs)
         if !(i in redundant_eqs)
             clean_rhs = substitute(eq.rhs, iter_sub)
-            clean_rhs = simplify(clean_rhs)
+            clean_rhs = polynormalize(clean_rhs)
             push!(clean_eqs, Equation(eq.lhs, clean_rhs))
         end
     end
@@ -85,7 +85,8 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
     iter_m = filter(x -> 2 <= sum(x) <= sys.m_order, clean_iter)
     iter_q = filter(x -> sys.m_order < sum(x) <= sys.q_order, clean_iter)
 
-    # TODO: fix μ, M -> moment and remove all these (switch to basic indices)
+    # TODO: use setfield?
+
     field_values = [getfield(sys, field) for field in fieldnames(typeof(sys))]
     ind_iter_m = findall(x -> x==:iter_m, fieldnames(typeof(sys)))[1]
     ind_iter_q = findall(x -> x==:iter_q, fieldnames(typeof(sys)))[1]
@@ -98,7 +99,7 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
     ## fixing ODE system to preserve consistent ordering of parameters
     iv = sys.odes.iv
     ps = sys.odes.ps
-    #vars = extract_variables(clean_eqs, ps)
+
     vars = extract_variables(clean_eqs, N, sys.q_order)
     odes = ODESystem(clean_eqs, iv, vars, ps)
 

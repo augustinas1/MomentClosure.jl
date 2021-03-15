@@ -1,15 +1,25 @@
-function close_eqs(sys::MomentEquations, closure::OrderedDict, closure_symbolic::OrderedDict)
+function close_eqs(sys::MomentEquations, closure::OrderedDict,
+                   closure_symbolic::OrderedDict, polynorm::Bool)
+
+    # TODO: improve performance
 
     closed_eqs = Equation[]
     for eq in sys.odes.eqs
+
         closed_rhs = substitute(eq.rhs, closure)
-        closed_rhs = simplify(closed_rhs)
+        # apply binomial expansion on the expressions
+        if polynorm # depending on the functional form
+            closed_rhs = polynormalize(closed_rhs)
+        else
+            closed_rhs = expand_expr(closed_rhs)
+        end
         push!(closed_eqs, Equation(eq.lhs, closed_rhs))
     end
 
     iv = sys.odes.iv
     ps = sys.odes.ps
 
+    # TODO: big overhead due to extract_variables - reduce it
     vars = extract_variables(closed_eqs, sys.N, sys.q_order)
     odes = ODESystem(closed_eqs, iv, vars, ps)
 
@@ -18,7 +28,7 @@ function close_eqs(sys::MomentEquations, closure::OrderedDict, closure_symbolic:
 end
 
 """
-    moment_closure(sys::MomentEquations, closure::String, binary_vars::Vector=[]; clean=true)
+    moment_closure(sys::MomentEquations, closure::String, binary_vars::Vector=[])
 
 Given `MomentEquations`, apply the specified moment closure approximation and return
 the [`ClosedMomentEquations`](@ref).
@@ -37,16 +47,8 @@ The supported `closure` options are:
 - `binary_vars` is required in case of conditional closures. It must be
   specified by denoting in an array the indices of all species whose molecule
   number is a Bernoulli (binary) variable.
-- `clean` argument is only relevant for gamma closure. Namely, `clean=true`
-  implies that the closure functions and the resulting closed moment equations
-  will be heavily simplified in order to preserve numerical stability. However,
-  this can extremely computationally expensive due to complicated functional
-  form of the higher order moments under gamma closure. Setting `clean=false`
-  is generally much faster as the symbolic expressions are not simplified
-  internally, but it can lead to severe numerical instabilities.
 """
-function moment_closure(sys::MomentEquations, closure::String,
-    binary_vars::Vector=[]; clean=true)
+function moment_closure(sys::MomentEquations, closure::String, binary_vars::Vector=[])
 
     if closure == "zero"
         zero_closure(sys)
@@ -57,7 +59,7 @@ function moment_closure(sys::MomentEquations, closure::String,
     elseif closure == "poisson"
         poisson_closure(sys)
     elseif closure == "gamma"
-        gamma_closure(sys, clean)
+        gamma_closure(sys)
     elseif closure == "derivative matching"
         derivative_matching(sys)
     elseif closure == "conditional gaussian"

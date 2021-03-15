@@ -1,6 +1,7 @@
 using MomentClosure
-using MomentClosure: value, expected_coeff, expand_mod
-using ModelingToolkit: simplify
+using MomentClosure: expected_coeff
+using ModelingToolkit: value, simplify
+using SymbolicUtils: polynormalize
 using Test
 
 @parameters b
@@ -27,12 +28,12 @@ M = sys.M
 expr2 = c₂*μ[1,0] + c₁*M[1,1]*(Ω^-2) + c₁*μ[0,1]*μ[1,0]*Ω^-2 - c₁*M[2,1]*Ω^-2 -
         2*c₁*M[1,1]*μ[1,0]*Ω^-2 - c₁*M[2,0]*μ[0,1]*Ω^-2 - c₁*μ[0,1]*Ω^-2*μ[1,0]^2
 expr2 = simplify(value.(expr2))
-@test isequal(expand_mod(expr1), expr2)
+@test isequal(polynormalize(expr1), expr2)
 
 sys = generate_central_moment_eqs(rn, 2)
 expr1 = sys.odes.eqs[2].rhs
 @test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
-@test isequal(expand_mod(expr1), expr2)
+@test isequal(polynormalize(expr1), expr2)
 
 sys = generate_raw_moment_eqs(rn, 2)
 μ = sys.μ
@@ -40,4 +41,4 @@ expr1 = sys.odes.eqs[4].rhs
 expr2 = c₂*μ[2,0] + c₁*μ[1,1]/Ω^2 - c₁*μ[3,1]/Ω^2 -c₂*(μ[1,0] + μ[1,1]) +
         c₃*μ[0,1]*Ω - c₄*μ[1,1] - c₁*μ[1,2]/Ω^2 + c₁*μ[2,2]/Ω^2
 expr2 = simplify(value.(expr2))
-@test isequal(expand_mod(expr1), expand_mod(expr2))
+@test isequal(polynormalize(expr1), polynormalize(expr2))

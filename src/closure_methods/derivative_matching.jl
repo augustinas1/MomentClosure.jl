@@ -96,6 +96,6 @@ function derivative_matching(sys::MomentEquations)
         end
     end
 
-    close_eqs(sys, closure_exp, closure)
+    close_eqs(sys, closure_exp, closure, false)
 
 end

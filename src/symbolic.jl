@@ -19,81 +19,17 @@ end
 
 # Trim a string of form "(a, b, c, d, ...)" to "abcd..."
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
-# Function whichs run SymbolicUtils.simplify until there
-# are no changes in the resulting expression (Operation)
-#fully_simplify = Fixpoint(simplify);
-# SymbolicUtils rule that expands a bracket
-expansion_rule = @acrule ~x * +(~~ys) => sum(map(y-> simplify(~x * y), ~~ys));
-# SymbolicUtils rule that expands all brackets and simplifies the expression until no changes occur
-expand = Fixpoint(Prewalk(simplify(PassThrough(expansion_rule))));
 
-
-PLUS_RULES = [
-    @rule(~x::isnotflat(+) => flatten_term(+, ~x))
-    @rule(~x::needs_sorting(+) => sort_args(+, ~x))
-    @ordered_acrule(~a::is_literal_number + ~b::is_literal_number => ~a + ~b)
-
-    @acrule(*(~~x) + *(~β, ~~x) => *(1 + ~β, (~~x)...))
-    @acrule(*(~α, ~~x) + *(~β, ~~x) => *(~α + ~β, (~~x)...))
-    @acrule(*(~~x, ~α) + *(~~x, ~β) => *(~α + ~β, (~~x)...))
-
-    @acrule(~x + *(~β, ~x) => *(1 + ~β, ~x))
-    @acrule(*(~α::is_literal_number, ~x) + ~x => *(~α + 1, ~x))
-    @rule(+(~~x::hasrepeats) => +(merge_repeats(*, ~~x)...))
-
-    @ordered_acrule((~z::_iszero + ~x) => ~x)
-    @rule(+(~x) => ~x)
-]
-
-TIMES_RULES = [
-    @rule(~x::isnotflat(*) => flatten_term(*, ~x))
-    @rule(~x::needs_sorting(*) => sort_args(*, ~x))
-
-    @ordered_acrule(~a::is_literal_number * ~b::is_literal_number => ~a * ~b)
-    #@rule(*(~~x::hasrepeats) => *(merge_repeats(^, ~~x)...))
-
-    @acrule((~y)^(~n) * ~y => (~y)^(~n+1))
-    @ordered_acrule((~x)^(~n) * (~x)^(~m) => (~x)^(~n + ~m))
-
-    @ordered_acrule((~z::_isone  * ~x) => ~x)
-    @ordered_acrule((~z::_iszero *  ~x) => ~z)
-    @rule(*(~x) => ~x)
-]
-
-ASSORTED_RULES = [
-    @rule(identity(~x) => ~x)
-    @rule(-(~x) => -1*~x)
-    @rule(-(~x, ~y) => ~x + -1(~y))
-    @rule(~x::_isone \ ~y => ~y)
-    @rule(~x \ ~y => ~y / (~x))
-    @rule(~x / ~y => ~x * pow(~y, -1))
-    @rule(one(~x) => one(symtype(~x)))
-    @rule(zero(~x) => zero(symtype(~x)))
-    @rule(ifelse(~x::is_literal_number, ~y, ~z) => ~x ? ~y : ~z)
-]
-
-function modified_simplifier()
-    rule_tree = [SymbolicUtils.If(istree, Chain(ASSORTED_RULES)),
-                 SymbolicUtils.If(SymbolicUtils.is_operation(+),
-                    Chain(PLUS_RULES)),
-                 SymbolicUtils.If(SymbolicUtils.is_operation(*),
-                    Chain(TIMES_RULES))] |> RestartedChain
-    rule_tree
-end
-
-#simplify_mod(expr) = simplify(expr, rewriter=Fixpoint(Postwalk(modified_simplifier())))
-simplify_mod = Fixpoint(Postwalk(PassThrough(modified_simplifier()))) # TODO: check that this modification still works for gamma closure
-expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> simplify_mod(~x * y), ~~ys));
-expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod))); #TODO: check if this is better than expand() for our needs
+# Expand a symbolic expression (no binomial expansion)
+expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys))
+expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod)))
 flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x))
 flatten_mod = Fixpoint(PassThrough(flatten_rule_mod))
-clean_expr = Fixpoint(Chain([simplify_mod, expand_mod, flatten_mod]))
-
+expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod])))
 
 # Note that throughout we use ModelingToolkit to initialise the variables
 # but then change their Num type into SymbolicUtils Term{Real} as it's
 # easier to handle in symbolic expressions
-
 function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
 
     indices = []
@@ -173,15 +109,14 @@ end
     we obtain the power each variable is raised to in each term (x to power 2 in term 1;
     x to power 1 and y to power 2 in term 2). Having this information we can proceed
     in constructing raw moment equations. IF any propensity function is non-polynomial
-    then the function `polynomial_propensities` will throw an error. NOTE that terms such
-    as (x-y)^2 will also not work as SymbolicUtils does not expand them automatically.
+    then the function `polynomial_propensities` will throw an error.
     NOTE: this code might easily break with a newer ModelingToolkit/SymbolicUtils version
     TODO: try to make this functionality less cumbersome and test more rigorously
 =#
 
 
 function polynomial_terms(expr, terms)
-    expr = expand_mod(expr)
+
     if istree(expr)
         if operation(expr) == +
             for arg in arguments(expr)
@@ -193,6 +128,7 @@ function polynomial_terms(expr, terms)
     else
         push!(terms, expr)
     end
+
 end
 
 function factorise_term(expr, factors, powers, rn)
@@ -253,7 +189,7 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
     max_power = 0
     for (ind, expr) in enumerate(a)
         terms = []
-        polynomial_terms(expr, terms)
+        polynomial_terms(polynormalize(expr), terms)
         for term in terms
             factors = []
             powers = zeros(Int, numspecies(rn))

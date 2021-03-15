@@ -37,9 +37,7 @@ Notes:
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
                                      m_order::Int, q_order=nothing;
                                      combinatoric_ratelaw=true)
-    #= Generate the moment equations for the reaction network rn
-       up to order of moment expansion m and the order of Taylor
-       expansion of propensity functions =#
+    # TODO: add checks that m_order and q_order are defined sensibly
 
     N = numspecies(rn) # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
@@ -111,7 +109,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         suma = 0
         for j in iter_all
             suma = suma + Da[r][j]*M[j]*1//fact(j)
-            suma = simplify(suma)
+            #suma = simplify(suma)
             # here // gives fractions (otherwise it's a float number)
             # only issue is that it does not latexify properly
         end
@@ -122,7 +120,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
             else
                 du[i] = S[i, r]*suma + du[i]
             end
-            du[i] = simplify(du[i])
+            #du[i] = simplify(du[i], polynorm=true)
+            du[i] = polynormalize(du[i])
         end
     end
 
@@ -145,7 +144,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
                     suma += Da[r][k]*M[j.+k]*1//fact(k)
                 end
                 dM[i] += factor_j*suma
-                dM[i] = simplify(dM[i])
             end
         end
         for j in 1:N
@@ -153,7 +151,11 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
                 dM[i] -= i[j]*du[j]*M[i.-iter_1[j]]
             end
         end
-        dM[i] = simplify(dM[i])
+        #dM[i] = simplify(dM[i], polynorm=true)
+        # polynorm=true makes it significantly slower
+        #dM[i] = simplify(dM[i])
+        #dM[i] = expand_expr(dM[i])
+        dM[i] = polynormalize(dM[i])
     end
 
     D = Differential(rn.iv)

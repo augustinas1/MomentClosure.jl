@@ -55,19 +55,24 @@ function conditional_gaussian_closure(sys::MomentEquations,
                 r = iter.-bernoulli_iter
 
                 # step 2
-                conditional_μ = simplify(-μ[bernoulli_iter]*expand(K[r] - μ[r]))
+                #conditional_μ = simplify(-μ[bernoulli_iter]*expand(K[r] - μ[r]))
+                conditional_μ = -μ[bernoulli_iter]*(K[r] - μ[r])
+                conditional_μ = simplify(conditional_μ, polynorm=true)
                 # additional simplification to make expressions lighter
 
                 # step 3
                 iter_conditional = filter(x -> 0 < sum(x) <= sum(r), nonbernoulli_iters)
                 conditional_sub = Dict([Pair(μ[iter], μ[iter.+bernoulli_iter]/μ[bernoulli_iter])
                                        for iter in iter_conditional])
-                conditional_μ = simplify(expand(substitute(conditional_μ, conditional_sub)))
+                #conditional_μ = simplify(expand(substitute(conditional_μ, conditional_sub)))
+                conditional_μ = substitute(conditional_μ, conditional_sub)
+                conditional_μ = simplify(conditional_μ, polynorm=true)
 
                 closure_μ[μ[iter]] = conditional_μ
-                closure_μ_exp[μ[iter]] = simplify(substitute(conditional_μ, closure_μ_exp))
-                closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
-
+                #closure_μ_exp[μ[iter]] = simplify(substitute(conditional_μ, closure_μ_exp))
+                #closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
+                closure_μ_exp[μ[iter]] = substitute(conditional_μ, closure_μ_exp)
+                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]], polynorm=true)
             else
                 # Case (ii)
 
@@ -76,12 +81,14 @@ function conditional_gaussian_closure(sys::MomentEquations,
                 # we assume that the marginal distribution P(p) also follows a Gaussian
                 # so that ⟨p^j⟩ is truncated according to normal closure
 
-                moment = simplify(-expand(K[iter]-μ[iter]))
+                #moment = simplify(-expand(K[iter]-μ[iter]))
+                moment = simplify(-(K[iter]-μ[iter]), polynorm=true)
 
                 closure_μ[μ[iter]] = moment
-                closure_μ_exp[μ[iter]] = simplify(substitute(moment, closure_μ_exp))
-                closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
-
+                #closure_μ_exp[μ[iter]] = simplify(substitute(moment, closure_μ_exp))
+                #closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
+                closure_μ_exp[μ[iter]] = substitute(moment, closure_μ_exp)
+                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]], polynorm=true)
             end
         end
     end
@@ -103,12 +110,11 @@ function conditional_gaussian_closure(sys::MomentEquations,
         for i in sys.iter_q
             μ_M[i] = closure_μ[μ[i]]
             μ_M[i] = substitute(μ_M[i], μ_central)
-            μ_M[i] = simplify(μ_M[i])
+            μ_M[i] = simplify(μ_M[i], polynorm=true)
             μ_M_exp[i] = closure_μ_exp[μ[i]]
             μ_M_exp[i] = substitute(μ_M_exp[i], μ_central)
-            μ_M_exp[i] = simplify(μ_M_exp[i])
+            μ_M_exp[i] = simplify(μ_M_exp[i], polynorm=true)
         end
-        #display(μ_M_exp)
         closure = OrderedDict()
         closure_exp = OrderedDict()
         # construct the corresponding truncated expressions of higher order
@@ -116,8 +122,8 @@ function conditional_gaussian_closure(sys::MomentEquations,
         raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ_M_exp, bernoulli=true)
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ_M, bernoulli=true)
         for i in sys.iter_q
-            closure_exp[sys.M[i]] = simplify(raw_to_central_exp[i])
-            closure[sys.M[i]] = simplify(raw_to_central[i])
+            closure_exp[sys.M[i]] = simplify(raw_to_central_exp[i], polynorm=true)
+            closure[sys.M[i]] = simplify(raw_to_central[i], polynorm=true)
         end
 
     else
@@ -125,6 +131,6 @@ function conditional_gaussian_closure(sys::MomentEquations,
         closure = closure_μ
     end
 
-    close_eqs(sys, closure_exp, closure)
+    close_eqs(sys, closure_exp, closure, false)
 
 end

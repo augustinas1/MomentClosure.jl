@@ -52,9 +52,9 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
                     suma += term_factors[r][k] * μ[j.+Tuple(term_powers[r][k])]
                 end
                 dμ[i] += factor_j * suma
-                dμ[i] = simplify(dμ[i])
             end
         end
+        dμ[i] = polynormalize(dμ[i])
     end
 
     D = Differential(rn.iv)
@@ -63,7 +63,6 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
         push!(eqs, D(μ[i]) ~ dμ[i])
     end
 
-    #vars = extract_variables(eqs, params(rn))
     vars = extract_variables(eqs, N, q_order)
     odes = ODESystem(eqs, rn.iv, vars, rn.ps)
 

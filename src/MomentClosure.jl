@@ -1,7 +1,7 @@
 module MomentClosure
 
-import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies, numreactions, numparams,
-                 substoichmat, prodstoichmat
+import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
+				 numreactions, numparams, substoichmat, prodstoichmat
 
 using Reexport
 using ModelingToolkit
@@ -11,11 +11,9 @@ using ModelingToolkit: value, var_from_nested_derivative
 
 using SciMLBase
 
-using SymbolicUtils
-using SymbolicUtils.Rewriters: Chain, RestartedChain, PassThrough, Prewalk, Postwalk, Fixpoint
-using SymbolicUtils: @rule, @acrule, @ordered_acrule, isnotflat, flatten_term, istree,
-                     needs_sorting, sort_args, is_literal_number, hasrepeats, merge_repeats,
-                     _iszero, pow, one, _isone, zero, symtype, operation, arguments
+using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
+using SymbolicUtils: polynormalize, simplify, operation, arguments, istree
+using SymbolicUtils: @rule, @acrule, isnotflat, flatten_term
 
 using OrderedCollections: OrderedDict
 using Combinatorics: permutations

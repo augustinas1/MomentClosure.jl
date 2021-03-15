@@ -144,6 +144,8 @@ end
 Given an array of initial molecule numbers and the corresponding moment equations,
 return a mapping of each moment to its initial value under deterministic initial conditions.
 
+TODO: discuss that molecule numbers cannot be set to zero for certain closures
+
 # Notes
 - The means are set to initial molecule numbers (as they take the values specified in
   `u₀` with probability one). The higher order raw moments are products of the corresponding
@@ -197,7 +199,6 @@ function format_moment_eqs(eqs::MomentEquations)
     for i in 1:size(odes.eqs)[1]
         key = odes.states[i]
         eq = odes.eqs[i].rhs
-        eq = isa(eq, Number) ? eq : clean_expr(eq)
         expr = "d"*string(key)*"/dt = "*string(eq)
         expr = replace(expr, "(t)"=>"")
         expr = replace(expr, ".0"=>"")
@@ -220,7 +221,6 @@ function format_closure(eqs::ClosedMomentEquations)
     exprs = []
     for i in keys(closure)
         eq = closure[i]
-        eq = isa(eq, Number) ? eq : clean_expr(eq)
         expr = string(i)*" = "*string(eq)
         expr = replace(expr, "(t)"=>"")
         expr = replace(expr, ".0"=>"")

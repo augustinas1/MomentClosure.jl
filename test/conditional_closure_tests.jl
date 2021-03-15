@@ -1,5 +1,7 @@
 using MomentClosure
-using MomentClosure: value, define_M, define_μ, expand_mod
+using MomentClosure: define_M, define_μ
+using ModelingToolkit: value
+using SymbolicUtils: polynormalize
 using Test
 using Catalyst
 
@@ -51,40 +53,26 @@ expr1 = closed_eqs.closure[μ[1,3]]
 expr2 = μ[1,2]^3*μ[1,0]*μ[1,1]^-3
 @test isequal(expr1, expr2)
 
-# Testing formatting utilities
-#exprs = format_moment_eqs(closed_eqs)
-## order of array elements can vary
-#ind = findfirst(!isnothing, match.(Ref(r"dμ₀₂/dt"), exprs))
-#expr1 = exprs[ind]
-#expr2 = "dμ₀₂/dt = γ_p*μ₀₁ + b*k_p*μ₁₀ + 2b*k_p*μ₁₁ + 2k_p*μ₁₀*(b^2) - (2γ_p*(μ₀₂))"
-#@test expr1 == expr2
-#exprs = format_closure(closed_eqs)
-#ind = findfirst(!isnothing, match.(Ref(r"μ₀₅ = "), exprs))
-#expr1 = exprs[ind]
-#expr2 = "μ₀₅ = ((μ₀₁)^-5)*((μ₀₂)^10)*((μ₀₃)^-10)*((μ₀₄)^5)"
-#@test expr1 == expr2
-
 sys = generate_central_moment_eqs(rn, 3, 5)
 expr1 = sys.odes.eqs[1].rhs
 expr2 = -k_off*M[1,2] - k_on*μ[1,0] - k_off*M[0,2]*μ[1,0]-2*k_off*M[1,1]*μ[0,1] - k_off*μ[1,0]*μ[0,1]^2 + k_on
-@test isequal(expand_mod(expr1), expr2)
+@test isequal(polynormalize(expr1), expr2)
 @test length(sys.odes.eqs) == 9
 
 sys_clean = bernoulli_moment_eqs(sys, binary_vars)
-expr1 = expand_mod(sys_clean.odes.eqs[3].rhs)
+expr1 = polynormalize(sys_clean.odes.eqs[3].rhs)
 expr2 = b*k_p*μ[1,0] - k_off*M[1,3] - k_on*M[1,1] - M[1,1]*γ_p - b*k_p*μ[1,0]^2 - k_off*M[0,3]*μ[1,0] -
       k_off*M[1,1]*μ[0,1]^2 - 2*k_off*M[1,2]*μ[0,1] - 2*k_off*M[0,2]*μ[0,1]*μ[1,0]
 @test isequal(expr1, expr2)
 @test length(sys_clean.odes.eqs) == 6
 
 closed_eqs = moment_closure(sys, "conditional gaussian", binary_vars)
-expr1 = expand_mod(closed_eqs.closure[M[0,5]])
-expr2 = 45*μ[0,1]^5 + 10*M[0,2]*M[0,3] + 90*M[0,2]*μ[0,1]^3 + 5*M[0,4]*μ[0,1] + 30*μ[0,1]*M[0,2]^2 -
-    45*μ[0,1]*(M[0,2]+μ[0,1]^2)^2
+expr1 = polynormalize(closed_eqs.closure[M[0,5]])
+expr2 = 10*M[0,2]*M[0,3] + 5*M[0,4]*μ[0,1] - 15*μ[0,1]*M[0,2]^2
 @test isequal(expr1, expr2)
 
 closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
-expr1 = expand_mod(closed_eqs.closure[M[1,3]])
+expr1 = closed_eqs.closure[M[1,3]]
 expr2 = μ[1,0]*(M[1,1]+μ[0,1]*μ[1,0])^-3*(M[1,2]+M[0,2]*μ[1,0]+μ[1,0]*μ[0,1]^2+2*M[1,1]*μ[0,1])^3 -
     M[0,3]*μ[1,0] - 3*M[1,1]*μ[0,1]^2 - 3*M[1,2]*μ[0,1] - μ[1,0]*μ[0,1]^3- 3*M[0,2]*μ[0,1]*μ[1,0]
-@test isequal(expr1, expr2)
+@test isequal(polynormalize(expr1), polynormalize(expr2))

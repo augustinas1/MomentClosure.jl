@@ -65,25 +65,29 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
 
                 γ = A\b
                 conditional_μ = prod([μ[iter_k[i]]^Int(γ[i]) for i in 1:length_k])
-                conditional_μ = simplify(μ[bernoulli_iter]*conditional_μ)
+                #conditional_μ = simplify(μ[bernoulli_iter]*conditional_μ)
+                conditional_μ = μ[bernoulli_iter]*conditional_μ
+                conditional_μ = simplify(conditional_μ, polynorm=true)
 
                 # step 3
                 iter_conditional = filter(x -> 0 < sum(x) <= sum(r), nonbernoulli_iters)
                 conditional_sub = Dict([Pair(μ[iter], μ[iter.+bernoulli_iter]/μ[bernoulli_iter])
                                        for iter in iter_conditional])
-                conditional_μ = simplify(expand(substitute(conditional_μ, conditional_sub)))
+                #conditional_μ = simplify(expand(substitute(conditional_μ, conditional_sub)))
+                conditional_μ = substitute(conditional_μ, conditional_sub)
+                conditional_μ = simplify(conditional_μ)
 
                 closure_μ[μ[iter]] = conditional_μ
-                closure_μ_exp[μ[iter]] = simplify(substitute(conditional_μ, closure_μ_exp))
-                closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
-
+                #closure_μ_exp[μ[iter]] = simplify(substitute(conditional_μ, closure_μ_exp))
+                #closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
+                closure_μ_exp[μ[iter]] = substitute(conditional_μ, closure_μ_exp)
+                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]])
             else
                 # Case (ii)
 
-                # Conditional Gaussian closure has no well-defined approximation for terms
+                # Conditional derivative matching has no well-defined approximation for terms
                 # such as ⟨p^j⟩ which are independent of the Bernoulli variables
-                # we assume that the marginal distribution P(p) also follows a Gaussian
-                # so that ⟨p^j⟩ is truncated according to normal closure
+                # We assume that ⟨p^j⟩ are truncated using derivative matching
 
                 iter_k = filter(x -> 0 < sum(x) < sum(iter), sys.iter_all)
                 length_k = length(iter_k)
@@ -97,11 +101,14 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
                 end
                 γ = A\b
                 moment = prod([μ[iter_k[i]]^Int(γ[i]) for i in 1:length_k])
+                #moment = simplify(moment)
                 moment = simplify(moment)
 
                 closure_μ[μ[iter]] = moment
-                closure_μ_exp[μ[iter]] = simplify(substitute(moment, closure_μ_exp))
-                closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
+                #closure_μ_exp[μ[iter]] = simplify(substitute(moment, closure_μ_exp))
+                #closure_μ_exp[μ[iter]] = simplify(expand(closure_μ_exp[μ[iter]]))
+                closure_μ_exp[μ[iter]] = substitute(moment, closure_μ_exp)
+                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]])
 
             end
         end
@@ -129,7 +136,7 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
             μ_M_exp[i] = substitute(μ_M_exp[i], μ_central)
             μ_M_exp[i] = simplify(μ_M_exp[i])
         end
-        #display(μ_M_exp)
+
         closure = OrderedDict()
         closure_exp = OrderedDict()
         # construct the corresponding truncated expressions of higher order
@@ -147,6 +154,6 @@ function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vect
         closure = closure_μ
     end
 
-    close_eqs(sys, closure_exp, closure)
+    close_eqs(sys, closure_exp, closure, false)
 
 end
