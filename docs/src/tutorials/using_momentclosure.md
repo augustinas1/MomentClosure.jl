@@ -94,7 +94,7 @@ The corresponding central moment equations can also be easily generated:
 ```julia
 central_eqs = generate_central_moment_eqs(rn, 2, combinatoric_ratelaw=false)
 ```
-Note that in case of non-polynomial propensity functions the [expansion order $q$](@ref central_moment_eqs) must also be specified, see the [P53 system example](P53_system_example.md) for more details. Luckily, the Brusselator contains only mass-action reactions and hence $q$ is automatically determined by the highest order (polynomial) propensity. The function [`generate_central_moment_eqs`](@ref) returns an instance of [`CentralMomentEquations`](@ref MomentClosure.CentralMomentEquations). As before, we can visualise the central moment equations:
+Note that in case of non-polynomial propensity functions the [Taylor expansion order $q$](@ref central_moment_eqs) must also be specified, see the [P53 system example](P53_system_example.md) for more details. Luckily, the Brusselator contains only mass-action reactions and hence $q$ is automatically determined by the highest order (polynomial) propensity. The function [`generate_central_moment_eqs`](@ref) returns an instance of [`CentralMomentEquations`](@ref MomentClosure.CentralMomentEquations). As before, we can visualise the central moment equations:
 ```julia
 latexify(central_eqs)
 ```
@@ -197,7 +197,7 @@ p = [0.9, 2, 1, 1, 100]
 Next, we can specify the initial condition. Usually when working with moment equations we consider *deterministic* initial conditions so that the molecule numbers at initial time take the specified integer values with probability one. We can define the initial molecule numbers as $X(t=0) = X_0$ and $Y(t=0) = Y_0$. Probability one implies that initially the means will be equal to the molecule numbers, i.e., $μ_{10}(t=0) = X_0$ and $μ_{01}(t=0) = Y_0$, whereas all higher order raw moments will be products of the corresponding powers of the means, e.g., $μ_{21} = X_0^2 Y_0$. Note that all central moments would be set to zero in this case. To make life easier we use [`deterministic_IC`](@ref) function which, given the initial molecule numbers, automatically constructs the variable mapping under deterministic initial conditions:
 ```julia
 # initial molecule numbers [X, Y] (order as in speciesmap(rn))
-u₀ = [0, 0]
+u₀ = [1, 1]
 u₀map = deterministic_IC(u₀, closed_raw_eqs)
 ```
 The next ingredient, the time interval to solve on, can be specified simply as:
@@ -206,13 +206,12 @@ tspan = (0., 100.)
 ```
 Now we are able to create the corresponding `ODEProblem`:
 ```julia
-using OrdinaryDiffEq
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, pmap)
 ```
-We are using only [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) as there is no need to load the whole DifferentialEquations library, as discussed [here](https://diffeq.sciml.ai/stable/features/low_dep/#Low-Dependency-Usage).
-
 Finally, we have everything we need to solve the raw moment equations which can be done using any ODE solver [implemented within DifferentialEquations.jl](https://diffeq.sciml.ai/dev/solvers/ode_solve/). We use the default `Tsit5()` solver and then [plot](https://diffeq.sciml.ai/stable/basics/plot/#plot) the obtained mean molecule numbers:
 ```julia
+# using only ODE solvers from DifferentialEquations (faster to load)
+using OrdinaryDiffEq
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 using Plots

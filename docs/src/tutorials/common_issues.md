@@ -1,6 +1,6 @@
 # [Common Issues](@id common_issues)
 
-It is important to be well aware that moment closure approximations are based on *ad hoc* assumptions and no rigorous and general predictions can be made on whether the results will be accurate or even physically meaningful [1-2]. Moreover, the truncated moment equations are prone to numerical instabilities and it may not be possible to solve them for the entire time course [3]. In this tutorial, we walk through a number of such issues encountered in the analysis of the Brusselator introduced in the [previous tutorial](using_momentclosure.md).
+Moment closure approximations are based on *ad hoc* assumptions and no rigorous and general predictions can be made on whether the results will be accurate or even physically meaningful [1-2]. Moreover, the truncated moment equations are prone to numerical instabilities and it may not be possible to solve them for the entire time course [3]. In this tutorial, we walk through a number of such issues encountered in the analysis of the Brusselator model introduced in the [previous tutorial](using_momentclosure.md).
 
 We first redefine the system and its parameters for completeness:
 ```julia
@@ -18,7 +18,7 @@ tspan = (0., 100.)
 
 raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
 ```
-As we have seen earlier, second-order moment expansion using normal closure approximates the true system dynamics sufficiently accurately but it would be interesting to see how other closures compare. Let's try applying zero closure:
+As we have seen earlier, second-order moment expansion using normal closure approximates the true system dynamics sufficiently accurately but it's interesting to see how other closures compare. Let's try applying zero closure:
 ```julia
 closed_raw_eqs = moment_closure(raw_eqs, "zero")
 
@@ -32,13 +32,13 @@ plot(sol, vars=(0, [1,2]), lw=2)
 
 The trajectory of $μ₀₁$ becomes negative and so zero closure fails to provide physically meaningful results for this parameter set. Note that is important to correctly choose the ODE solver depending on the stiffness of the system and the accuracy required. We tried a number of [recommended DifferentialEquations solvers](https://diffeq.sciml.ai/stable/solvers/ode_solve/) here but none seemed to improve the results.
 
-We apply log-normal closure next and try solving the equations using `Tsit5()` solver which immediately throws a `DomainError`: the mean trajectories become negative again and they are passed to $\log$ terms in the higher order moment closure functions which result in the error message. Nevertheless, this can be overcome by using one of the solvers advised for stiff problems, e.g., `Rodas4P()`:
+Let's apply log-normal closure next:
 ```julia
 closed_raw_eqs = moment_closure(raw_eqs, "log-normal")
 
 u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
-sol = solve(oprob, Rodas4P(), saveat=0.1)
+sol = solve(oprob, Tsit5(), saveat=0.1)
 
 plot(sol, vars=(0, [1,2]), lw=2, legend=:bottomright)
 ```
@@ -72,7 +72,7 @@ plot(sol, vars=(0, [1,2]), lw=2, legend=:bottomright)
 ```
 ![Brusselator issue 4](../assets/brusselator_issue_4.svg)
 
-Some dampening in the system is now visible. Increasing the expansion order to `4` finally leads to sensible results:
+Some dampening in the system is now visible. Increasing the expansion order to `4` finally leads to physically sensible results:
 ```julia
 raw_eqs = generate_raw_moment_eqs(rn, 4, combinatoric_ratelaw=true)
 closed_raw_eqs = moment_closure(raw_eqs, "normal")
