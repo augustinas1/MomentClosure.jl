@@ -3,13 +3,10 @@ module MomentClosure
 import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
 				 numreactions, numparams, substoichmat, prodstoichmat
 
-using Reexport
 using ModelingToolkit
-using ModelingToolkit: value, var_from_nested_derivative
-@reexport using ModelingToolkit: @parameters
-@reexport using Symbolics: @variables
+using Symbolics: value, var_from_nested_derivative
 
-using SciMLBase
+using SciMLBase, SciMLBase.EnsembleAnalysis
 
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: polynormalize, simplify, operation, arguments, istree
@@ -28,6 +25,10 @@ export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eq
        species, params, speciesmap, paramsmap, numspecies, numreactions, numparams,
        moment_closure, deterministic_IC, ODEProblem,
 	   sample_raw_moments, sample_central_moments, sample_cumulants
+
+# reexporting from ModelingToolkit & Symbolics
+# needed for ReactionSystemMod definition
+export @parameters, @variables
 
 include("reaction_systems.jl")
 include("moment_equations.jl")
