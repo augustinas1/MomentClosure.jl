@@ -2,7 +2,7 @@ using MomentClosure
 using DiffEqJump, JLD2
 using Test
 
-JLD2.@load "test/test_data.jld2" sol
+JLD2.@load joinpath(@__DIR__, "test_data.jld2") sol
 
 μ_t = Dict([(0, 1, 0) => [30.0, 33.6, 37.6]
             (0, 0, 2) => [3600.0, 3461.4, 3207.0]
