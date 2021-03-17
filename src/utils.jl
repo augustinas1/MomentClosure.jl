@@ -1,124 +1,161 @@
+"""
+    get_raw_moments(sol::EnsembleSolution, order::Int; naive::Bool=true, b::Int=2)
 
-function sample_raw_moments(sol::EnsembleSolution, order::Int; naive::Bool=true)
-    # need to build a t x n matrix for each timepoint, where t is the number of realisations (trajectories)
-    # and n is the number of  variables
+Given an `EnsembleSolution` of [DifferentialEquations ensemble simulation]
+(https://diffeq.sciml.ai/stable/features/ensemble/#Performing-an-Ensemble-Simulation),
+return a Dictionary of raw moments computed up to the specified `order` at each time step.
 
-    # naive algorithm (naive=true), naivemoment(), performs much better in case of small N
-    # when N is large, big performance improvement is expected(?) using moment() (naive=false)
-    # this implementatation is experimental, need more testing to properly assert any
-    # statement about performance + understand why the naive algorithm is still very fast
-    # compared to the most trivial algorithm
+# Notes
+- For example, the dictionary key `(2,0,1)` maps to an array containing the values of
+  the raw moment ``μ_{201}`` at each time step.
+- It is assumed that the time steps are all at the same time point for all trajectories
+  (i.e., fixed `dt` used by the integrator or values were saved using `saveat`, as discussed [here]
+  (https://diffeq.sciml.ai/stable/features/ensemble/#Time-steps-vs-time-points)).
+- Moments are computed using [Cumulants.jl](https://github.com/iitis/Cumulants.jl) internally.
+  The naive algorithm of moment tensor calculations (`naive=true`) is usually faster for small
+  systems but the [proposed novel algorithm](https://arxiv.org/pdf/1701.05420.pdf) (`naive=false`)
+  *should* be more efficient in case of many marginal variables. The [block size]
+  (https://github.com/iitis/Cumulants.jl#block-size) `b` can also be specified for the
+  novel algorithm and may have a significant effect on its performance.
+- Only useful if higher order moments are needed: DifferentialEquations
+  has a number of far more efficient and flexible ensemble statistics functions for
+  means, variances and correlations, see [this tutorial]
+  (https://diffeq.sciml.ai/stable/features/ensemble/#Analyzing-an-Ensemble-Experiment)
+  for more details.
+"""
+function get_raw_moments(sol::EnsembleSolution, order::Int; naive::Bool=true, b::Int=2)
 
-    # TODO: rewrite this as sample_central_moments right now appears to be faster
-    # TODO: use internal SciMLBase functionality to simplify the code here further?
+    # TODO: improve performance (it's rather poor now)
+    # TODO: consider dropping the Dict and using DiffEqArrays
 
-    alg = naive ? naivemoment : moment
+    if naive
+        f_alg = naivemoment
+        b = ()
+    else
+        f_alg = moment
+    end
 
-    no_t_pts = length(sol.u[1].t)
+    no_t_pts = length(sol.u[1])
     N = length(sol.u[1].u[1])
 
-    iter_all = MomentClosure.construct_iter_all(N, order)
-    iter_zero = Tuple(fill(0, N))
+    iter_all = construct_iter_all(N, order)
+    iter_order = [filter(x -> sum(x) == m, iter_all) for m in 1:order]
+    iter_μ = vcat(iter_order...)
 
-    μ = Dict()
+    keys = Dict([iter => vcat([fill(i, n) for (i,n) in enumerate(iter)]...) for iter in iter_μ])
+    μ = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_μ])
 
-    for m in 1:order
+    for t_pt in 1:no_t_pts
 
-        data = Array{Float64}(undef, fill(N, m)..., no_t_pts)
+        tslice = componentwise_vectors_timestep(sol, t_pt)
+        tslice = hcat(tslice...) / 1
 
-        for t_pt in 1:no_t_pts
-            tslice = Array(hcat([s[t_pt] for s in sol]...)')
-            data[fill(:, m)..., t_pt] = Array(alg(tslice, m))
-        end
-
-        for iter in filter(x-> sum(x) == m, iter_all)
-            key = vcat([fill(i, m) for (i,m) in enumerate(iter)]...)
-            μ[iter] = data[key..., :]
+        for m in 1:order
+            data = Array(f_alg(tslice, m, b...))
+            for iter in iter_order[m]
+                μ[iter][t_pt] = data[keys[iter]...]
+            end
         end
 
     end
 
-    μ[iter_zero] = fill(1.0, no_t_pts)
+    μ
 
-    #typeof(sol) == EnsembleSolution does not work...
-
-    return μ
 end
 
+"""
+    get_central_moments(sol::EnsembleSolution, order::Int; naive::Bool=true, b::Int=2)
 
-function sample_central_moments(sol::EnsembleSolution, order::Int; naive::Bool=true)
+Given an `EnsembleSolution` of [DifferentialEquations ensemble simulation]
+(https://diffeq.sciml.ai/stable/features/ensemble/#Performing-an-Ensemble-Simulation),
+return a Dictionary of central moment estimates computed up to the specified `order`
+at each time step. See the notes of [`get_raw_moments`](@ref) function for more information.
+"""
+function get_central_moments(sol::EnsembleSolution, order::Int; naive::Bool=true, b::Int=2)
 
-    alg = naive ? naivemoment : moment
+    if naive
+        f_alg = naivemoment
+        b = ()
+    else
+        f_alg = moment
+    end
 
-    no_t_pts = length(sol.u[1].t)
+    no_t_pts = length(sol.u[1])
     N = length(sol.u[1].u[1])
 
-    iter_all = MomentClosure.construct_iter_all(N, order)
-    iter_zero = Tuple(fill(0, N))
+    iter_all = construct_iter_all(N, order)
     iter_order = [filter(x-> sum(x) == m, iter_all) for m in 1:order]
+    iter_M = filter(x -> sum(x) > 1, iter_all)
 
     keys = Dict([iter => vcat([fill(i, n) for (i,n) in enumerate(iter)]...) for iter in iter_all])
-    M = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_all])
+    M = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_M])
+
+    μ = Dict()
+    μ[Tuple(fill(0, N))] = 1.
 
     for t_pt in 1:no_t_pts
-        tslice = Array(hcat([s[t_pt] for s in sol]...)')
-        μ = Dict()
-        μ[iter_zero] = 1
+        tslice = componentwise_vectors_timestep(sol, t_pt)
+        tslice = hcat(tslice...) / 1
+
         for m in 1:order
-            data = Array(alg(tslice, m))
+            data = Array(f_alg(tslice, m, b...))
             for iter in iter_order[m]
                 μ[iter] = data[keys[iter]...]
             end
         end
         M_temp = raw_to_central_moments(N, order, μ)
-        for (key, val) in M_temp
-            M[key][t_pt] = val
+        for iter in iter_M
+            M[iter][t_pt] = M_temp[iter]
         end
     end
 
-    return M
+    M
 
 end
 
+"""
+    get_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true, b::Int=2)
 
-function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
+Given an `EnsembleSolution` of [DifferentialEquations ensemble simulation]
+(https://diffeq.sciml.ai/stable/features/ensemble/#Performing-an-Ensemble-Simulation),
+return a Dictionary of cumulant estimates computed up to the specified `order`
+at each time step. See the notes of [`get_raw_moments`](@ref) function for more information.
+"""
+function get_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true, b::Int=2)
 
-    no_t_pts = length(sol.u[1].t)
+    no_t_pts = length(sol.u[1])
     N = length(sol.u[1].u[1])
 
-    iter_all = MomentClosure.construct_iter_all(N, order)
+    iter_all = construct_iter_all(N, order)
     iter_order = [filter(x-> sum(x) == m, iter_all) for m in 1:order]
+    iter_κ = vcat(iter_order...)
+
+    keys = Dict([iter => vcat([fill(i, n) for (i,n) in enumerate(iter)]...) for iter in iter_κ])
+    κ = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_κ])
 
     if naive
 
-        κ = Dict()
+        for t_pt in 1:no_t_pts
 
-        for m in 1:order
+            tslice = componentwise_vectors_timestep(sol, t_pt)
+            tslice = hcat(tslice...) / 1
 
-            data = Array{Float64}(undef, fill(N, m)..., no_t_pts)
-
-            for t_pt in 1:no_t_pts
-                tslice = Array(hcat([s[t_pt] for s in sol]...)')
-                data[fill(:, m)..., t_pt] = Array(naivecumulant(tslice, m))
-            end
-
-            for iter in iter_order[m]
-                key = vcat([fill(i, m) for (i,m) in enumerate(iter)]...)
-                κ[iter] = data[key..., :]
+            for m in 1:order
+                data = Array(naivecumulant(tslice, m))
+                for iter in iter_order[m]
+                    κ[iter][t_pt] = data[keys[iter]...]
+                end
             end
 
         end
 
     else
 
-        iter_all = filter(x -> sum(x) > 0, iter_all)
-        keys = Dict([iter => vcat([fill(i, n) for (i,n) in enumerate(iter)]...) for iter in iter_all])
-        κ = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_all])
-
         for t_pt in 1:no_t_pts
 
-            tslice = Array(hcat([s[t_pt] for s in sol]...)')
-            κ_tensor = cumulants(tslice, order)
+            tslice = componentwise_vectors_timestep(sol, t_pt)
+            tslice = hcat(tslice...) / 1
+            κ_tensor = cumulants(tslice, order, b)
 
             for m in 1:order
 
@@ -134,7 +171,7 @@ function sample_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true)
 
     end
 
-    return κ
+    κ
 
 end
 

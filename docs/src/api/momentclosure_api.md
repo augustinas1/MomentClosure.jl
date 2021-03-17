@@ -67,7 +67,7 @@ latexify(moment_eqs, :closure)
 ## Stochastic Simulation Utilities
 
 ```@docs
-sample_raw_moments
-sample_central_moments
-sample_cumulants
+get_raw_moments
+get_central_moments
+get_cumulants
 ```

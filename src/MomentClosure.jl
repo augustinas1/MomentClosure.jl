@@ -24,7 +24,7 @@ export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eq
        get_S_mat, propensities, ReactionSystemMod,
        species, params, speciesmap, paramsmap, numspecies, numreactions, numparams,
        moment_closure, deterministic_IC, ODEProblem,
-	   sample_raw_moments, sample_central_moments, sample_cumulants
+	   get_raw_moments, get_central_moments, get_cumulants
 
 # reexporting from ModelingToolkit & Symbolics
 # needed for ReactionSystemMod definition
