@@ -242,7 +242,7 @@ jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 ensembleprob  = EnsembleProblem(jprob)
 
 # simulate 10000 SSA trajectories
-@time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=10000);
+@time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=10000)
 ```
 Now we use the DifferentialEquations [ensemble statistics tools](https://diffeq.sciml.ai/stable/features/ensemble/#Analyzing-an-Ensemble-Experiment) to calculate the SSA mean values and plot them:
 ```julia
