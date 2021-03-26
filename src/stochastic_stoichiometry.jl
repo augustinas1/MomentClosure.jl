@@ -2,7 +2,8 @@
 # necessary to deal with (independent) stochastic variables
 # NOTE: only geometric distribution is supported
 # the parameter passed is supposed to be the MEAN value
-function expected_coeff(x::Union{Int, Sym{ModelingToolkit.Parameter{Real}}}, pwr)
+#function expected_coeff(x::Union{Int, Sym{ModelingToolkit.Parameter{Real}}}, pwr)
+function expected_coeff(x::Union{Int, Symbolic}, pwr)
     if typeof(x) == Int64
         x^pwr
     else
@@ -18,7 +19,8 @@ function eulerian_number(n, k)
     return suma
 end
 
-function geometric_raw_moment_arbitrary_order(m::Sym{ModelingToolkit.Parameter{Real}}, n::Int)
+#function geometric_raw_moment_arbitrary_order(m::Sym{ModelingToolkit.Parameter{Real}}, n::Int)
+function geometric_raw_moment_arbitrary_order(m::Symbolic, n::Int)
     # computes the symbolic expression of ⟨Xⁿ⟩ where X is a stochastic variable
     # following a geometric distribution with mean burst size m
     # the distribution has the form P(x) = (1-p)ˣp, and m is given by m = (1-p)/p
@@ -33,7 +35,8 @@ function geometric_raw_moment_arbitrary_order(m::Sym{ModelingToolkit.Parameter{R
     simplify((1+m)^n * suma)
 end
 
-function geometric_raw_moment(m::Sym{ModelingToolkit.Parameter{Real}}, n::Int)
+#function geometric_raw_moment(m::Sym{ModelingToolkit.Parameter{Real}}, n::Int)
+function geometric_raw_moment(m::Symbolic, n::Int)
     # provide the symbolic expression of ⟨Xⁿ⟩ where X is a stochastic variable
     # following a geometric distribution with mean burst size m
     # the distribution has the form P(x) = (1-p)ˣp, and m is given by m = (1-p)/p

@@ -13,8 +13,19 @@ identical for the sake of familiar users.
 # Fields
 $(FIELDS)
 
+# Notes
+- The molecule numbers of each chemical species must be explicitly defined as
+  [`Symbolics.@variables`](@ref) and reaction constants as [`ModelingToolkit.@parameters`](@ref).
+  The time, ``t``, must also be initialised as a `ModelingToolkit.parameter`
+  and be used to indicate the time-dependence of species' variables.
+- To specify that a certain reaction product is geometrically distributed, the
+  corresponding stoichiometric matrix element must be a `ModelingToolkit.parameter`
+  denoting the mean of the distribution.
+
 # Example
 ```julia
+using MomentClosure
+
 @parameters t, c₁, c₂, c₃, c₄, Ω
 @variables X(t), Y(t)
 
