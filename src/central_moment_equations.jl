@@ -74,8 +74,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     @parameters t # need to define time as a parameter
 
     μ = define_μ(N, 1, iter_1)
-    #μ = delete!(μ, Tuple(zeros(N)))
-
     M = define_M(N, q_order)
 
     #= Obtain all derivatives of the propensity functions with respect
@@ -87,7 +85,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     n = species(rn)
     dict_n_to_μ = Dict(zip(n, values(μ)))
 
-    # TODO: set entries to zero by default using info from polynomial_propensities
     # save derivatives in a dictionary
     derivs = Dict()
     for r in 1:R

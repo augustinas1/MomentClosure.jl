@@ -1,8 +1,12 @@
-function normal_closure(sys::MomentEquations)
+function normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
 
     closure = OrderedDict()
     closure_exp = OrderedDict()
     N = sys.N
+
+    if !isempty(binary_vars)
+        sys = bernoulli_moment_eqs(sys, binary_vars)
+    end
 
     # build symbolic expressions of cumulants up to q_order in terms of central/raw moments
     if typeof(sys) == CentralMomentEquations

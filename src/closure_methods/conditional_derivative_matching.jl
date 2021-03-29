@@ -1,4 +1,5 @@
-function conditional_derivative_matching(sys::MomentEquations, binary_vars::Vector=[])
+function conditional_derivative_matching(sys::MomentEquations,
+                                         binary_vars::Array{Int,1}=Int[])
 
     if isempty(binary_vars)
         error("conditional closure does not work if there are no binary species")

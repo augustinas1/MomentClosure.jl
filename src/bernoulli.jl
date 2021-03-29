@@ -1,4 +1,4 @@
-function bernoulli_iter_redundant(sys, binary_vars)
+function bernoulli_iter_redundant(sys, binary_vars::Array{Int,1})
 
     redundant_iter_sub = Dict()
 
@@ -24,15 +24,10 @@ function bernoulli_iter_redundant(sys, binary_vars)
 end
 
 
-
-function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
-
-    # Construct moment equations removing the redundant ones
-    # noting the properties of the Bernoulli variables in the system
+function bernoulli_reduce(sys::MomentEquations, binary_vars::Array{Int,1})
 
     N = sys.N
 
-    iter_subs = Dict()
     redundant_iter_sub = bernoulli_iter_redundant(sys, binary_vars)
     redundant_iter = keys(redundant_iter_sub)
 
@@ -68,6 +63,18 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
 
     end
 
+    redundant_iter, redundant_eqs, iter_sub
+
+end
+
+
+function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Array{Int,1})
+
+    # Construct moment equations removing the redundant ones
+    # noting the properties of the Bernoulli variables in the system
+
+    redundant_iter, redundant_eqs, iter_sub = bernoulli_reduce(sys, binary_vars)
+
     # construct the cleaned moment equations
     clean_eqs = Equation[]
     for (i, eq) in enumerate(sys.odes.eqs)
@@ -83,22 +90,20 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Vector)
     iter_m = filter(x -> 2 <= sum(x) <= sys.m_order, clean_iter)
     iter_q = filter(x -> sys.m_order < sum(x) <= sys.q_order, clean_iter)
 
-    # TODO: use setfield?
-
     field_values = [getfield(sys, field) for field in fieldnames(typeof(sys))]
     ind_iter_m = findall(x -> x==:iter_m, fieldnames(typeof(sys)))[1]
     ind_iter_q = findall(x -> x==:iter_q, fieldnames(typeof(sys)))[1]
     ind_iter_all = findall(x -> x==:iter_all, fieldnames(typeof(sys)))[1]
 
-    field_values[ind_iter_m] = iter_m     #sys.iter_m
-    field_values[ind_iter_q] = iter_q #sys.iter_q
+    field_values[ind_iter_m] = iter_m       #sys.iter_m
+    field_values[ind_iter_q] = iter_q       #sys.iter_q
     field_values[ind_iter_all] = clean_iter #sys.iter_all
 
     ## fixing ODE system to preserve consistent ordering of parameters
     iv = sys.odes.iv
     ps = sys.odes.ps
 
-    vars = extract_variables(clean_eqs, N, sys.q_order)
+    vars = extract_variables(clean_eqs, sys.N, sys.q_order)
     odes = ODESystem(clean_eqs, iv, vars, ps)
 
     new_system = typeof(sys)(odes, field_values[2:end]...)

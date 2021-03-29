@@ -1,9 +1,16 @@
-function log_normal_closure(sys::MomentEquations)
+function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
 
     closure = OrderedDict()
     closure_exp = OrderedDict() # here it does not play a role
-
     N = sys.N
+
+    if isempty(binary_vars)
+        isbernoulli = false
+    else
+        sys = bernoulli_moment_eqs(sys, binary_vars)
+        isbernoulli = true
+    end
+
     if sys isa CentralMomentEquations
         M = copy(sys.M)
         μ = central_to_raw_moments(N, sys.m_order)
@@ -41,7 +48,7 @@ function log_normal_closure(sys::MomentEquations)
     if typeof(sys) == CentralMomentEquations
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained log-normal raw moment expressions
-        raw_to_central = raw_to_central_moments(N, sys.q_order, μ)
+        raw_to_central = raw_to_central_moments(N, sys.q_order, μ, bernoulli=isbernoulli)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         closure_M = OrderedDict()
         for i in sys.iter_q

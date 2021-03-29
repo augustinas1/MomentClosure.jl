@@ -10,12 +10,19 @@ function multi_binomial(a, b)
     end
 end
 
-function derivative_matching(sys::MomentEquations)
+function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
 
     closure_exp = OrderedDict()
     closure = OrderedDict() # additional dict to hold not expanded symbolic expressions
 
     N = sys.N
+
+    if isempty(binary_vars)
+        isbernoulli = false
+    else
+        sys = bernoulli_moment_eqs(sys, binary_vars)
+        isbernoulli = true
+    end
 
     # construct the raw moments up to mth order from the solved-for central moments
     if typeof(sys) == CentralMomentEquations
@@ -81,7 +88,7 @@ function derivative_matching(sys::MomentEquations)
     if typeof(sys) == CentralMomentEquations
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained raw moment expressions
-        raw_to_central = raw_to_central_moments(N, sys.q_order, closed_μ)
+        raw_to_central = raw_to_central_moments(N, sys.q_order, closed_μ, bernoulli=isbernoulli)
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         closure_M = OrderedDict()
         for i in sys.iter_q

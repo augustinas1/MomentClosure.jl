@@ -35,7 +35,7 @@ expr2 = simplify(value.(expr2))
 @test isequal(expr1, expr2)
 @test length(sys_clean.odes.eqs) == 6
 
-@test_throws ErrorException moment_closure(sys, "conditional derivative matching", [])
+@test_throws ErrorException moment_closure(sys, "conditional derivative matching")
 
 closed_eqs = moment_closure(sys, "conditional gaussian", binary_vars)
 expr1 = closed_eqs.closure[μ[1,4]]
@@ -76,3 +76,5 @@ expr1 = closed_eqs.closure[M[1,3]]
 expr2 = μ[1,0]*(M[1,1]+μ[0,1]*μ[1,0])^-3*(M[1,2]+M[0,2]*μ[1,0]+μ[1,0]*μ[0,1]^2+2*M[1,1]*μ[0,1])^3 -
     M[0,3]*μ[1,0] - 3*M[1,1]*μ[0,1]^2 - 3*M[1,2]*μ[0,1] - μ[1,0]*μ[0,1]^3- 3*M[0,2]*μ[0,1]*μ[1,0]
 @test isequal(polynormalize(expr1), polynormalize(expr2))
+
+## Some further tests checking the Bernoulli functionality
