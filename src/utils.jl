@@ -218,6 +218,7 @@ function deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 
 end
 
+
 """
     format_moment_eqs(eqs::MomentEquations)
 
@@ -252,11 +253,23 @@ Given [`ClosedMomentEquations`](@ref), return an array of formatted strings
 representing closure functions for each higher order moment. The symbolic
 expressions are formatted similarly to [`format_moment_eqs`](@ref) and can
 be visualised using [Latexify](https://github.com/korsbo/Latexify.jl).
+
+# Notes
+- `include_all` argument specifies whether all higher-order moments (`include_all=true`)
+  or only those encountered in the moment ODEs specifically (`include_all=false`,
+  the default option) will be returned.
 """
-function format_closure(eqs::ClosedMomentEquations)
+function format_closure(eqs::ClosedMomentEquations; include_all::Bool=false)
     closure = eqs.closure
     exprs = []
-    for i in keys(closure)
+
+    if include_all
+        iter = keys(closure)
+    else
+        iter = setdiff(eqs.open_eqs.odes.states, eqs.odes.states)
+    end
+
+    for i in iter
         eq = closure[i]
         expr = string(i)*" = "*string(eq)
         expr = replace(expr, "(t)"=>"")
@@ -267,7 +280,7 @@ function format_closure(eqs::ClosedMomentEquations)
 end
 
 
-@latexrecipe function f(eqs::MomentEquations, type=:equations; inds::Array)
+@latexrecipe function f(eqs::MomentEquations, type=:equations)
 
     env --> :align
     starred --> true
