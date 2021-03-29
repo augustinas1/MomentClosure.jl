@@ -18,35 +18,19 @@ The terminology and the notation used throughout is consistent with the **Theory
 ```julia
 using Catalyst
 rn = @reaction_network begin
+  # also including system-size parameter Ω
   (c₁/Ω^2), 2X + Y → 3X
   (c₂), X → Y
   (c₃*Ω, c₄), 0 ↔ X
 end c₁ c₂ c₃ c₄ Ω
 ```
-The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). Note that we have also included the system-size parameter $\Omega$ which will be of interest later on looking at the system's dynamics.
+The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using MomentClosure functions [`get_S_mat`](@ref) and [`propensities`](@ref) respectively.
 
-**Alternatively**, models can be defined as a MomentClosure's built-in [`ReactionSystemMod`](@ref) by considering the net stoichiometry matrix and a vector of the corresponding reaction propensity functions. As in Catalyst, the model specification is based on the rich symbolic-numeric modelling framework provided by [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl). Note that we have to explicitly define the molecule numbers of each chemical species as [`Symbolics.@variables`](@ref) and reaction constants as [`ModelingToolkit.@parameters`](@ref). The time, $t$, must also be initialised as a `ModelingToolkit.parameter` and used to indicate the time-dependence of species' variables. The reaction network can then be constructed as follows:
-```julia
-using MomentClosure
-@parameters t, c₁, c₂, c₃, c₄, Ω
-@variables X(t), Y(t)
-
-# stoichiometric matrix
-S_mat = [ 1 -1  1 -1;
-         -1  1  0  0]
-
-# propensity functions
-a = [c₁*X*Y*(X-1)/Ω^2, c₂*X, c₃*Ω, c₄*X]
-
-rn2 = ReactionSystemMod(t, [X, Y], [c₁, c₂, c₃, c₄, Ω], a, S_mat)
-```
-We stress that [`ReactionSystemMod`](@ref), as the name suggests, is a rather trivial extension/modification of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The main motivation behind it is to add support for systems that include reactions whose products are independent geometrically distributed random variables ([currently unsupported by Catalyst](https://github.com/SciML/Catalyst.jl/issues/308)), see [the auto-regulatory gene network example](gene_network_example.md) for more details. Although [`ReactionSystemMod`](@ref) provides the same basic functions to access network properties as does Catalyst for a `ModelingToolkit.ReactionSystem` ([see the API](@ref api)), its functionality is nowhere near as rich. For example, `ReactionSystemMod` cannot be used directly for [deterministic or stochastic simulations](https://github.com/SciML/DifferentialEquations.jl/) using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl/). Therefore, we advise using Catalyst for model initialisation whenever possible.
-
-Note that the net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from a `ModelingToolkit.ReactionSystem` using functions [`get_S_mat`](@ref) and [`propensities`](@ref) respectively.
+Note that MomentClosure add support for systems containing geometrically distributed reaction products—see [this tutorial](@ref geometric-and-conditional) for more details.
 
 ## Generating Moment Equations
 
-Having defined the Brusselator model, we can proceed to obtain the moment equations. The system follows the law of mass action, i.e., all propensity functions are polynomials in molecule numbers $X(t)$ and $Y(t)$, and so we can generate either *raw* or *central* moment equations, as described in the **Theory** section on [moment expansion](@ref moment_expansion).
+We can now obtain the moment equations. The system follows the law of mass action, i.e., all propensity functions are polynomials in molecule numbers $X(t)$ and $Y(t)$, and so we can generate either *raw* or *central* moment equations, as described in the **Theory** section on [moment expansion](@ref moment_expansion).
 
 #### Raw Moment Equations
 
@@ -139,15 +123,10 @@ latexify(exprs, :closure)
 ```
 ```math
 \begin{align*}
-\mu{_{30}} =& 3 \mu{_{10}} \mu{_{20}} - 2 \mu{_{10}}^{3} \\
 \mu{_{21}} =& \mu{_{01}} \mu{_{20}} + 2 \mu{_{10}} \mu{_{11}} - 2 \mu{_{01}} \mu{_{10}}^{2} \\
 \mu{_{12}} =& \mu{_{02}} \mu{_{10}} + 2 \mu{_{01}} \mu{_{11}} - 2 \mu{_{10}} \mu{_{01}}^{2} \\
-\mu{_{03}} =& 3 \mu{_{01}} \mu{_{02}} - 2 \mu{_{01}}^{3} \\
-\mu{_{40}} =& 6 \mu{_{10}}^{4} + 3 \mu{_{20}}^{2} + 4 \mu{_{10}} \mu{_{30}} - 12 \mu{_{20}} \mu{_{10}}^{2} \\
 \mu{_{31}} =& \mu{_{01}} \mu{_{30}} + 6 \mu{_{01}} \mu{_{10}}^{3} + 3 \mu{_{10}} \mu{_{21}} + 3 \mu{_{11}} \mu{_{20}} - 6 \mu{_{11}} \mu{_{10}}^{2} - 6 \mu{_{01}} \mu{_{10}} \mu{_{20}} \\
-\mu{_{22}} =& \mu{_{02}} \mu{_{20}} + 2 \mu{_{11}}^{2} + 2 \mu{_{01}} \mu{_{21}} + 2 \mu{_{10}} \mu{_{12}} + 6 \mu{_{01}}^{2} \mu{_{10}}^{2} - 2 \mu{_{02}} \mu{_{10}}^{2} - 2 \mu{_{20}} \mu{_{01}}^{2} - 8 \mu{_{01}} \mu{_{10}} \mu{_{11}} \\
-\mu{_{13}} =& \mu{_{03}} \mu{_{10}} + 3 \mu{_{01}} \mu{_{12}} + 3 \mu{_{02}} \mu{_{11}} + 6 \mu{_{10}} \mu{_{01}}^{3} - 6 \mu{_{11}} \mu{_{01}}^{2} - 6 \mu{_{01}} \mu{_{02}} \mu{_{10}} \\
-\mu{_{04}} =& 6 \mu{_{01}}^{4} + 3 \mu{_{02}}^{2} + 4 \mu{_{01}} \mu{_{03}} - 12 \mu{_{02}} \mu{_{01}}^{2}
+\mu{_{22}} =& \mu{_{02}} \mu{_{20}} + 2 \mu{_{11}}^{2} + 2 \mu{_{01}} \mu{_{21}} + 2 \mu{_{10}} \mu{_{12}} + 6 \mu{_{01}}^{2} \mu{_{10}}^{2} - 2 \mu{_{02}} \mu{_{10}}^{2} - 2 \mu{_{20}} \mu{_{01}}^{2} - 8 \mu{_{01}} \mu{_{10}} \mu{_{11}}
 \end{align*}
 ```
 Similarly, we can close central moment equations using
@@ -163,12 +142,8 @@ latexify(closed_central_eqs, :closure)
 M{_{30}} =& 0 \\
 M{_{21}} =& 0 \\
 M{_{12}} =& 0 \\
-M{_{03}} =& 0 \\
-M{_{40}} =& 3 M{_{20}}^{2} \\
 M{_{31}} =& 3 M{_{11}} M{_{20}} \\
-M{_{22}} =& M{_{02}} M{_{20}} + 2 M{_{11}}^{2} \\
-M{_{13}} =& 3 M{_{02}} M{_{11}} \\
-M{_{04}} =& 3 M{_{02}}^{2}
+M{_{22}} =& M{_{02}} M{_{20}} + 2 M{_{11}}^{2}
 \end{align*}
 ```
 Higher order central moments under normal closure take a rather simple form compared to their raw moment equivalents. That can be expected due to the relationship between central moments and cumulants, on which [the closure is based](@ref normal_closure).
