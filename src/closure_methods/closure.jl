@@ -28,7 +28,7 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
 end
 
 """
-    moment_closure(sys::MomentEquations, closure::String, binary_vars::Vector=[])
+    moment_closure(sys::MomentEquations, closure::String, binary_vars::Array{Int,1}=Int[])
 
 Given `MomentEquations`, apply the specified moment closure approximation and return
 the [`ClosedMomentEquations`](@ref).

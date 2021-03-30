@@ -119,7 +119,7 @@ latexify(closed_raw_eqs)
 ```
 The closure functions can also be displayed by adding `:closure` argument:
 ```julia
-latexify(exprs, :closure)
+latexify(closed_raw_eqs, :closure)
 ```
 ```math
 \begin{align*}
@@ -181,7 +181,7 @@ tspan = (0., 100.)
 ```
 Now we are able to create the corresponding `ODEProblem`:
 ```julia
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, pmap)
+oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 ```
 Finally, we have everything we need to solve the raw moment equations which can be done using any ODE solver [implemented within DifferentialEquations.jl](https://diffeq.sciml.ai/dev/solvers/ode_solve/). We use the default `Tsit5()` solver and then [plot](https://diffeq.sciml.ai/stable/basics/plot/#plot) the obtained mean molecule numbers:
 ```julia

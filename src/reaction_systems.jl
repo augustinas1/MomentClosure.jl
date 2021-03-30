@@ -7,8 +7,8 @@
 $(TYPEDEF)
 
 A system of chemical reactions. The structure is heavily based on
-`ModelingToolkit.ReactionSystem` and the relevant fields are left
-identical for the sake of familiar users.
+[`ModelingToolkit.ReactionSystem`](https://mtk.sciml.ai/stable/systems/ReactionSystem)
+and the relevant fields are left identical for the sake of familiar users.
 
 # Fields
 $(FIELDS)
@@ -22,7 +22,7 @@ $(FIELDS)
   corresponding stoichiometric matrix element must be a `ModelingToolkit.parameter`
   denoting the mean of the distribution.
 
-# Example
+# Example (also see [here](@ref geometric-and-conditonal))
 ```julia
 using MomentClosure
 

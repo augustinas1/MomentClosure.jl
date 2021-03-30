@@ -181,14 +181,16 @@ end
 Given an array of initial molecule numbers and the corresponding moment equations,
 return a mapping of each moment to its initial value under deterministic initial conditions.
 
-TODO: discuss that molecule numbers cannot be set to zero for certain closures
-
 # Notes
 - The means are set to initial molecule numbers (as they take the values specified in
   `u₀` with probability one). The higher order raw moments are products of the corresponding
   powers of the means whereas the higher order central moments are simply zero.
 - The ordering of `u₀` elements must be consistent with the ordering of species
   in the corresponding reaction system (can be checked with the `speciesmap` function).
+- As higher-order moment functions under log-normal, gamma, derivative matching and
+  the conditional closures involve moments raised to negative powers, setting initial
+  molecule numbers of certain species to *zeros* will result in NaN errors when solving
+  the ODEs (the specifics depend on the system at hand).
 """
 function deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 

@@ -1,6 +1,6 @@
 # [Moment Closure Approximations](@id moment_closure_approximations)
 
-In the [previous section](moment_expansion.md), we have shown that for a non-linear system an infinite hierarchy of coupled moment equations is obtained that cannot be solved directly and therefore needs to be truncated in an approximate way. This can be achieved using moment closure approximations (MAs) using which all moments above a certain order $m$ are expressed in terms of $m^{\text{th}}$ and lower order moments using various (usually distributional) assumptions [1]. Doing so enables us to effectively *close* the moment hierarchy, leading to a finite set of ODEs which can then be solved numerically. In this section, we present some the commonly used MA methods that are implemented in MomentClosure. Please see the **Tutorials** section for examples showing different MAs applied to a variety of systems.
+In the [previous section](moment_expansion.md), we have shown that for a non-linear system an infinite hierarchy of coupled moment equations is obtained that cannot be solved directly and, therefore, needs to be truncated in an approximate way. This can be achieved using moment closure approximations (MAs), in which all moments above a certain order $m$ are expressed in terms of $m^{\text{th}}$ and lower order moments using various (usually distributional) assumptions [1]. Doing so enables us to effectively *close* the moment hierarchy, leading to a finite set of ODEs which can then be solved numerically. In this section, we present some the commonly used MA methods that are implemented in MomentClosure. Please see the **Tutorials** section for examples showing different MAs applied to a variety of systems.
 
 ## [Zero Closure](@id zero_closure)
 
@@ -32,8 +32,8 @@ Note that a different implementation of normal closure can be found in literatur
 Although the Poisson distribution lacks a general formulation for multiple variables [3], "Poisson MA" has been formulated [2, 8] assuming that the joint multivariate distribution is a product of univariate Poisson distributions, i.e., $n_i \sim \text{Poisson}(\mu_i)$. The cumulants of a univariate Poisson distribution are equal to the mean, hence in Poisson closure we set all higher order diagonal cumulants to the corresponding mean values and mixed cumulants to zero [2], which in our notation can be expressed as:
 ```math
 \begin{align*}
-    \kappa_{\mathbf{i}} &= \mu_k, \quad \text{if} \; |\mathbf{i}| > m \; \text{and} \; i_1,\dotsc,i_N = k \; \text{or} \; 0 \quad \text{for some} \; k \in \{1,\dotsc,N\}, \\
-    \kappa_{\mathbf{i}} &= 0, \quad \; \; \text{if} \; |\mathbf{i}| > m \; \text{and} \; i_k \neq i_l \quad \text{for some} \; k,l \in \{1,\dotsc,N\}.
+    \kappa_{\mathbf{i}} &= \mu_j, \quad \text{if} \; i_{j} > m \; \text{and} \; i_{j\neq k} = 0 \quad \text{for some} \; j, k \in \{1,\dotsc,N\}, \\
+    \kappa_{\mathbf{i}} &= 0, \quad \text{if} \;  |\mathbf{i}| > m \; \text{and} \; i_{j} \neq i_{k} \; (\text{where} \; i_{j} \neq 0, i_{k} \neq 0) \quad \text{for some} \; j, k \in \{1,\dotsc,N\}
 \end{align*}
 ```
 Similarly to normal closure, the higher order central/raw moments can be expressed in terms of cumulants as described in [7].
@@ -209,11 +209,73 @@ where all elements of $\mathbf{ϵ}(\mathbf{n}_0)$ are zero except the ones corre
 
 ## Conditional Closures
 
-Discussion of [16].
+As standard MAs often fail to provide sufficiently accurate approximations of chemical reaction networks involving both high- and low-abundance species, some novel approaches suggest using moments conditioned on the low-copy number species, which can lead to a more effective description of the system dynamics [1, 16]. Here we discuss the conditional moment closure proposed by Soltani et al. (2015) [16], applicable to networks containing molecular species which copy number can be either zero or one, i.e., a binary/Bernoulli random variable. Such conditional MA can be very useful in the study of gene networks where two-state gene systems are often considered—the gene state itself can be treated as a distinct species which molecule number is a Bernoulli variable.
+
+The conditional MA is based on conditioning the higher order moments of high-abundance species on the binary species being in state 1 (instead of 0) and then applying standard MAs on the conditional moments. Closely following Soltani et al. [16], we use a two-state gene circuit to illustrate the conditional MAs, denoting the binary gene state by $g$ and the protein number (high-abundance species) by $p$. Firstly, note that as $g$ is a Bernoulli variable the following identities hold
+```math
+\begin{align*}
+\langle g^j p \rangle &= \langle g \rangle, \quad j \in {2, 3, \dotsc}, \\
+\langle g^j p^k \rangle &= \langle g p^k \rangle, \quad j,k \in {1, 2, 3, \dotsc}
+\end{align*}
+```
+Therefore, we only need to concern ourselves with moments of the form $\langle p^k \rangle$ and $\langle gp^k \rangle$. The former can be approximated using the standard MAs (no conditioning needed), whereas the latter can be written down as:
+```math
+\begin{align*}
+\langle gp^j \rangle = \langle p^j \,|\, g=1 \rangle \langle g \rangle, \quad j\in \{1,2, \dotsc\}.
+\end{align*}
+```
+Now the conditional moment $\langle p^j \,|\, g= 1 \rangle$ can be expressed in terms of lower order conditional moments using one of the standard MAs, e.g., normal closure or derivative matching—the two methods (including the conditioning step) are respectively known as the *conditional gaussian* and *conditional derivative matching* MAs. For completeness, we show how the two methods are applied to approximate a specific higher order moment:
+```math
+\begin{align*}
+    \langle gp^3 \rangle = \langle p^3 \,|\, g=1 \rangle \langle g \rangle.
+\end{align*}
+```
 
 ### [Conditional Gaussian Closure](@id conditional_gaussian_closure)
 
+Under the conditional Gaussian MA, we assume that the number of protein molecules conditioned on the gene being active, $p \,|\, g = 1$, follows a Gaussian distribution. In other words, we apply [normal MA](@ref normal_closure) on the conditional moment $\langle p^j \,|\, g=1 \rangle$. Hence we obtain (following the example above):
+```math
+\begin{align*}
+\langle p^3 \,|\, g= 1 \rangle = 3 \langle p^2 \,|\, g = 1 \rangle \langle p \,|\, g=1 \rangle - 2 \langle p \,|\, g=1 \rangle^3.
+\end{align*}
+```
+Using $\langle gp^j \rangle = \langle p^j \,|\, g=1 \rangle \langle g \rangle$, we can rewrite the equation as:
+```math
+\begin{align*}
+\langle p^3 \,|\, g= 1 \rangle = 3 \frac{\langle gp^2 \rangle \langle gp \rangle}{\langle g \rangle^2} - 2 \frac{\langle gp \rangle^3}{\langle g \rangle^3}.
+\end{align*}
+```
+Plugging this into the previous expression of the higher-order moment $\langle gp^3 \rangle$ we finally obtain:
+```math
+\begin{align*}
+    \langle gp^3 \rangle = 3 \frac{\langle gp^2 \rangle \langle gp \rangle}{\langle g \rangle} - 2 \frac{\langle gp \rangle^3}{\langle g \rangle^2}.
+\end{align*}
+```
+
 ### [Conditional Derivative Matching](@id conditional_derivative_matching)
+
+The conditional derivative matching boils down to approximating the higher order conditional moments in terms of lower order conditional moments using the standard [derivative matching](@ref derivative_matching):
+```math
+\begin{align*}
+\langle p^3 \,|\, g = 1 \rangle = \frac{\langle p^2 \,|\, g = 1 \rangle^3}{\langle p \,|\, g= 1 \rangle^3}.
+\end{align*}
+```
+Using $\langle gp^j \rangle = \langle p^j \,|\, g=1 \rangle \langle g \rangle$ again, we find:
+```math
+\begin{align*}
+\langle gp^3 \rangle = \frac{\langle gp^2 \rangle^3 \langle g \rangle}{\langle gp \rangle^3}.
+\end{align*}
+```
+
+Note that conditional moment closure is fully applicable to systems containing multiple binary species. For example, given two two-state genes, $g_1$ and $g_2$, the same Bernoulli variable properties hold and the higher-order moments can be expressed as:
+```math
+\begin{align*}
+\langle g_1 g_2 p^j \rangle = \langle p^j \,|\, g_1 = g_2 = 1 \rangle \langle g_1 g_2 \rangle, \quad j \in \{1,2,\dotsc\}.
+\end{align*}
+```
+Such higher order conditional moments can again be closed using normal closure or derivative matching.
+
+Note that the description here is taken from [16] and we urge the reader to see the paper for more details. In addition, we have used MomentClosure to apply conditional closures on genetic feedback loops and reproduce some of the published results in [this example](@ref geometric-and-conditional).
 
 ## References
 

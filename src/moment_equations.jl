@@ -4,7 +4,7 @@ abstract type MomentEquations end
 $(TYPEDEF)
 
 Raw moment equations generated for the given system plus a number of
-helper parameters (important for internal functionality).
+helper parameters (used internally).
 
 # Fields
 $(FIELDS)
@@ -21,14 +21,14 @@ struct RawMomentEquations <: MomentEquations
     m_order::Int
     """Expansion order."""
     q_order::Int
-    """Vector of all index combinations (Tuples) up to `q_order`."""
+    """Vector of all index combinations up to `q_order`."""
     iter_all::Vector
-    """Vector of all index combinations (Tuples) up to `m_order`."""
+    """Vector of all index combinations up to `m_order`."""
     iter_m::Vector
-    """Vector of all index combinations (Tuples) of order greater than `m_order`
+    """Vector of all index combinations of order greater than `m_order`
     up to `q_order`."""
     iter_q::Vector
-    """Vector of index combinations (Tuples)of order 1."""
+    """Vector of index combinations of order 1."""
     iter_1::Vector
 end
 
@@ -36,7 +36,7 @@ end
 $(TYPEDEF)
 
 Central moment equations generated for the given system plus a number of
-helper parameters (important for internal functionality).
+helper parameters (used internally).
 
 # Fields
 $(FIELDS)

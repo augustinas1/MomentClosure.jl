@@ -67,7 +67,14 @@ function bernoulli_reduce(sys::MomentEquations, binary_vars::Array{Int,1})
 
 end
 
+"""
+    bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Array{Int,1})
 
+Given `MomentEquations` and an array of indices specifying the species which molecule numbers are
+binary variables (either 0 or 1), apply identities of Bernoulli variables to remove the redundant
+ODEs and return the *cleaned up* `MomentEquations`. See [here](@ref geometric-and-conditon) for
+an example usage.
+"""
 function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Array{Int,1})
 
     # Construct moment equations removing the redundant ones
