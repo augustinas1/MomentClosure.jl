@@ -17,7 +17,8 @@ The transcription (mRNA) dynamics are not modelled explicitly in this gene circu
 
 Using `ReactionSystemMod`, our gene network model can be constructed as follows:
 ```julia
-using MomentClosure
+# load all the packages we will need
+using MomentClosure, DiffEqJump, OrdinaryDiffEq, DiffEqBase.EnsembleAnalysis, Plots, Latexify
 
 @parameters t, k_on, k_off, k_p, γ_p, b
 @variables g(t), p(t)

@@ -261,11 +261,11 @@ be visualised using [Latexify](https://github.com/korsbo/Latexify.jl).
   or only those encountered in the moment ODEs specifically (`include_all=false`,
   the default option) will be returned.
 """
-function format_closure(eqs::ClosedMomentEquations; include_all::Bool=false)
+function format_closure(eqs::ClosedMomentEquations; format_all::Bool=false)
     closure = eqs.closure
     exprs = []
 
-    if include_all
+    if format_all
         iter = keys(closure)
     else
         iter = setdiff(eqs.open_eqs.odes.states, eqs.odes.states)
@@ -282,7 +282,7 @@ function format_closure(eqs::ClosedMomentEquations; include_all::Bool=false)
 end
 
 
-@latexrecipe function f(eqs::MomentEquations, type=:equations)
+@latexrecipe function f(eqs::MomentEquations, type=:equations; print_all=false)
 
     env --> :align
     starred --> true
@@ -291,7 +291,7 @@ end
     if type == :equations
         return format_moment_eqs(eqs)
     elseif type == :closure
-        return format_closure(eqs)
+        return format_closure(eqs, format_all=print_all)
     else
         error("supported arguments are only `:equations` or `:closure`")
     end

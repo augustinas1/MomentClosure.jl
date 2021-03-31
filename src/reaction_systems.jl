@@ -22,7 +22,7 @@ $(FIELDS)
   corresponding stoichiometric matrix element must be a `ModelingToolkit.parameter`
   denoting the mean of the distribution.
 
-# Example (also see [here](@ref geometric-and-conditonal))
+# Example (also see [here](@ref geometric-and-conditional))
 ```julia
 using MomentClosure
 
