@@ -55,18 +55,18 @@ function conditional_gaussian_closure(sys::MomentEquations,
 
                 # step 2
                 conditional_μ = -μ[bernoulli_iter]*(K[r] - μ[r])
-                conditional_μ = simplify(conditional_μ, polynorm=true)
+                conditional_μ = simplify(conditional_μ, expand=true)
 
                 # step 3
                 iter_conditional = filter(x -> 0 < sum(x) <= sum(r), nonbernoulli_iters)
                 conditional_sub = Dict([Pair(μ[iter], μ[iter.+bernoulli_iter]/μ[bernoulli_iter])
                                        for iter in iter_conditional])
                 conditional_μ = substitute(conditional_μ, conditional_sub)
-                conditional_μ = simplify(conditional_μ, polynorm=true)
+                conditional_μ = simplify(conditional_μ, expand=true)
 
                 closure_μ[μ[iter]] = conditional_μ
                 closure_μ_exp[μ[iter]] = substitute(conditional_μ, closure_μ_exp)
-                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]], polynorm=true)
+                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]], expand=true)
             else
                 # Case (ii)
 
@@ -75,11 +75,11 @@ function conditional_gaussian_closure(sys::MomentEquations,
                 # we assume that the marginal distribution P(p) also follows a Gaussian
                 # so that ⟨p^j⟩ is truncated according to normal closure
 
-                moment = simplify(-(K[iter]-μ[iter]), polynorm=true)
+                moment = simplify(-(K[iter]-μ[iter]), expand=true)
 
                 closure_μ[μ[iter]] = moment
                 closure_μ_exp[μ[iter]] = substitute(moment, closure_μ_exp)
-                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]], polynorm=true)
+                closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]], expand=true)
             end
         end
     end
@@ -100,10 +100,10 @@ function conditional_gaussian_closure(sys::MomentEquations,
         for i in sys.iter_q
             μ_M[i] = closure_μ[μ[i]]
             μ_M[i] = substitute(μ_M[i], μ_central)
-            μ_M[i] = simplify(μ_M[i], polynorm=true)
+            μ_M[i] = simplify(μ_M[i], expand=true)
             μ_M_exp[i] = closure_μ_exp[μ[i]]
             μ_M_exp[i] = substitute(μ_M_exp[i], μ_central)
-            μ_M_exp[i] = simplify(μ_M_exp[i], polynorm=true)
+            μ_M_exp[i] = simplify(μ_M_exp[i], expand=true)
         end
         closure = OrderedDict()
         closure_exp = OrderedDict()
@@ -112,8 +112,8 @@ function conditional_gaussian_closure(sys::MomentEquations,
         raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ_M_exp, bernoulli=true)
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ_M, bernoulli=true)
         for i in sys.iter_q
-            closure_exp[sys.M[i]] = simplify(raw_to_central_exp[i], polynorm=true)
-            closure[sys.M[i]] = simplify(raw_to_central[i], polynorm=true)
+            closure_exp[sys.M[i]] = simplify(raw_to_central_exp[i], expand=true)
+            closure[sys.M[i]] = simplify(raw_to_central[i], expand=true)
         end
 
     else

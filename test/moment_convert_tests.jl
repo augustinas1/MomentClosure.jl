@@ -1,6 +1,6 @@
 using MomentClosure
 using MomentClosure: define_μ, define_M
-using SymbolicUtils: polynormalize
+using SymbolicUtils: expand
 using Test
 
 M = define_M(2, 4)
@@ -14,7 +14,7 @@ expr = M[3,1] - 3*M[1,1]*M[2,0]
 @test isequal(κ[1,0], μ[1,0])
 expr = μ[2,1] + 2*μ[0,1]*μ[1,0]^2 - μ[0,1]*μ[2,0] - 2*μ[1,0]*μ[1,1]
 # if this one fails most likely simplification functions have broke
-@test isequal(polynormalize(κ[2,1]),expr)
+@test isequal(expand(κ[2,1]),expr)
 
 raw_to_central = MomentClosure.raw_to_central_moments(2,3)
 expr = 2*μ[1,0]^3 + μ[3,0] - 3*μ[1,0]*μ[2,0]

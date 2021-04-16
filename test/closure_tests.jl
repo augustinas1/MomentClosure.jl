@@ -1,7 +1,7 @@
 using MomentClosure
 using MomentClosure: define_M, define_μ
 using ModelingToolkit: value
-using SymbolicUtils: polynormalize
+using SymbolicUtils: expand
 using Test
 using Catalyst
 
@@ -24,7 +24,7 @@ expr1 = closed_eqs.odes.eqs[1].rhs
 expr2 = c₃*Ω + M[1,1]*c₁*μ[1,0]*(Ω^-2) + M[1,1]*c₁*(Ω^-2)*(μ[1,0]- 1) + c₁*M[2,0]*μ[0,1]*(Ω^-2) +
         c₁*μ[0,1]*μ[1,0]*(Ω^-2)*(μ[1,0] - 1) - c₂*μ[1,0] - c₄*μ[1,0]
 expr2 = simplify(value.(expr2))
-@test isequal(polynormalize(expr1), polynormalize(expr2))
+@test isequal(expand(expr1), expand(expr2))
 
 # check that deterministic_IC is working with central moments
 ic_values = Dict(deterministic_IC([2, 5], closed_eqs))
@@ -48,6 +48,7 @@ expr1 = closed_eqs.closure[M[2,1]]
 expr2 = M[2,0]*μ[0,1] + μ[0,1]*μ[1,0]^2 + 2*M[1,1]*μ[1,0] + 2*M[1,1]*M[2,0]*μ[1,0]^-1 -
     M[2,0]*μ[0,1] - μ[0,1]*μ[1,0]^2 - 2*M[1,1]*μ[1,0]
 @test isequal(expr1, expr2)
+expr1
 
 closed_eqs = moment_closure(sys, "derivative matching")
 expr1 = closed_eqs.closure[sys.M[0,4]]
@@ -70,7 +71,7 @@ expr2 = c₂*μ[1,0] + 2*c₂*μ[1,1] + c₁*μ[0,1]*μ[2,0]/Ω^2 - c₁*μ[1,1]
     2*c₁*μ[0,1]*μ[1,0]^2/Ω^2 + 2*c₁*μ[0,2]*μ[1,0]/Ω^2 -2*c₁*μ[0,2]*μ[2,0]/Ω^2 + 2*c₁*μ[1,0]*μ[1,1]/Ω^2 -
     4*c₁*μ[1,0]*μ[0,1]^2/Ω^2 + 4*c₁*μ[0,1]^2*μ[1,0]^2/Ω^2
 expr2 = simplify(value.(expr2))
-@test isequal(polynormalize(expr1), expr2)
+@test isequal(expand(expr1), expr2)
 
 # check that deterministic_IC is working with raw moments
 ic_values = Dict(deterministic_IC([2, 5], closed_eqs))

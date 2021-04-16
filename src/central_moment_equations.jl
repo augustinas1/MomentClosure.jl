@@ -35,9 +35,8 @@ Notes:
   propensities are defined directly by the user.
 """
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
-                                     m_order::Int, q_order=nothing;
+                                     m_order::Int, q_order::Int=0;
                                      combinatoric_ratelaw=true)
-    # TODO: add checks that m_order and q_order are defined sensibly
 
     N = numspecies(rn) # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
@@ -45,10 +44,10 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     # propensity functions of all reactions in the network
     a = propensities(rn, combinatoric_ratelaw=combinatoric_ratelaw)
 
-    # quite messy solution to check whether all propensity functions are polynomials
-    if q_order == nothing
+    # quite messy way to check whether all propensity functions are polynomials
+    if q_order == 0
         try
-            temp1, temp2, poly_order = polynomial_propensities(a, rn)
+            _, _, poly_order = polynomial_propensities(a, rn)
             q_order = poly_order + m_order - 1
         catch e
             error("non-polynomial rates (OR A BUG): please specify q_order.\n" * string(e))
@@ -117,7 +116,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
             else
                 du[i] = S[i, r]*suma + du[i]
             end
-            du[i] = polynormalize(du[i])
+            du[i] = expand(du[i])
         end
     end
 
@@ -147,7 +146,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
                 dM[i] -= i[j]*du[j]*M[i.-iter_1[j]]
             end
         end
-        dM[i] = polynormalize(dM[i])
+        dM[i] = expand(dM[i])
     end
 
     D = Differential(rn.iv)

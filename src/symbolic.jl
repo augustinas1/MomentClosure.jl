@@ -85,7 +85,6 @@ function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
     μs = values(define_μ(N, q_order, iter_μ))
     Ms = values(define_M(N, q_order, iter_M))
     vars = vcat(μs..., Ms...)
-
     # extract variables from rhs of each equation
     eq_vars = unique(vcat(get_variables.(eqs)...))
     # need this as get_variables does not extract var from `Differential(t)(var(t))`
@@ -93,8 +92,8 @@ function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
     # filter out the unique ones
     eq_vars = unique(vcat(eq_vars..., diff_vars...))
     # this should preserve the correct ordering
-    vars = intersect!(vars, eq_vars)
 
+    vars = intersect!(vars, eq_vars)
     vars
 
 end
@@ -112,6 +111,7 @@ end
     then the function `polynomial_propensities` will throw an error.
     NOTE: this code might easily break with a newer ModelingToolkit/SymbolicUtils version
     TODO: try to make this functionality less cumbersome and test more rigorously
+    TODO: use AbstractAlgebra MPoly
 =#
 
 
@@ -135,7 +135,7 @@ function factorise_term(expr, factors, powers, rn)
     if istree(expr)
         args = arguments(expr)
         if length(args) == 1
-            if args[1] == rn.iv
+            if isequal(args[1], rn.iv)
                 idx = speciesmap(rn)[expr]
                 if powers[idx] != 0
                     error("Same variable occurring multiple times is unexpected in: ", expr)
@@ -189,7 +189,7 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
     max_power = 0
     for (ind, expr) in enumerate(a)
         terms = []
-        polynomial_terms(polynormalize(expr), terms)
+        polynomial_terms(expand(expr), terms)
         for term in terms
             factors = []
             powers = zeros(Int, numspecies(rn))
@@ -208,3 +208,39 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
     term_factors, term_powers, max_power
 
 end
+
+#=
+
+function is_polynomial(expr::Symbolic, rn::Union{ReactionSystem, ReactionSystemMod})
+
+    # checking whether a given symbolic expression is a polynomial in molecule numbers
+
+    #terms = []
+    #polynomial_terms(expand(expr), terms)
+    #ks = sort(collect(keys(poly[2])), lt=SymbolicUtils.:<ₑ)
+
+    sym2term, term2sym = SymbolicUtils._dicts()
+    SymbolicUtils.labels!((sym2term, term2sym), expr)
+
+    ks = collect(keys(term2sym))
+    println(ks)
+
+    for expr in ks[findall(istree.(ks))]
+
+        vars = get_variables(expr)
+
+        if sum(in.(species(rn), Ref(vars))) > 0
+            # if length is one we have time-dependent variable (molecule number)
+            if length(vars) > 1
+                return false
+            end
+        end
+
+    end
+
+    return true
+
+end
+
+is_polynomial(expr::Real, rn::Union{ReactionSystem, ReactionSystemMod}) = true
+=#

@@ -12,7 +12,7 @@ using Random
 using Distributions: Geometric
 
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
-using SymbolicUtils: Symbolic, polynormalize, simplify, operation, arguments
+using SymbolicUtils: Symbolic, expand, simplify, operation, arguments
 using SymbolicUtils: @rule, @acrule, isnotflat, flatten_term, istree
 
 using OrderedCollections: OrderedDict

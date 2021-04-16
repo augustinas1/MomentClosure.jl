@@ -9,7 +9,7 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
         closed_rhs = substitute(eq.rhs, closure_exp)
         # apply binomial expansion on the expressions
         if polynorm # depending on the functional form
-            closed_rhs = polynormalize(closed_rhs)
+            closed_rhs = expand(closed_rhs)
         else
             closed_rhs = expand_expr(closed_rhs)
         end

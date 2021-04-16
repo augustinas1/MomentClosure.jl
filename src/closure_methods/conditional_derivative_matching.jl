@@ -67,7 +67,7 @@ function conditional_derivative_matching(sys::MomentEquations,
                 γ = A\b
                 conditional_μ = prod([μ[iter_k[i]]^Int(γ[i]) for i in 1:length_k])
                 conditional_μ = μ[bernoulli_iter]*conditional_μ
-                conditional_μ = simplify(conditional_μ, polynorm=true)
+                conditional_μ = simplify(conditional_μ, expand=true)
 
                 # step 3
                 iter_conditional = filter(x -> 0 < sum(x) <= sum(r), nonbernoulli_iters)

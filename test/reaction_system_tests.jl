@@ -22,9 +22,9 @@ end c₁ c₂ c₃ c₄ Ω
 rn2 = ReactionSystemMod(t, [X, Y], [c₁, c₂, c₃, c₄, Ω], a, S_mat)
 
 @test isequal(species(rn1), species(rn2))
-@test params(rn1) == params(rn2)
-@test speciesmap(rn1) == speciesmap(rn2)
-@test paramsmap(rn1) == paramsmap(rn2)
+@test isequal(params(rn1), params(rn2))
+@test isequal(speciesmap(rn1), speciesmap(rn2))
+@test isequal(paramsmap(rn1), paramsmap(rn2))
 @test numspecies(rn1) == numspecies(rn2) == 2
 @test numreactions(rn1) == numreactions(rn2) == 4
 @test numparams(rn1) == numparams(rn2) == 5

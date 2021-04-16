@@ -33,11 +33,11 @@ function poisson_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
             else
                 closed_moment = -(K[r]-moments[r])
             end
-            closed_moment = simplify(closed_moment, polynorm=true)
+            closed_moment = simplify(closed_moment, expand=true)
 
             closure[moments[r]] = closed_moment
             closure_exp[moments[r]] = substitute(closed_moment, closure_exp)
-            closure_exp[moments[r]] = simplify(closure_exp[moments[r]], polynorm=true)
+            closure_exp[moments[r]] = simplify(closure_exp[moments[r]], expand=true)
         end
 
     end

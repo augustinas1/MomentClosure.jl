@@ -54,7 +54,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
                 dμ[i] += factor_j * suma
             end
         end
-        dμ[i] = polynormalize(dμ[i])
+        dμ[i] = expand(dμ[i])
     end
 
     D = Differential(rn.iv)

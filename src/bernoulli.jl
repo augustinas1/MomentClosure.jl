@@ -87,7 +87,7 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Array{Int,1})
     for (i, eq) in enumerate(sys.odes.eqs)
         if !(i in redundant_eqs)
             clean_rhs = substitute(eq.rhs, iter_sub)
-            clean_rhs = polynormalize(clean_rhs)
+            clean_rhs = expand(clean_rhs)
             push!(clean_eqs, Equation(eq.lhs, clean_rhs))
         end
     end

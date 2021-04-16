@@ -117,10 +117,10 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
             suma += factor1*factor2
         end
 
-        suma = simplify(suma, polynorm=true)
+        suma = simplify(suma, expand=true)
         suma = substitute(suma, symbolic_sub)
         suma *= prod([β[j]^iter[j] for j in 1:N])
-        μ[iter] = simplify(suma, polynorm=true)
+        μ[iter] = simplify(suma, expand=true)
         closure[μ_symbolic[iter]] = μ[iter]
 
         # Note that joint moments of multivariate distributions are symmetric in the sense
@@ -192,7 +192,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
             if !(i in redundant_eqs)
 
                 closed_rhs = substitute(eq.rhs, closure_exp)
-                closed_rhs = polynormalize(closed_rhs)
+                closed_rhs = expandalize(closed_rhs)
                 closed_rhs = substitute(closed_rhs, iter_sub)
                 closed_rhs = simplify(closed_rhs)
 
@@ -328,10 +328,10 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
             suma += factor1*factor2
         end
 
-        suma = simplify(suma, polynorm=true)
+        suma = simplify(suma, expand=true)
         suma = substitute(suma, symbolic_sub)
         suma *= prod([β[j]^iter[j] for j in 1:N])
-        μ[iter] = simplify(suma, polynorm=true)
+        μ[iter] = simplify(suma, expand=true)
         closure[μ_symbolic[iter]] = μ[iter]
 
         # Note that joint moments of multivariate distributions are symmetric in the sense
