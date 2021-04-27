@@ -192,7 +192,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
             if !(i in redundant_eqs)
 
                 closed_rhs = substitute(eq.rhs, closure_exp)
-                closed_rhs = expandalize(closed_rhs)
+                closed_rhs = expand(closed_rhs)
                 closed_rhs = substitute(closed_rhs, iter_sub)
                 closed_rhs = simplify(closed_rhs)
 
