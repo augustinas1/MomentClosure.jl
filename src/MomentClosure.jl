@@ -16,7 +16,7 @@ using SymbolicUtils: Symbolic, expand, simplify, operation, arguments
 using SymbolicUtils: @rule, @acrule, isnotflat, flatten_term, istree
 
 using OrderedCollections: OrderedDict
-using Combinatorics: permutations
+using Combinatorics
 using TupleTools: sort
 using Cumulants
 using Latexify

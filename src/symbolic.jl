@@ -1,3 +1,34 @@
+function gen_iter(n, d)
+    # based on https://twitter.com/evalparse/status/1107964924024635392
+    iter = []
+    for x in partitions(d + n, n)
+        x = x .- 1
+        if all(x .<= d)
+            ys = Set(multiset_permutations(x, n))
+            for y in ys
+                push!(iter, Tuple(y))
+            end
+        end
+    end
+    iter
+end
+
+function construct_iter_all(N::Int, order::Int)
+
+    #Construct an ordered iterator going over all moments
+    # sequentially in terms of order
+
+    iters = []
+    for d in 0:order
+        x = Base.sort(gen_iter(N, d), rev=true)
+        push!(iters, x...)
+    end
+
+    iters
+
+end
+
+#=
 function construct_iter_all(N::Int, order::Int)
 
     #Construct an ordered iterator going over all moments
@@ -15,7 +46,7 @@ function construct_iter_all(N::Int, order::Int)
     collect(iter_all)
 
 end
-
+=#
 
 # Trim a string of form "(a, b, c, d, ...)" to "abcd..."
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
