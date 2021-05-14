@@ -40,7 +40,7 @@ Applying a transformation $\mathbf{n}-S_r \rightarrow \mathbf{n}$ on the first t
 The derivation can be extended to the multivariate case of higher order moments $\mu_{\mathbf{i}}$ with $|\mathbf{i}| \leq m$:
 ``` math
 \begin{align*}
-    \frac{\mu_{\mathbf{i}}}{dt} &= \sum_{\mathbf{n}} n_1^{i_1}\dotsm n_N^{i_N} \frac{dP(\mathbf{n}, t)}{dt} \\
+    \frac{d\mu_{\mathbf{i}}}{dt} &= \sum_{\mathbf{n}} n_1^{i_1}\dotsm n_N^{i_N} \frac{dP(\mathbf{n}, t)}{dt} \\
     &= \sum_{r} \sum_{\mathbf{n}} \left[ (n_1+S_{1r})^{i_1}\dotsm (n_N +S_{2r})^{i_N} - n_1^{i_1}\dotsm n_N^{i_N} \right] a_r(\mathbf{n})P(\mathbf{n}, t) \\
     &= \sum_r \sum_{\mathbf{n}} \left[ \sum^{i_1}_{j_1=0} \binom{i_1}{j_1} n_{1}^{j_1}S_{1r}^{\,i_1-j_1} \dotsm \sum^{i_N}_{j_N=0} \binom{i_N}{j_N} n_{N}^{j_N}S_{Nr}^{\, i_N-j_N} - n_1^{i_1}\dotsm n_N^{i_N} \right] a_r(\mathbf{n})P(\mathbf{n}, t) \\
     &= \sum_r \sum_{\mathbf{n}} \sum^{|\mathbf{i}|-1}_{|\mathbf{j}|=0} \binom{i_1}{j_1} \dotsm \binom{i_N}{j_N} S_{1r}^{\,i_1-j_1} \dotsm S_{Nr}^{\, i_N-j_N} n_{1}^{j_1} \dotsm n_{N}^{j_N} a_r(\mathbf{n})P(\mathbf{n}, t) \\
