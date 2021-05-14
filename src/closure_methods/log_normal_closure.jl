@@ -33,7 +33,10 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
         end
     end
 
-    for i in sys.iter_q
+    unique_iter_q = unique(sort(i) for i in sys.iter_q)
+    sub = Dict()
+
+    for i in unique_iter_q
         term = prod([μ[sys.iter_1[j]]^i[j] for j in 1:N])
         for j in 1:N
             for k in j+1:N
@@ -43,6 +46,21 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
         end
         μ[i] = simplify(term)
         closure[μ_symbolic[i]] = μ[i]
+
+        perms = collect(multiset_permutations(i, length(i)))[2:end]
+
+        for iter_perm in perms
+
+            iter_perm_ind = sortperm(sortperm(iter_perm))
+            for r in sys.iter_all
+                sub[μ_symbolic[r]] = μ_symbolic[r[iter_perm_ind]]
+            end
+
+            iter_perm = Tuple(iter_perm)
+            μ[iter_perm] = substitute(μ[i], sub)
+            closure[μ_symbolic[iter_perm]] = μ[iter_perm]
+        end
+
     end
 
     if typeof(sys) == CentralMomentEquations

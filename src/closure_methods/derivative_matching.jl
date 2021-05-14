@@ -38,12 +38,11 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
     # so if q_order > m_order + 1, we have to consider m_order+1, m_order+2, and so on in sequence
     # to build up the truncated raw moment expressions
 
+    # iterator through all moments of lower order
     iter_k = vcat(sys.iter_1, sys.iter_m)
+    sub = Dict()
 
     for order in sys.m_order+1:sys.q_order
-
-        # iterator through all moments of lower order
-        iter_k = vcat(iter_k, filter(x -> sum(x) == order-1, sys.iter_q))
 
         length_k = length(iter_k)
 
@@ -53,7 +52,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
         # initialise matrix needed for linear system defined below
         A = Matrix{Float64}(undef, length_k, length_k)
 
-        for m in iter_order
+        for m in unique(sort(i) for i in iter_order)
 
             # each higher order moment μ_m is a product of lower order moments ∏ᵣ₌₁ᵏ(μ_mᵣ)^γᵣ
             # the coefficients γᵣ (contained in vector γ) are obtained by solving a system
@@ -71,7 +70,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
             end
 
             # The solution γ appears to always be integer-valued (also mentioned in the paper).
-            # While there is no proof that it holds generall, we assume so in order
+            # While there is no proof that it holds generally, we assume so in order
             # to use integer powers instead of float ones for simpler symbolic manipulations.
             # The code will break otherwise, throwing an InexactError attempting to convert Float to Int.
             # If this ever happens we know what to fix. TODO: add exception handling?
@@ -81,7 +80,24 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
             closed_μ[m] = simplify(closed_μ[m])
             closure[μ_symbolic[m]] = prod([μ[iter_k[i]]^Int(γ[i]) for i in 1:length_k])
             closure[μ_symbolic[m]] = simplify(closure[μ_symbolic[m]])
+
+            perms = collect(multiset_permutations(m, length(m)))[2:end]
+
+            for iter_perm in perms
+
+                iter_perm_ind = sortperm(sortperm(iter_perm))
+                for i in iter_k
+                    sub[μ_symbolic[i]] = μ_symbolic[i[iter_perm_ind]]
+                end
+                iter_perm = Tuple(iter_perm)
+                closed_μ[iter_perm] = substitute(closed_μ[m], sub)
+                closure[μ_symbolic[iter_perm]] = substitute(closure[μ_symbolic[m]], sub)
+            end
+
+
         end
+
+        iter_k = vcat(iter_k, iter_order)
 
     end
 

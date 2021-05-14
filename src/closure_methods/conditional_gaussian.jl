@@ -8,7 +8,7 @@ function conditional_gaussian_closure(sys::MomentEquations,
 
     sys = bernoulli_moment_eqs(sys, binary_vars)
     # define symbolic raw moment expressions
-    μ = typeof(sys) == CentralMomentEquations ? define_μ(N, sys.q_order) : copy(sys.μ)
+    μ = sys isa CentralMomentEquations ? define_μ(N, sys.q_order) : copy(sys.μ)
     # express cumulants in terms of raw moments
     K = cumulants_to_raw_moments(N, sys.q_order)
 
@@ -23,12 +23,17 @@ function conditional_gaussian_closure(sys::MomentEquations,
 
     # by nonbernoulli we denote moments which cannot be written in the conditional form
     nonbernoulli_iters = filter(x -> sum(x[binary_vars]) == 0, sys.iter_all)
+
+    # iterator for symmetric permutations of the indices
+    iter_qs = vcat(sys.iter_1, sys.iter_m)
+    sub = Dict()
+
     for order in sys.m_order+1:sys.q_order
 
         # building the closed moment expressions order by order (due to such hierarchical functional dependency)
         iter_order = filter(x -> sum(x) == order, sys.iter_q)
 
-        for iter in iter_order
+        for iter in unique(sort(i) for i in iter_order)
 
             # Two cases: (i) conditional (⟨gp^j⟩=⟨p^j|g=1⟩⟨g⟩) or (ii) basic non bernoulli (⟨p^j⟩)"
             # Here g is a bernoulli variable (e.g gene state), p is any other stochastic variable (e.g no. of proteins)
@@ -81,10 +86,29 @@ function conditional_gaussian_closure(sys::MomentEquations,
                 closure_μ_exp[μ[iter]] = substitute(moment, closure_μ_exp)
                 closure_μ_exp[μ[iter]] = simplify(closure_μ_exp[μ[iter]], expand=true)
             end
+
+            perms = collect(multiset_permutations(iter, length(iter)))[2:end]
+
+            for iter_perm in perms
+
+                iter_perm_ind = sortperm(sortperm(iter_perm))
+
+                for i in iter_qs
+                    sub[μ[i]] = μ[i[iter_perm_ind]]
+                end
+
+                iter_perm = Tuple(iter_perm)
+                closure_μ[μ[iter_perm]] = substitute(closure_μ[μ[iter]], sub)
+                closure_μ_exp[μ[iter_perm]] = substitute(closure_μ_exp[μ[iter]], sub)
+            end
+
         end
+
+        iter_qs = vcat(iter_qs, iter_order)
+
     end
 
-    if typeof(sys) == CentralMomentEquations
+    if sys isa CentralMomentEquations
 
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         μ_central = Dict()
