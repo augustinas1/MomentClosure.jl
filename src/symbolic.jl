@@ -140,138 +140,149 @@ end
     x to power 1 and y to power 2 in term 2). Having this information we can proceed
     in constructing raw moment equations. IF any propensity function is non-polynomial
     then the function `polynomial_propensities` will throw an error.
-    NOTE: this code might easily break with a newer ModelingToolkit/SymbolicUtils version
-    TODO: try to make this functionality less cumbersome and test more rigorously
-    TODO: use AbstractAlgebra MPoly
 =#
 
+function isconstant(expr::Union{Symbolic, Number}, vars::Vector, iv::Sym) :: Bool
 
-function polynomial_terms(expr, terms)
+    # Check that the given expression does NOT depend on the given variables `vars` (expr is constant wrt. vars)
+    # A variable here is defined as a function of the independent variable `iv`, e.g,  X(t) is variable, where t
+    # is the independent variable
 
-    if istree(expr)
-        if operation(expr) == +
-            for arg in arguments(expr)
-                polynomial_terms(arg, terms)
-            end
-        else
-            push!(terms, expr)
-        end
-    else
-        push!(terms, expr)
-    end
-
-end
-
-function factorise_term(expr, factors, powers, rn)
     if istree(expr)
         args = arguments(expr)
         if length(args) == 1
-            if isequal(args[1], rn.iv)
-                idx = speciesmap(rn)[expr]
-                if powers[idx] != 0
-                    error("Same variable occurring multiple times is unexpected in: ", expr)
-                else
-                    powers[idx] = 1
-                end
+            if isequal(args[1], iv)
+                !isvar(expr, vars)
             else
-                error("Unexpected symbolic expression: ", expr)
+                isconstant(args[1], vars, iv)
             end
         else
-            op = operation(expr)
-            if op == ^
-                if length(args) == 2
-                    # this is fragile (any change in SymbolicUtils/ModelingToolkit might break it)
-                    if args[1] isa Term{Real} && args[2] isa Int && args[2] >= 0  # x(t)^i where i is Int>0
-                        idx = speciesmap(rn)[args[1]]
-                        if powers[idx] != 0
-                            error("Same variable occurring multiple times is unexpected in: ", expr)
-                        else
-                            powers[idx] = args[2]
-                        end
-                    elseif args[1] isa SymbolicUtils.Add{Real,Int64,Dict{Any,Number}}
-                        error("binomial expansion is not supported for: ", expr)
-                    elseif !isa(args[1], Term{Real}) && !isa(args[2], Term{Real})
-                        push!(factors, expr)
-                    else
-                        error("Unexpected expression with ^: ", expr)
-                    end
-                else
-                    error("Only expressions x^n (two symbols) are supported ", expr)
-                end
-            elseif op == *
-                for arg in args
-                    factorise_term(arg, factors, powers, rn)
-                end
-            else
-                error("Operation in a polynomial term is unexpected: ", op)
-            end
+            all((isconstant(arg, vars, iv) for arg in args))
         end
     else
-        push!(factors, expr)
+        return true
     end
 
 end
+
+isvar(x::Symbolic, vars::Vector) = any((isequal(x, var) for var in vars))
+
+function extract_pwr(expr::Symbolic, smap::Dict, vars::Vector, powers::Vector)
+    args = arguments(expr)
+    if isvar(args[1], vars) && args[2] isa Int && args[2] >= 0
+        idx = smap[args[1]]
+        if powers[idx] != 0
+            error(args[1], " occurring multiple times in a monomial is unexpected. In ", expr)
+        else
+            powers[idx] = args[2]
+        end
+    else
+        error("Unexpected term: ", expr)
+    end
+end
+
+function extract_mul(expr::Symbolic, smap::Dict, vars::Vector, iv::Sym)
+
+    powers = zeros(Int, length(smap))
+    factors = []
+
+    for arg in arguments(expr)
+        if isconstant(arg, vars, iv)
+            push!(factors, arg)
+        elseif operation(arg) == ^
+            extract_pwr(arg, smap, vars, powers)
+        elseif isvar(arg, vars)
+            powers[smap[arg]] = 1
+        else
+            error("Unexpected operation: ", operation(arg), " in ", expr)
+        end
+    end
+
+    factor = isempty(factors) ? 1 : prod(factors)
+    powers, factor
+
+end
+
 
 function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSystemMod})
 
     R = numreactions(rn)
-    term_factors = [[] for i = 1:R]
-    term_powers = [[] for i = 1:R]
-    max_power = 0
-    for (ind, expr) in enumerate(a)
-        terms = []
-        polynomial_terms(expand(expr), terms)
-        for term in terms
-            factors = []
-            powers = zeros(Int, numspecies(rn))
+    N = numspecies(rn)
+    vars = species(rn)
+    smap = speciesmap(rn)
+    iv = rn.iv
+
+    all_factors = [[] for i = 1:R]
+    all_powers = [[] for i = 1:R]
+
+    for (rind, expr) in enumerate(a)
+
+        expr = expand(expr)
+
+        if isconstant(expr, vars, iv)
+
+            push!(all_factors[rind], expr)
+            push!(all_powers[rind], zeros(Int, N))
+
+        elseif operation(expr) == ^ #Symbolics.Pwr
+
             try
-                factorise_term(term, factors, powers, rn)
+                powers = zeros(Int, N)
+                extract_pwr(expr, smap, vars, powers)
+                push!(all_factors[rind], 1)
+                push!(all_powers[rind], powers)
             catch e
-                error("Non-polynomial propensity was included?\n" * string(e))
+                error("Propensity function ", expr, " is non-polynomial? \n" * string(e))
             end
-            factor = isempty(factors) ? 1 : prod(factors)
-            max_power = sum(powers) > max_power ? sum(powers) : max_power
-            push!(term_factors[ind], factor)
-            push!(term_powers[ind], powers)
+
+        elseif operation(expr) == * #Symbolics.Mul
+
+            try
+                powers, factor = extract_mul(expr, smap, vars, iv)
+                push!(all_powers[rind], powers)
+                push!(all_factors[rind], factor)
+            catch e
+                error("Propensity function ", expr, " is non-polynomial?\n" * string(e))
+            end
+
+        elseif operation(expr) == + #Symbolics.Add
+
+            for term in arguments(expr)
+
+                if isconstant(term, vars, iv)
+                    push!(all_factors[rind], term)
+                    push!(all_powers[rind], zeros(Int, N))
+                else
+                    try
+                        op = operation(term)
+                        if op == ^
+                            powers = zeros(Int, N)
+                            extract_pwr(term, smap, vars, powers)
+                            push!(all_factors[rind], 1)
+                            push!(all_powers[rind], powers)
+                        elseif op == *
+                            powers, factor = extract_mul(term, smap, vars, iv)
+                            push!(all_factors[rind], factor)
+                            push!(all_powers[rind], powers)
+                        elseif isvar(term, vars)
+                            powers = zeros(Int, N)
+                            powers[smap[term]] = 1
+                            push!(all_factors[rind], 1)
+                            push!(all_powers[rind], powers)
+                        else
+                            error("Unexpected operation: ", op, " in ", term)
+                        end
+                    catch e
+                        error("Propensity function ", expr, " is non-polynomial?\n" * string(e))
+                    end
+                end
+            end
+
         end
+
     end
 
-    term_factors, term_powers, max_power
+    max_power = maximum(sum.(vcat(all_powers...)))
+    all_factors, all_powers, max_power
 
 end
-
-#=
-
-function is_polynomial(expr::Symbolic, rn::Union{ReactionSystem, ReactionSystemMod})
-
-    # checking whether a given symbolic expression is a polynomial in molecule numbers
-
-    #terms = []
-    #polynomial_terms(expand(expr), terms)
-    #ks = sort(collect(keys(poly[2])), lt=SymbolicUtils.:<ₑ)
-
-    sym2term, term2sym = SymbolicUtils._dicts()
-    SymbolicUtils.labels!((sym2term, term2sym), expr)
-
-    ks = collect(keys(term2sym))
-    println(ks)
-
-    for expr in ks[findall(istree.(ks))]
-
-        vars = get_variables(expr)
-
-        if sum(in.(species(rn), Ref(vars))) > 0
-            # if length is one we have time-dependent variable (molecule number)
-            if length(vars) > 1
-                return false
-            end
-        end
-
-    end
-
-    return true
-
-end
-
-is_polynomial(expr::Real, rn::Union{ReactionSystem, ReactionSystemMod}) = true
-=#

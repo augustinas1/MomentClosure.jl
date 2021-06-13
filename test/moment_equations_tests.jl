@@ -2,6 +2,7 @@ using MomentClosure
 using MomentClosure: expected_coeff
 using ModelingToolkit: value, simplify
 using SymbolicUtils: expand
+using Catalyst
 using Test
 
 @parameters b
@@ -42,3 +43,26 @@ expr2 = c₂*μ[2,0] + c₁*μ[1,1]/Ω^2 - c₁*μ[3,1]/Ω^2 -c₂*(μ[1,0] + μ
         c₃*μ[0,1]*Ω - c₄*μ[1,1] - c₁*μ[1,2]/Ω^2 + c₁*μ[2,2]/Ω^2
 expr2 = simplify(value.(expr2))
 @test isequal(expand(expr1), expand(expr2))
+
+# time-dependent propensity tests
+
+rn = @reaction_network begin
+        (X^1.5), X ⇒ Y
+end c₁
+@test_throws ErrorException generate_raw_moment_eqs(rn, 2)
+
+rn = @reaction_network begin
+        (c₁*Y^3*X^1.5), X ⇒ Y
+end c₁
+@test_throws ErrorException generate_raw_moment_eqs(rn, 2)
+
+rn = @reaction_network begin
+        (c₁*sin(exp(X)+Y)), X ⇒ Y
+end c₁
+@test_throws ErrorException generate_raw_moment_eqs(rn, 2)
+
+rn = @reaction_network begin
+        (c₁*sin(exp(t))+Y^(3+1)), X ⇒ Y
+end c₁
+eqs = generate_raw_moment_eqs(rn, 2)
+@test eqs.q_order == 5

@@ -45,6 +45,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     a = propensities(rn, combinatoric_ratelaw=combinatoric_ratelaw)
 
     # quite messy way to check whether all propensity functions are polynomials
+    # and extract the moment expansion order automatically (if not set by the user)
     if q_order == 0
         try
             _, _, poly_order = polynomial_propensities(a, rn)
