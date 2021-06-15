@@ -34,6 +34,20 @@ using MomentClosure
 
 Note the use of full link to github repo as the package is currently unregistered.
 
+## Citation
+
+If you use MomentClosure in your work, please cite [our paper](https://arxiv.org/abs/2105.05475):
+```
+@misc{sukys2021momentclosurejl,
+      title={MomentClosure.jl: automated moment closure approximations in Julia},
+      author={Augustinas Sukys and Ramon Grima},
+      year={2021},
+      eprint={2105.05475},
+      archivePrefix={arXiv},
+      primaryClass={q-bio.MN}
+}
+```
+
 ## References
 
 [1]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). [https://doi.org/10.1088/1751-8121/aa54d9](https://doi.org/10.1088/1751-8121/aa54d9)

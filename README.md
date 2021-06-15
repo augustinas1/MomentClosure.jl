@@ -30,6 +30,20 @@ Please [see the documentation](https://augustinas1.github.io/MomentClosure.jl/de
 - Moment equations are constructed as a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) that can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solver. Moreover, [parameter estimation](https://diffeq.sciml.ai/stable/analysis/parameter_estimation/), [sensitivity analysis](https://diffeq.sciml.ai/stable/analysis/sensitivity/) and [bifurcation analysis](https://diffeq.sciml.ai/stable/analysis/bifurcation/) tools can be applied to further study the resulting system of equations.
 - [Latexify](https://github.com/korsbo/Latexify.jl) can be used to generate LaTeX expressions of the corresponding moment equations.
 
+## Citation
+
+If you use MomentClosure in your work, please cite [our paper](https://arxiv.org/abs/2105.05475):
+```
+@misc{sukys2021momentclosurejl,
+      title={MomentClosure.jl: automated moment closure approximations in Julia},
+      author={Augustinas Sukys and Ramon Grima},
+      year={2021},
+      eprint={2105.05475},
+      archivePrefix={arXiv},
+      primaryClass={q-bio.MN}
+}
+```
+
 ## References
 
 <a id="1">[1]</a> D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). https://doi.org/10.1088/1751-8121/aa54d9
