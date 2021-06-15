@@ -25,7 +25,8 @@ makedocs(;
             "tutorials/time-dependent_propensities.md",
             "tutorials/geometric_reactions+conditional_closures.md",
             "tutorials/P53_system_example.md",
-            "tutorials/derivative_matching_example.md"
+            "tutorials/derivative_matching_example.md",
+            "tutorials/SIR_example.md"
         ],
         "API" => Any[
             "api/momentclosure_api.md"
