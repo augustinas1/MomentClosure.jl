@@ -12,7 +12,7 @@ vars = [g, p]
 ps = [k_on, k_off, k_p, γ_p, b]
 S = [1 -1 0 0;
    0 0 b -1]
-as = [k_on*(1-g),    # 0 -> g
+as = [k_on*(1-g),  # 0 -> g
     k_off*g*(p^2), # g -> 0
     k_p*g,         # 0 -> mP, m ~ Geometric(mean=b)
     γ_p*p]         # p -> 0
@@ -76,5 +76,3 @@ expr1 = closed_eqs.closure[M[1,3]]
 expr2 = μ[1,0]*(M[1,1]+μ[0,1]*μ[1,0])^-3*(M[1,2]+M[0,2]*μ[1,0]+μ[1,0]*μ[0,1]^2+2*M[1,1]*μ[0,1])^3 -
     M[0,3]*μ[1,0] - 3*M[1,1]*μ[0,1]^2 - 3*M[1,2]*μ[0,1] - μ[1,0]*μ[0,1]^3- 3*M[0,2]*μ[0,1]*μ[1,0]
 @test isequal(expand(expr1), expand(expr2))
-
-## Some further tests checking the Bernoulli functionality
