@@ -224,6 +224,11 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
             push!(all_factors[rind], expr)
             push!(all_powers[rind], zeros(Int, N))
 
+        elseif expr in Set(vars) # less conservative but likely faster: expr isa Term
+
+            push!(all_factors[rind], 1)
+            push!(all_powers[rind], map(v -> isequal(expr, v), vars))
+
         elseif operation(expr) == ^ #Symbolics.Pwr
 
             try
@@ -277,6 +282,10 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
                     end
                 end
             end
+
+        else
+
+            error("Expression $expr could not be parsed correctly!")
 
         end
 
