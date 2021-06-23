@@ -224,7 +224,7 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
             push!(all_factors[rind], expr)
             push!(all_powers[rind], zeros(Int, N))
 
-        elseif expr in Set(vars) # less conservative but likely faster: expr isa Term
+        elseif isvar(expr, vars)
 
             push!(all_factors[rind], 1)
             push!(all_powers[rind], map(v -> isequal(expr, v), vars))
