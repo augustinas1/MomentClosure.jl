@@ -44,6 +44,14 @@ expr2 = c₂*μ[2,0] + c₁*μ[1,1]/Ω^2 - c₁*μ[3,1]/Ω^2 -c₂*(μ[1,0] + μ
 expr2 = simplify(value.(expr2))
 @test isequal(expand(expr1), expand(expr2))
 
+# corner case - a linear propensity with rate coefficient 1
+rn = @reaction_network begin
+    1, X → 0
+end
+sys = generate_raw_moment_eqs(rn, 2)
+μ = sys.μ
+@test isequal(MomentClosure.Differential(t)(μ[(1,)]) ~ -μ[(1,)], sys.odes.eqs[1])
+
 # time-dependent propensity tests
 
 rn = @reaction_network begin
