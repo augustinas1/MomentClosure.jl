@@ -1,6 +1,6 @@
 using MomentClosure
 using MomentClosure: define_μ, define_M
-using Test, SafeTestsets
+using Test
 
 @testset "creating symbolic moments" begin
 

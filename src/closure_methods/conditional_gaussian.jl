@@ -59,8 +59,8 @@ function conditional_gaussian_closure(sys::MomentEquations,
                 r = iter.-bernoulli_iter
 
                 # step 2
-                conditional_μ = -μ[bernoulli_iter]*(K[r] - μ[r])
-                conditional_μ = simplify(conditional_μ, expand=true)
+                conditional_μ = μ[bernoulli_iter]*(K[r] - μ[r])
+                conditional_μ = -simplify(conditional_μ, expand=true)
 
                 # step 3
                 iter_conditional = filter(x -> 0 < sum(x) <= sum(r), nonbernoulli_iters)

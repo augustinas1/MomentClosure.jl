@@ -28,26 +28,6 @@ function construct_iter_all(N::Int, order::Int)
 
 end
 
-#=
-function construct_iter_all(N::Int, order::Int)
-
-    #Construct an ordered iterator going over all moments
-    # sequentially in terms of order
-
-    # helper iterator through all possible combinations of
-    # N terms each given in range [0, order]
-    iter_full = Iterators.product(fill(0:order, N)...)
-    iter_all = Iterators.filter(x -> sum(x) == 0, iter_full)
-    for i in 1:order
-        iter = Iterators.filter(x -> sum(x) == i, iter_full)
-        iter_all = Iterators.flatten((iter_all, iter))
-    end
-
-    collect(iter_all)
-
-end
-=#
-
 # Trim a string of form "(a, b, c, d, ...)" to "abcd..."
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
 
@@ -58,22 +38,23 @@ flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x))
 flatten_mod = Fixpoint(PassThrough(flatten_rule_mod))
 expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod])))
 
-# Note that throughout we use ModelingToolkit to initialise the variables
-# but then change their Num type into SymbolicUtils Term{Real} as it's
-# easier to handle in symbolic expressions
 function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
 
-    indices = []
+    indices = String[]
     for i in iter
-        push!(indices, trim_key(i))
+        push!(indices, MomentClosure.trim_key(i))
     end
 
     @parameters t
-    @variables μ[indices](t)
+    t = [t.val]
 
     μs = OrderedDict()
     for (i, idx) in enumerate(iter)
-        μs[idx] = sum(idx) == 0 ? 1 : μ[i].val
+        if sum(idx) == 0
+            μs[idx] = 1
+        else
+            μs[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("μ$(join(map_subscripts(indices[i]), ""))")), t)
+        end
     end
 
     μs
@@ -83,22 +64,22 @@ end
 
 function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
 
-    indices = []
+    indices = String[]
     for i in iter
-        push!(indices, trim_key(i))
+        push!(indices, MomentClosure.trim_key(i))
     end
 
     @parameters t
-    @variables M[indices](t)
+    t = [t.val]
 
     Ms = OrderedDict()
     for (i, idx) in enumerate(iter)
-        if sum(idx)==0
+        if sum(idx) == 0
             Ms[idx] = 1
-        elseif sum(idx)==1
+        elseif sum(idx) == 1
             Ms[idx] = 0
         else
-            Ms[idx] = M[i].val
+            Ms[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("M$(join(map_subscripts(indices[i]), ""))")), t)
         end
     end
 
@@ -229,7 +210,7 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
             push!(all_factors[rind], 1)
             push!(all_powers[rind], map(v -> isequal(expr, v), vars))
 
-        elseif operation(expr) == ^ #Symbolics.Pwr
+        elseif operation(expr) == ^ #Symbolics.Pow
 
             try
                 powers = zeros(Int, N)

@@ -4,7 +4,7 @@ import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
 				 numreactions, numparams, substoichmat, prodstoichmat
 
 using ModelingToolkit
-using Symbolics: value, var_from_nested_derivative
+using Symbolics: value, var_from_nested_derivative, map_subscripts
 
 using SciMLBase, SciMLBase.EnsembleAnalysis
 using DiffEqJump
@@ -12,8 +12,9 @@ using Random
 using Distributions: Geometric
 
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
-using SymbolicUtils: Symbolic, expand, simplify, operation, arguments
-using SymbolicUtils: @rule, @acrule, isnotflat, flatten_term, istree
+using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
+					 arguments, @rule, @acrule, isnotflat, flatten_term,
+					 istree, FnType
 
 using OrderedCollections: OrderedDict
 using Combinatorics
