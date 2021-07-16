@@ -38,22 +38,19 @@ flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x))
 flatten_mod = Fixpoint(PassThrough(flatten_rule_mod))
 expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod])))
 
-function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
+function define_μ(iter::AbstractVector, iv::Union{Sym,Num})
 
     indices = String[]
     for i in iter
-        push!(indices, MomentClosure.trim_key(i))
+        push!(indices, trim_key(i))
     end
-
-    @parameters t
-    t = [t.val]
 
     μs = OrderedDict()
     for (i, idx) in enumerate(iter)
         if sum(idx) == 0
             μs[idx] = 1
         else
-            μs[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("μ$(join(map_subscripts(indices[i]), ""))")), t)
+            μs[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("μ$(join(map_subscripts(indices[i]), ""))")), [iv])
         end
     end
 
@@ -61,16 +58,19 @@ function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
 
 end
 
+define_μ(N::Int, order::Int, iv::Union{Sym,Num}) = define_μ(construct_iter_all(N, order), iv)
+function define_μ(N::Int, order::Int) 
+    @parameters t
+    return define_μ(construct_iter_all(N, order), t.val)
+end
 
-function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
+
+function define_M(iter::AbstractVector,  iv::Union{Sym,Num})
 
     indices = String[]
     for i in iter
-        push!(indices, MomentClosure.trim_key(i))
+        push!(indices, trim_key(i))
     end
-
-    @parameters t
-    t = [t.val]
 
     Ms = OrderedDict()
     for (i, idx) in enumerate(iter)
@@ -79,7 +79,7 @@ function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
         elseif sum(idx) == 1
             Ms[idx] = 0
         else
-            Ms[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("M$(join(map_subscripts(indices[i]), ""))")), t)
+            Ms[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("M$(join(map_subscripts(indices[i]), ""))")), [iv])
         end
     end
 
@@ -87,6 +87,11 @@ function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
 
 end
 
+define_M(N::Int, order::Int, iv::Union{Sym,Num}) = define_M(construct_iter_all(N, order), iv)
+function define_M(N::Int, order::Int) 
+    @parameters t
+    return define_M(construct_iter_all(N, order), t.val)
+end
 
 function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
 
