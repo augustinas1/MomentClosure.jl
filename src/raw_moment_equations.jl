@@ -23,7 +23,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
     a = propensities(rn, combinatoric_ratelaw = combinatoric_ratelaw)
 
     term_factors, term_powers, poly_order = polynomial_propensities(a, rn)
-
+    
     q_order = poly_order + m_order - 1
 
     # iterator over all moments from lowest to highest moment order
@@ -35,7 +35,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
     # iterator over the first order moments
     iter_1 = filter(x -> sum(x) == 1, iter_all)
 
-    μ = define_μ(N, q_order)
+    μ = define_μ(iter_all, rn.iv)
 
     dμ = Dict()
     for i in vcat(iter_1, iter_m)

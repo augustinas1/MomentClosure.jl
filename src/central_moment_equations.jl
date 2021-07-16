@@ -71,10 +71,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
        central moments Mᵢ as symbolic variables
        using the functionality of ModelingToolkit.jl =#
 
-    @parameters t # need to define time as a parameter
-
-    μ = define_μ(N, 1, iter_1)
-    M = define_M(N, q_order)
+    μ = define_μ(iter_1, rn.iv)
+    M = define_M(iter_all, rn.iv)
 
     #= Obtain all derivatives of the propensity functions with respect
     to all molecular species up to order defined by q_order.
