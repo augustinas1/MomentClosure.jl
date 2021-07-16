@@ -16,9 +16,10 @@ using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
 					 arguments, @rule, @acrule, isnotflat, flatten_term,
 					 istree, FnType
 
-using OrderedCollections: OrderedDict
-using Combinatorics
+using DataStructures: OrderedSet, OrderedDict
+using LinearAlgebra: tr
 using TupleTools: sort
+using Combinatorics
 using Cumulants
 using Latexify
 
@@ -40,7 +41,9 @@ include("symbolic.jl")
 include("moment_convert.jl")
 include("stochastic_stoichiometry.jl")
 include("central_moment_equations.jl")
+include("central_moment_equations_SDE.jl")
 include("raw_moment_equations.jl")
+include("raw_moment_equations_SDE.jl")
 include("closure_methods/closure.jl")
 include("bernoulli.jl")
 include("utils.jl")
