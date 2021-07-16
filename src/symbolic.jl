@@ -281,3 +281,77 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
     all_factors, all_powers, max_power
 
 end
+
+gradient(f, vars) = [expand_derivatives(Differential(v)(f)) for v in vars]
+hessian(f, vars) = [expand_derivatives(Differential(w)(Differential(v)(f))) for v in vars, w in vars]
+
+degree(ex::AbstractArray, ps::Set = Set()) = [degree(e, ps) for e in ex]
+degree(ex::Num, ps::Set = Set()) = degree(expand(ex).val, ps)
+degree(ex::Symbolics.Pow, ps::Set = Set()) = ex ∈ ps ? 0 : ex.exp 
+degree(ex::Symbolics.Mul, ps::Set = Set()) = sum(ex.dict[key] for key in keys(ex.dict) if key ∉ ps)
+degree(ex::Symbolics.Add, ps::Set = Set()) = maximum(degree(sub_ex, ps) for sub_ex in arguments(ex))
+degree(ex::Sym, ps::Set = Set()) = ex ∈ ps ? 0 : 1
+degree(ex::Term, ps::Set = Set()) = ex ∈ ps ? 0 : 1 
+degree(ex::Number, ps::Set = Set()) = 0 
+
+poly_subs(ex::Union{Num, Number, Symbolics.Mul, Symbolics.Add}, subs::AbstractDict, ps::AbstractArray, flag::Bool = false) = poly_subs(ex, subs, Set(ps), flag) 
+poly_subs(ex::Num, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = poly_subs(expand(ex).val, subs, ps, flag) 
+poly_subs(ex::Number, ::AbstractDict, ps::Set = Set(), ::Bool = false) = ex 
+poly_subs(ex::Sym, subs::AbstractDict, ::Set, ::Bool = false) = haskey(subs, ex) ? subs[ex] : ex
+poly_subs(ex::Term, subs::AbstractDict, ::Set, ::Bool = false) = haskey(subs, ex) ? subs[ex] : ex
+poly_subs(ex::Symbolics.Pow, subs::AbstractDict, ::Set, flag::Bool = false) = substitute(ex, subs)
+poly_subs(ex::Symbolics.Add, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = sum(poly_subs(term, subs, ps, flag) for term in arguments(expand(ex)))
+
+function poly_subs(ex::Symbolics.Mul, subs::AbstractDict, ps = Set(), flag::Bool = false) 
+    mono = 1
+    coeff = ex.coeff
+    if flag 
+        for (base, exponent) in pairs(ex.dict)
+            if base ∉ ps && haskey(subs, base) # very hacky but does the job ...
+                mono *= base^exponent
+            else
+                coeff *= base^exponent
+            end
+        end
+    else
+        for (base, exponent) in pairs(ex.dict)
+            if base ∉ ps 
+                mono *= base^exponent
+            else
+                coeff *= base^exponent
+            end
+        end
+    end
+    return haskey(subs, mono) ? coeff*subs[mono] : ex
+end
+
+
+function taylor_expand(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symbolics.Pow}, vars::AbstractVector, ref_point::AbstractVector, order::Int, aux_flag::Bool = true)
+    @assert order >= 0 "Order of Taylor expansion must be non-negative"
+    @assert length(ref_point) == length(vars) "Variables and reference point must have the same dimension" 
+    N = length(vars)
+    Δ = vars .- aux_flag * ref_point
+    sub_ref_point = Dict(vars[i] => ref_point[i] for i in 1:N)
+    f_taylor = substitute(f, sub_ref_point)
+    iter_all = filter(x -> sum(x) > 0, MomentClosure.construct_iter_all(N, order))
+    for iter in iter_all
+        f_taylor += substitute(derivative(f, vars, iter), sub_ref_point)*prod(Δ .^ iter)/MomentClosure.fact(iter)
+    end
+    return f_taylor
+end
+
+function derivative(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symbolics.Pow}, vars::AbstractVector, order::Tuple)
+    for i in 1:length(vars)
+        if order[i] != 0
+            f = nth_differential(f, vars[i], order[i])
+        end
+    end
+    return f
+end
+
+function nth_differential(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symbolics.Pow}, var::Union{Num, Sym, Term}, n::Int) 
+    for i in 1:n
+        f = expand_derivatives(Differential(var)(f), true)
+    end
+    return f
+end
