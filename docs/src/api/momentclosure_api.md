@@ -27,12 +27,12 @@ paramsmap
 numspecies
 numparams
 numreactions
+get_S_mat
 ```
 
-Moreover, we include two slight extensions of the Catalyst API:
+Moreover, we include one slight extension of the Catalyst API:
 
 ```@docs
-get_S_mat
 propensities
 ```
 
@@ -72,13 +72,20 @@ Note that this will print out only those higher order moments which are found in
 latexify(moment_eqs, :closure, print_all=true)
 ```
 
+## Linear Mapping Approximation
+
+```@docs
+linear_mapping_approximation
+```
+
 ## [Stochastic Simulation Utilities](@id stochastic_simulation_utilities)
 
 A [`ReactionSystemMod`](@ref) is compatible with the standard DifferentialEquations [`JumpProblem`](https://diffeq.sciml.ai/stable/types/jump_types/#Jump-Problems) and hence can be simulated using SSA. Internally, [`ReactionSystemMod`](@ref) is converted into a system of [ConstantRateJumps](https://diffeq.sciml.ai/stable/types/jump_types/#Types-of-Jumps:-Regular,-Variable,-Constant-Rate-and-Mass-Action) taking into account the geometrically distributed reaction products. Note, however, that the implementation here is very restricted: time-dependent propensities are currently not allowed and [MassActionJumps] (https://diffeq.sciml.ai/stable/types/jump_types/#Types-of-Jumps:-Regular,-Variable,-Constant-Rate-and-Mass-Action) cannot be used due to limitations of the [`ReactionSystemMod`](@ref) API, hence the performance is subpar.
 
-We also provide provides functions for higher-order moment extraction from SSA data:
+We also provide provides functions for higher-order moment extraction from SSA and FSP data:
 ```@docs
 get_raw_moments
 get_central_moments
 get_cumulants
+get_moments_FSP
 ```

@@ -5,6 +5,10 @@
 /docs/Manifest.toml
 /docs/build/
 *local_make.jl
+/src/drafts/
+/docs/src/assets/misc/
+/docs/src/assets/paper/
+/examples/drafts/
 
 *checkpoint.ipynb
 *.ipynb_checkpoints

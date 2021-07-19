@@ -17,7 +17,8 @@ makedocs(;
         "Home" => "index.md",
         "Theory" => Any[
             "theory/moment_expansion.md",
-            "theory/moment_closure_approximations.md"
+            "theory/moment_closure_approximations.md",
+            "theory/linear_mapping_approximation.md"
         ],
         "Tutorials" => Any[
             "tutorials/using_momentclosure.md",
@@ -26,7 +27,8 @@ makedocs(;
             "tutorials/geometric_reactions+conditional_closures.md",
             "tutorials/P53_system_example.md",
             "tutorials/derivative_matching_example.md",
-            "tutorials/SIR_example.md"
+            "tutorials/SIR_example.md",
+            "tutorials/LMA_example.md"
         ],
         "API" => Any[
             "api/momentclosure_api.md"
