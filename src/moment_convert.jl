@@ -19,19 +19,18 @@ Dict{Any,Any} with 5 entries:
   (1, 1) => μ₁₁(t) - ((μ₀₁(t))*(μ₁₀(t)))
 ```
 """
-function cumulants_to_raw_moments(N::Int, max_order::Int)
+function cumulants_to_raw_moments(N::Int, max_order::Int, μ=nothing)
 
     # following Smith (1995)
 
-    #if μ == nothing && typeof(sys) == RawMomentEquations
-    #    μ = sys.μ
-    #elseif μ == nothing && typeof(sys) == CentralMomentEquations
-    #    error("must provide vector μ as it is not contained in CentralMomentEquations")
-    #end
-
-    μ = define_μ(N, max_order)
     iter_all = construct_iter_all(N, max_order)
     iter_1 = filter(x -> sum(x) == 1, iter_all)
+
+    if μ == nothing
+        μ = define_μ(N, max_order)
+    else
+        @assert (μ isa Dict) && length(μ) == length(iter_all) "passed arguments are inconsistent (μ vs N & order)"
+    end
 
     K = Dict()
     μ_star = Dict()
@@ -162,7 +161,7 @@ function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
     M = define_M(N, order)
     if μ == nothing
         μ = define_μ(N, order)
-    elseif typeof(μ) != Dict{Any}{Any} || length(μ) != length(iter_all)
+    elseif !(μ isa Dict) || length(μ) != length(iter_all)
         if bernoulli
             iter_all = keys(μ)
         else
