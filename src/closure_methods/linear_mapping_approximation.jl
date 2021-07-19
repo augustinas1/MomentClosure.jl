@@ -6,20 +6,20 @@ Given a *nonlinear* [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/cata
 and an equivalent *linear* `ReactionSystem`, perform the Linear Mapping Approximation (LMA)
 and return the corresponding linear [`RawMomentEquations`](@ref) of the system as well as
 a Dictionary of reaction parameter substitutions obtained using LMA that are used to generate
-the moment equations See here (ADD LINK) for more information.
+the moment equations. See the [LMA theory section](@ref linear_mapping_approximation) for more details.
 
 Notes:
-- `rn_nonlinear` and `rn_linear` must be *identical* in layout to be interpreted correctly and the nonlinear
-  reactions contained in `rn_nonlinear` must all be linearised in `rn_linear` with rate coefficients updated
-  accordingly. Although this requires a lot of manual input, automating the linearisation further is difficult
-  due to arbitrary choices in constructing the reaction networks which would complicate the API further.
+- `rn_nonlinear` and `rn_linear` must be *identical* in layout in order to be interpreted correctly, and the
+  nonlinear reactions contained in `rn_nonlinear` must all be linearised in `rn_linear` with rate coefficients
+  updated accordingly. Although this requires a lot of manual input, automating the linearisation further is
+  difficult due to arbitrary choices that may be mane in constructing the reaction networks.
 - `binary_vars` *must* be specified for conditional closures as an array of indices of all species
   (as in [`speciesmap`](@ref)) which molecule number is a Bernoulli variable. Note that `rn_nonlinear`
   and `rn_linear` may internally order the species differently: `binary_vars` must be consistent with
   the ordering in the *nonlinear* network.
 - By default the moment equations will be generated up to the order determined by the degree of nonlinearity
   of the nonlinear system's reactions. However, if higher order moment information is required, the optional
-  `m_order` argument may be provided that controls the moment expansion order.
+  `m_order` argument may be provided to increase the expansion order manually.
 - `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).

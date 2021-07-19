@@ -9,3 +9,4 @@ using SafeTestsets
 @safetestset "conditional closure" begin include("conditional_closure_tests.jl") end
 @safetestset "latexify" begin include("latexify_tests.jl") end
 @safetestset "sample moments" begin include("sample_moment_tests.jl") end
+@safetestset "linear mapping approximation" begin include("lma_tests.jl") end
