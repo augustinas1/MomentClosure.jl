@@ -18,7 +18,7 @@ function construct_iter_all(N::Int, order::Int)
     #Construct an ordered iterator going over all moments
     # sequentially in terms of order
 
-    iters = []
+    iters = Tuple{repeat([Int], N)...}[]
     for d in 0:order
         x = Base.sort(gen_iter(N, d), rev=true)
         push!(iters, x...)
@@ -185,12 +185,11 @@ function extract_mul(expr::Symbolic, smap::Dict, vars::Vector, iv::Sym)
 end
 
 
-function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSystemMod})
+function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSystemMod}; smap=speciesmap(rn))
 
-    R = numreactions(rn)
+    R = length(a)
     N = numspecies(rn)
-    vars = species(rn)
-    smap = speciesmap(rn)
+    vars = [x for (x,y) in Base.sort(collect(smap), by=x->x[2])]
     iv = rn.iv
 
     all_factors = [[] for i = 1:R]

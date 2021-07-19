@@ -152,13 +152,17 @@ end
     get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod})
 Return the (net) stoichiometric matrix of the given [`ReactionSystem`]
 (https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
-or [`ReactionSystemMod`](@ref).
+or [`ReactionSystemMod`](@ref). Note that in case of a Catalyst's [`ReactionSystem`]([`ReactionSystem`]
+(https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem),
+the transpose of [`netstoichmat`]((https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.netstoichmat)
+is returned.
 """
-function get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod})
-    if typeof(rn) == ReactionSystem
-        prodstoichmat(rn)' - substoichmat(rn)'
+function get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod}; smap=speciesmap(rn))
+    if rn isa ReactionSystem
+        netstoichmat(rn; smap)'
     else
-        rn.S
+        ordering = [smap[s] for s in species(rn)]
+        view(rn.S, ordering, :)
     end
 end
 
