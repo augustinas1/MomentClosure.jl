@@ -207,7 +207,7 @@ Using the specific construction of $\bar{\mathbf{φ}}$ described above, it can b
 ```
 where all elements of $\mathbf{ϵ}(\mathbf{n}_0)$ are zero except the ones corresponding to $m^{\text{th}}$ order raw moments—these elements are second order polynomials in $\mathbf{n}_0$. Note, however, that these results hold only for mass-action systems containing no higher than second order chemical reactions. While the derivative matching MA can be applied in the same way to systems containing higher order polynomial and non-polynomial propensity functions, it has not been rigorously analysed in such scenarios, where, naturally, we expect significantly larger approximation errors.
 
-## Conditional Closures
+## [Conditional Closures](@id conditional_closures)
 
 As standard MAs often fail to provide sufficiently accurate approximations of chemical reaction networks involving both high- and low-abundance species, some novel approaches suggest using moments conditioned on the low-copy number species, which can lead to a more effective description of the system dynamics [1, 16]. Here we discuss the conditional moment closure proposed by Soltani et al. (2015) [16], applicable to networks containing molecular species which copy number can be either zero or one, i.e., a binary/Bernoulli random variable. Such conditional MA can be very useful in the study of gene networks where two-state gene systems are often considered—the gene state itself can be treated as a distinct species which molecule number is a Bernoulli variable.
 

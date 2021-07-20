@@ -1,40 +1,45 @@
 # [Linear Mapping Approximation](@id linear_mapping_approximation)
 
-Please see the **Tutorials** section for examples showing different MAs applied to a variety of systems.
+The Linear Mapping Approximation (LMA) provides a novel way of approximating the solution of the [CME](@ref chemical_master_equation) and has been shown to be accurate for a variety of models of gene regulatory networks (GRNs) [1]. It is based on mapping a *nonlinear* GRN onto an equivalent *linear* GRN so that the exact solution of the linear system gives an approximate solution of the nonlinear system. The LMA is restricted in its applicability to chemical reaction networks where one of the substrates in each nonlinear reaction is a molecular species which copy number can be either zero or one (a Bernoulli/binary random variable). Note that a network can contain an arbitrary number of such species but more than one of them cannot be involved in any nonlinear reaction. Below we provide a short overview of the LMA and urge the reader to see the original [paper](https://doi.org/10.1038/s41467-018-05822-0) for a more comprehensive description [1].
 
+To explain the LMA procedure, we start by considering a simple example of a two-state GRN as done in a [previous section on conditional closures](@ref conditional_closures), denoting the binary gene state by $g$ and the protein number by $p$. We assume that there is a single nonlinear reversible reaction in the network given by
+```math
+\begin{align*}
+G+P &\underset{σ_u}{\stackrel{σ_b}{\rightleftharpoons}} G^*,
+\end{align*}
+```
+where $P$ denotes the protein, $G$ the gene in the ON state ($g=1$) and $G^*$ the gene in the OFF state ($g=0$). Our aim is to find an approximate time-dependent probability distribution of protein numbers $p$ at time $t$.
 
-Note that the description here is taken from [16] and we urge the reader to see the paper for more details. In addition, we have used MomentClosure to apply conditional closures on genetic feedback loops and reproduce some of the published results in [this example](@ref linear_mapping_approximation_example).
+The steps of performing the LMA can then be described as follows:
+
+**1.** Find the linear network by replacing any reversible nonlinear reaction (it must involve one binary species) in the nonlinear network by a reversible pseudo first-order reaction between the binary species' states.
+- In our example, we replace the reaction above with $G \underset{σ_u}{\stackrel{\bar{σ}_b}{\rightleftharpoons}} G^*$, noting that the rate parameter is changed from $σ_b$ to $\bar{σ}_b$. Moreover, this approach is just as applicable in case of cooperativity, e.g., $G+nP \rightleftharpoons G^*$ (where $n$ is an integer indicating the cooperative order) would be similarly replaced with $G \rightleftharpoons G^*$.
+
+**2.** Approximate the changed rate parameters of the linearised reactions by their expectation values.
+- As noted in [1], the first-order reaction $G \stackrel{\bar{σ}_b}\rightarrow G^*$ maps onto the second-order reaction $G+P \stackrel{σ_b}\rightarrow  G^*$ if we choose $\bar{σ}_b = σ_b \left(p \,|\, g=1 \right)$, where $p \,|\, g=1$ indicates the instantaneous protein number given the gene is ON. In LMA, we use the mean-field approximation taking the expectation value of the rate so that
+  ```math
+  \begin{align*}
+  \bar{σ}_b = σ_b \left \langle p \,|\, g=1 \right \rangle = σ_b \frac{\left\langle pg \right\rangle}{\left\langle g \right\rangle}.
+  \end{align*}
+  ```
+  The same procedure can be extended to the general nonlinear reaction where $n$ proteins bind cooperatively. The effective parameter is then given by
+  ```math
+  \bar{σ}_b = σ_b \frac{\left\langle \prod_{i=0}^{n-1} \left( p-i\right)g \right\rangle}{\left\langle g \right\rangle}.
+  ```
+
+**3.** Write down the moment equations for the linear network using the approximated stochastic rates.
+- Note that the moment equations must be generated up the order given by the highest order nonlinear reaction in the network. If the only nonlinear reaction is the second-order reaction $G+P \stackrel{σ_b}\rightarrow G^*$, we need to consider only moments up to the second order (as hinted by the functional form of $\bar{σ}_b$ above). However, the moment hierarchy is otherwise closed, no additional moment closure approximations need to be performed, and therefore we can solve the moment equations in a straightforward manner.
+
+**4.** Solve the moment equations numerically up to time $t$ and plug the resulting moment values into the equations for the effective parameters. Proceed to calculate the time-average of these parameters over the time-interval $[0, t]$.
+- In our example, plugging the solved-for moment values into the equation for $\bar{σ}_b$ allows us to interpret the effective parameter as a time-dependent function $\bar{σ}_b(t)$. However, as the time-dependent probability distribution solution of the CME for the nonlinear network with a general time-dependent $\bar{σ}_b$ is most likely intractable, we transform $\bar{σ}_b(t)$ into a time-independent constant by taking its time-average $\bar{σ}_b^* = \int_0^t \bar{σ}_b(t') dt' / t$. This approach is justified in [1] by considering the Magnus expansion.
+
+**5.** Obtain the time-dependent probability distribution solution of the CME of the linear network assuming that the rate parameters of the linearised reactions are time-independent constants.
+- Note that this step is the major limitation of the LMA as closed-form solutions are available only for a handful of systems (consult [1] for more details).
+
+**6.** Finally, construct the approximate probability distribution of the nonlinear network at time $t$ by replacing the respective rate parameters with their time-averaged equivalents obtained in the previous step.
+
+MomentClosure.jl provides automated generation of the closed moment equations using LMA given a nonlinear chemical reaction network and its linear equivalent. This encapsulates the first three steps of the LMA procedure outlined above which are general and can be seen as an original moment closure approximation. We apply the LMA on simple models of nonlinear GRNs and also discuss how the subsequent LMA steps can be performed in Julia on a case-by-case basis in [this tutorial example](@ref linear_mapping_approximation_example).
 
 ## References
 
-[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Approximation and inference methods for stochastic biochemical kinetics - a tutorial review", Journal of Physics A: Mathematical and Theoretical 50, 093001 (2017). [https://doi.org/10.1088/1751-8121/aa54d9](https://doi.org/10.1088/1751-8121/aa54d9)
-
-[2]: D. Schnoerr, G. Sanguinetti, and R. Grima, "Comparison of different moment-closure approximations for stochastic chemical kinetics", The Journal of Chemical Physics 143, 185101 (2015). [https://doi.org/10.1063/1.4934990](https://doi.org/10.1063/1.4934990)
-
-[3]: E. Lakatos, A. Ale, P. D. W. Kirk, and M. P. H. Stumpf, "Multivariate moment closure techniques for stochastic kinetic models", The Journal of Chemical Physics 143, 094107 (2015). [https://doi.org/10.1063/1.4929837](https://doi.org/10.1063/1.4929837)
-
-[4]: J.  Hespanha,  "Moment  closure  for  biochemical  networks",  in  2008  3rd  International Symposium on Communications, Control and Signal Processing (Mar. 2008), pp. 142–147. [https://doi.org/10.1109/ISCCSP.2008.4537208](https://doi.org/10.1109/ISCCSP.2008.4537208)
-
-[5]: L. A. Goodman, "Population Growth of the Sexes", Biometrics 9, Publisher: [Wiley, International Biometric Society], 212–225 (1953). [https://doi.org/10.2307/3001852](https://doi.org/10.2307/3001852)
-
-[6]: P. Whittle, "On the use of the normal approximation in the treatment of stochastic processes", Journal of the Royal Statistical Society: Series B (Methodological) 19, 268–281 (1957). [https://doi.org/10.1111/j.2517-6161.1957.tb00263.x](https://doi.org/10.1111/j.2517-6161.1957.tb00263.x)
-
-[7]: N. Balakrishnan, N. L. Johnson, and S. Kotz, “A note on relationships between moments, central moments and cumulants from multivariate distributions”, Statistics & Probability Letters 39, 49–54 (1998). [https://doi.org/10.1016/S0167-7152(98)00027-3](https://doi.org/10.1016/S0167-7152(98)00027-3)
-
-[8]: I. Nasell, "An extension of the moment closure method", Theoretical Population Biology 64, 233–239 (2003). [https://doi.org/10.1016/S0040-5809(03)00074-1](https://doi.org/10.1016/S0040-5809(03)00074-1)
-
-[9]: M. J. Keeling, "Multiplicative Moments and Measures of Persistence in Ecology", Journal of Theoretical Biology 205, 269–281 (2000). [https://doi.org/10.1006/jtbi.2000.2066](https://doi.org/10.1006/jtbi.2000.2066)
-
-[10]: E. L. Crow and K. Shimizu, eds., Lognormal Distributions: Theory and Applications (Marcel Dekker, 1988).
-
-[11]: N. L. Johnson, S. Kotz, and N. Balakrishnan, Discrete Multivariate Distributions (Wiley, Feb. 1997).
-
-[12]: A. M. Mathal and P. G. Moschopoulos, "A form of multivariate gamma distribution", Annals of the Institute of Statistical Mathematics 44, 97–106 (1992). [https://doi.org/10.1007/BF00048672](https://doi.org/10.1007/BF00048672)
-
-[13]: E. Furman, "On a multivariate gamma distribution", Statistics & Probability Letters 78, 2353–2360 (2008). [https://doi.org/10.1016/j.spl.2008.02.012](https://doi.org/10.1016/j.spl.2008.02.012)
-
-[14]: A.  Singh  and  J.  P.  Hespanha,  "Lognormal  Moment  Closures  for  Biochemical  Reactions", in Proceedings of the 45th IEEE Conference on Decision and Control, ISSN:0191-2216 (Dec. 2006), pp. 2063–2068. [https://doi.org/10.1109/CDC.2006.376994](https://doi.org/10.1109/CDC.2006.376994)
-
-[15]: A. Singh and J. P. Hespanha, "Approximate Moment Dynamics for Chemically Reacting Systems", IEEE Transactions on Automatic Control 56, 414–418 (2011). [https://doi.org/10.1109/TAC.2010.2088631](https://doi.org/10.1109/TAC.2010.2088631)
-
-[16]: M. Soltani, C. A. Vargas-Garcia, and A. Singh, "Conditional Moment Closure Schemes for Studying Stochastic Dynamics of Genetic Circuits", IEEE Transactions on Biomedical Circuits and Systems 9, 518–526 (2015). [https://doi.org/10.1109/tbcas.2015.2453158](https://doi.org/10.1109/tbcas.2015.2453158)
+[1]: Z. Cao and R. Grima, "Linear mapping approximation of gene regulatory networks with stochastic dynamics", Nature Communications 9, 3305 (2018). [https://doi.org/10.1038/s41467-018-05822-0](https://doi.org/10.1038/s41467-018-05822-0)

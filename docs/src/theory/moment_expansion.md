@@ -1,6 +1,6 @@
 # [Moment Expansion](@id moment_expansion)
 
-## The Chemical Master Equation
+## [The Chemical Master Equation](@id chemical_master_equation)
 
 Consider a chemical reaction network with $N$ different molecular species $X_i$ ($i=1, \dotsc, N$) and $R$ chemical reactions, so that the system can be described by [1]:
 
