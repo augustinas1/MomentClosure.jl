@@ -8,7 +8,7 @@ To explain the LMA procedure, we start by considering a simple example of a two-
 G+P &\underset{σ_u}{\stackrel{σ_b}{\rightleftharpoons}} G^*,
 \end{align*}
 ```
-where $P$ denotes the protein, $G$ the gene in the ON state ($g=1$) and $G^*$ the gene in the OFF state ($g=0$). Our aim is to find an approximate time-dependent probability distribution of protein numbers $p$ at time $t$.
+where $P$ denotes the protein and the gene can be in either state $G$ ($g=1$) or $G^*$ ($g=0$). Our aim is to find an approximate time-dependent probability distribution of protein numbers $p$ at time $t$.
 
 The steps of performing the LMA can then be described as follows:
 
@@ -16,7 +16,7 @@ The steps of performing the LMA can then be described as follows:
 - In our example, we replace the reaction above with $G \underset{σ_u}{\stackrel{\bar{σ}_b}{\rightleftharpoons}} G^*$, noting that the rate parameter is changed from $σ_b$ to $\bar{σ}_b$. Moreover, this approach is just as applicable in case of cooperativity, e.g., $G+nP \rightleftharpoons G^*$ (where $n$ is an integer indicating the cooperative order) would be similarly replaced with $G \rightleftharpoons G^*$.
 
 **2.** Approximate the changed rate parameters of the linearised reactions by their expectation values.
-- As noted in [1], the first-order reaction $G \stackrel{\bar{σ}_b}\rightarrow G^*$ maps onto the second-order reaction $G+P \stackrel{σ_b}\rightarrow  G^*$ if we choose $\bar{σ}_b = σ_b \left(p \,|\, g=1 \right)$, where $p \,|\, g=1$ indicates the instantaneous protein number given the gene is ON. In LMA, we use the mean-field approximation taking the expectation value of the rate so that
+- As noted in [1], the first-order reaction $G \stackrel{\bar{σ}_b}\rightarrow G^*$ maps onto the second-order reaction $G+P \stackrel{σ_b}\rightarrow  G^*$ if we choose $\bar{σ}_b = σ_b \left(p \,|\, g=1 \right)$, where $p \,|\, g=1$ indicates the instantaneous protein number given the gene is in the state $G$. In LMA, we use the mean-field approximation taking the expectation value of the rate so that
   ```math
   \begin{align*}
   \bar{σ}_b = σ_b \left \langle p \,|\, g=1 \right \rangle = σ_b \frac{\left\langle pg \right\rangle}{\left\langle g \right\rangle}.
