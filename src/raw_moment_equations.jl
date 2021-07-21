@@ -1,5 +1,6 @@
 """
-    generate_raw_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int; combinatoric_ratelaw = true)
+    generate_raw_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int;
+                            combinatoric_ratelaw=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 or [`ReactionSystemMod`](@ref), return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
@@ -14,16 +15,19 @@ Notes:
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
   *Note* that this field is irrelevant using `ReactionSystemMod` as then the
   propensities are defined directly by the user.
+- `smap` sets the variable ordering in the moment equations (which index corresponds to which species
+  in the reaction network). By default, this is consistent with the internal system ordering
+  accessible with [`speciesmap`](@ref).
 """
-function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod},
-                                 m_order::Int; combinatoric_ratelaw = true)
+function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_order::Int;
+                                 combinatoric_ratelaw=true, smap=speciesmap(rn))
 
     N = numspecies(rn)
-    S = get_S_mat(rn)
-    a = propensities(rn, combinatoric_ratelaw = combinatoric_ratelaw)
+    S = get_S_mat(rn; smap)
+    a = propensities(rn; combinatoric_ratelaw)
 
-    term_factors, term_powers, poly_order = polynomial_propensities(a, rn)
-    
+    term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
+
     q_order = poly_order + m_order - 1
 
     # iterator over all moments from lowest to highest moment order

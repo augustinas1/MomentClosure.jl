@@ -27,6 +27,7 @@ Please [see the documentation](https://augustinas1.github.io/MomentClosure.jl/de
 	- derivative matching [[6]](#6)
 	- conditional gaussian closure [[7]](#7)
 	- conditional derivative matching [[7]](#7)
+	- linear mapping approximation [[8]](#8)
 - Moment equations are constructed as a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) that can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solver. Moreover, [parameter estimation](https://diffeq.sciml.ai/stable/analysis/parameter_estimation/), [sensitivity analysis](https://diffeq.sciml.ai/stable/analysis/sensitivity/) and [bifurcation analysis](https://diffeq.sciml.ai/stable/analysis/bifurcation/) tools can be applied to further study the resulting system of equations.
 - [Latexify](https://github.com/korsbo/Latexify.jl) can be used to generate LaTeX expressions of the corresponding moment equations.
 
@@ -59,3 +60,5 @@ If you use MomentClosure in your work, please cite [our paper](https://arxiv.org
 <a id="6">[6]</a>: A. Singh and J. P. Hespanha, "Lognormal Moment Closures for Biochemical Reactions", in Proceedings of the 45th IEEE Conference on Decision and Control, ISSN: 0191-2216 (Dec. 2006), pp. 2063-2068. https://doi.org/10.1109/CDC.2006.376994
 
 <a id="7">[7]</a>: M. Soltani, C. A. Vargas-Garcia, and A. Singh, "Conditional Moment Closure Schemes for Studying Stochastic Dynamics of Genetic Circuits", IEEE Transactions on Biomedical Circuits and Systems 9, 518-526 (2015). https://doi.org/10.1109/TBCAS.2015.2453158
+
+<a id="8">[8]</a>: Z. Cao and R. Grima, "Linear mapping approximation of gene regulatory networks with stochastic dynamics", Nature Communications 9, 3305 (2018). [https://doi.org/10.1038/s41467-018-05822-0](https://doi.org/10.1038/s41467-018-05822-0)

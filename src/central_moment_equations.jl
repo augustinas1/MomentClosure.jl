@@ -16,7 +16,8 @@ function fact(i)
 end
 
 """
-    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int, q_order=nothing; combinatoric_ratelaw = true)
+    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int, q_order=nothing;
+                                combinatoric_ratelaw=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 or [`ReactionSystemMod`](@ref), return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
@@ -33,20 +34,23 @@ Notes:
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
   *Note* that this field is irrelevant using `ReactionSystemMod` as then the
   propensities are defined directly by the user.
+- `smap` sets the variable ordering in the moment equations (which index corresponds to which species
+  in the reaction network). By default, this is consistent with the internal system ordering
+  accessible with [`speciesmap`](@ref).
 """
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
                                      m_order::Int, q_order::Int=0;
-                                     combinatoric_ratelaw=true)
+                                     combinatoric_ratelaw=true, smap=speciesmap(rn))
 
     N = numspecies(rn) # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
 
     # propensity functions of all reactions in the network
-    a = propensities(rn, combinatoric_ratelaw=combinatoric_ratelaw)
+    a = propensities(rn; combinatoric_ratelaw)
 
     # quite messy way to check whether all propensity functions are polynomials
     # and extract the moment expansion order automatically (if not set by the user)
-    if q_order == 0
+    if iszero(q_order)
         try
             _, _, poly_order = polynomial_propensities(a, rn)
             q_order = poly_order + m_order - 1
@@ -56,7 +60,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     end
 
     # net stoichiometric matrix
-    S = get_S_mat(rn)
+    S = get_S_mat(rn; smap)
 
     # iterator over all moments from lowest to highest moment order
     iter_all = construct_iter_all(N, q_order)

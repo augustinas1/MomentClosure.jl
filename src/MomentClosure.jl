@@ -1,7 +1,7 @@
 module MomentClosure
 
 import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
-				 numreactions, numparams, substoichmat, prodstoichmat
+				 numreactions, numparams, substoichmat, prodstoichmat, netstoichmat
 
 using ModelingToolkit
 using Symbolics: value, var_from_nested_derivative, map_subscripts
@@ -25,10 +25,11 @@ using Latexify
 using DocStringExtensions
 
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
-       get_S_mat, propensities, ReactionSystemMod,
-       species, params, speciesmap, paramsmap, numspecies, numreactions, numparams,
+       propensities, ReactionSystemMod, species, params, speciesmap, paramsmap,
+	   numspecies, numreactions, numparams, get_S_mat,
        moment_closure, deterministic_IC, JumpProblem,
-	   get_raw_moments, get_central_moments, get_cumulants
+	   get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
+	   linear_mapping_approximation
 
 # reexporting from ModelingToolkit & Symbolics
 # needed for ReactionSystemMod definition
@@ -54,7 +55,7 @@ include("closure_methods/gamma_closure.jl")
 include("closure_methods/derivative_matching.jl")
 include("closure_methods/conditional_gaussian.jl")
 include("closure_methods/conditional_derivative_matching.jl")
+include("closure_methods/linear_mapping_approximation.jl")
 include("stochastic_simulation.jl")
-
 
 end

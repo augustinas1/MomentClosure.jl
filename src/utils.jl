@@ -175,6 +175,68 @@ function get_cumulants(sol::EnsembleSolution, order::Int; naive::Bool=true, b::I
 
 end
 
+
+"""
+    get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
+
+Given an `ODESolution` obtained using [FiniteStateProjection.jl](https://github.com/kaandocal/FiniteStateProjection.jl),
+return a Dictionary of moments computed up to the specified `order` at each time step.
+Here, `moment_type` specifies the type of moments to be computed: available options are `raw`,
+`central` or `cumulant`.
+
+# Notes
+- The `ODESolution` represents the time-evolution of the probability density function
+  that is the solution of the Chemical Master Equation approximated using Finite State Projection
+  algorithms. See the documentation of [FiniteStateProjection.jl](https://github.com/kaandocal/FiniteStateProjection.jl)
+  for more information.
+"""
+function get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
+
+    @assert any(moment_type .== ["raw", "central", "cumulant"]) "Moment type "*moment_type*" does not exist"
+
+    state_space = size(sol)[1:end-1]
+    N = length(state_space)
+    no_t_pts = length(sol.u)
+
+    iter_moments = MomentClosure.construct_iter_all(N, order)[2:end]
+    moments = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_moments])
+
+    iter_state = Iterators.product((0:i-1 for i in state_space)...)
+
+    if moment_type == "raw"
+        for t_pt in 1:no_t_pts
+            tslice = sol[t_pt]
+            for μ_ind in iter_moments
+                moments[μ_ind][t_pt] = sum(prod(n_state.^μ_ind) * tslice[(n_state.+1)...] for n_state in iter_state)
+            end
+        end
+    else
+        μ = Dict{Tuple{fill(Int, N)...}, Float64}()
+        μ[Tuple(fill(0, N))] = 1.
+
+        for t_pt in 1:no_t_pts
+            tslice = sol[t_pt]
+            for μ_ind in iter_moments
+                μ[μ_ind] = sum(prod(n_state.^μ_ind) * tslice[(n_state.+1)...] for n_state in iter_state)
+            end
+
+            if moment_type == "central"
+                moment_temp = MomentClosure.raw_to_central_moments(N, order, μ)
+            else
+                moment_temp = MomentClosure.cumulants_to_raw_moments(N, order, μ)
+            end
+
+            for iter in iter_moments
+                moments[iter][t_pt] = moment_temp[iter]
+            end
+        end
+    end
+
+    moments
+
+end
+
+
 """
     deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 
