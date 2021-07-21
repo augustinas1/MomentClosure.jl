@@ -24,15 +24,16 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
     
     μ = define_μ(iter_all, iv)
     mono_to_moment = OrderedDict(prod(vars.^iter) => μ[iter] for iter in iter_all)
-   
+  
     mom_eqs = Equation[]
     moms = []
     for iter in vcat(iter_1, iter_m)
         mono = prod(vars.^iter)
-        poly = sum(drift .* gradient(mono, vars)) + 1/2*tr(diffusion_matrix*hessian(mono, vars))
+        poly = sum(drift .* gradient(mono, vars)) + 1/2*sum( (diffusion_matrix*hessian(mono, vars))[i,i] for i in 1:N )
         push!(moms, μ[iter])
         push!(mom_eqs, Differential(iv)(mono_to_moment[mono]) ~ poly_subs(poly, mono_to_moment, ps, true))
     end
+
     return RawMomentEquations(ODESystem(mom_eqs, iv, moms, ps), μ, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
 end
 

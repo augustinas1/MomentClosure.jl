@@ -54,7 +54,7 @@ function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff:
     for iter in iter_m
         mono = prod(vars .^ iter)
         push!(moms, M[iter])
-        poly = sum(poly_drift .* gradient(mono, vars)) + 1/2*tr(poly_diffusion_matrix*hessian(mono, vars))
+        poly = sum(poly_drift .* gradient(mono, vars)) + 1/2* sum( (poly_diffusion_matrix*hessian(mono, vars))[i,i] for i in 1:N ) 
         offset = 0
         for i in 1:N
             if iter[i] != 0 

@@ -17,7 +17,6 @@ using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
 					 istree, FnType
 
 using DataStructures: OrderedSet, OrderedDict
-using LinearAlgebra: tr
 using TupleTools: sort
 using Combinatorics
 using Cumulants
