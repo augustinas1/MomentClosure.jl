@@ -157,7 +157,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         push!(eqs, D(M[i]) ~ dM[i])
     end
 
-    vars = extract_variables(eqs, N, q_order)
+    vars = extract_variables(eqs, μ, M)
     odes = ODESystem(eqs, rn.iv, vars, rn.ps)
 
     CentralMomentEquations(

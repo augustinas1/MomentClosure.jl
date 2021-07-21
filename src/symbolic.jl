@@ -93,15 +93,8 @@ function define_M(N::Int, order::Int)
     return define_M(construct_iter_all(N, order), t.val)
 end
 
-function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
-
-    iters = construct_iter_all(N, q_order)
-    iter_μ = filter(x -> sum(x) > 0, iters)
-    iter_M = filter(x -> sum(x) > 1, iters)
-
-    μs = values(define_μ(N, q_order, iter_μ))
-    Ms = values(define_M(N, q_order, iter_M))
-    vars = vcat(μs..., Ms...)
+function extract_variables(eqs::Array{Equation, 1}, μ, M)
+    vars = vcat(values(μ)..., values(M)...)
     # extract variables from rhs of each equation
     eq_vars = unique(vcat(get_variables.(eqs)...))
     # need this as get_variables does not extract var from `Differential(t)(var(t))`
