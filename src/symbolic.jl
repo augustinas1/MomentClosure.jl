@@ -297,7 +297,7 @@ poly_subs(ex::Symbolics.Add, subs::AbstractDict, ps::Set = Set(), flag::Bool = f
 function poly_subs(ex::Symbolics.Mul, subs::AbstractDict, ps = Set(), flag::Bool = false) 
     mono = 1
     coeff = ex.coeff
-    if flag 
+    if flag # flag controls whether there are variables not being subsituted -> those are shifted to the coefficient
         for (base, exponent) in pairs(ex.dict)
             if base ∉ ps && haskey(subs, base) # very hacky but does the job ...
                 mono *= base^exponent
