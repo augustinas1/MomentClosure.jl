@@ -1,10 +1,12 @@
 module MomentClosure
 
 import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
-				 numreactions, numparams, substoichmat, prodstoichmat, netstoichmat
+				 numreactions, numparams, substoichmat, prodstoichmat, netstoichmat,
+				 ReactionSystem
 
 using ModelingToolkit
-using Symbolics: value, var_from_nested_derivative, map_subscripts
+using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient
+import Symbolics: degree
 
 using SciMLBase, SciMLBase.EnsembleAnalysis
 using DiffEqJump

@@ -2,7 +2,9 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
                    closure::OrderedDict, polynorm::Bool)
 
     # TODO: improve performance
-
+    closure_exp = OrderedDict(value(k) => value(v) for (k,v) in pairs(closure_exp))
+    closure = OrderedDict(value(k) => value(v) for (k,v) in pairs(closure))
+    
     closed_eqs = Equation[]
     for eq in sys.odes.eqs
 
@@ -21,7 +23,7 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
 
     vars = sys.odes.states[1:(length(sys.iter_1)+length(sys.iter_m))]
 
-    odes = ODESystem(closed_eqs, iv, vars, ps)
+    odes = ODESystem(closed_eqs, iv, vars, ps, name = Symbol(String(sys.odes.name)[1:end-5], :_CLOSED))
 
     ClosedMomentEquations(odes, closure, sys)
 

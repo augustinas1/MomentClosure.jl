@@ -32,11 +32,11 @@ end
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
 
 # Expand a symbolic expression (no binomial expansion)
-expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys))
-expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod)))
-flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x))
-flatten_mod = Fixpoint(PassThrough(flatten_rule_mod))
-expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod])))
+expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys)) # apply distribution law 
+expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod))) # distributes terms until no longer possible
+flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x)) # 
+flatten_mod = Fixpoint(PassThrough(flatten_rule_mod)) # 
+expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod]))) # apply flatten and distribution until no longer possible
 
 function define_μ(iter::AbstractVector, iv::Union{Sym,Num})
 
@@ -50,7 +50,12 @@ function define_μ(iter::AbstractVector, iv::Union{Sym,Num})
         if sum(idx) == 0
             μs[idx] = 1
         else
-            μs[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("μ$(join(map_subscripts(indices[i]), ""))")), [iv])
+            # old Symbolics approach
+            #μs[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("μ$(join(map_subscripts(indices[i]), ""))")), [iv])
+            # hardcoding
+            #μs[idx] = (identity)((Symbolics.wrap)((SymbolicUtils.setmetadata)(((Sym){(SymbolicUtils.FnType){NTuple{1, Any}, Real}}(varname))((Symbolics.value)(iv)), Symbolics.VariableSource, (:variables, varname))))
+            varname = Symbol("μ$(join(map_subscripts(indices[i]), ""))")
+            μs[idx] = (@variables $varname(iv))[1]
         end
     end
 
@@ -61,7 +66,7 @@ end
 define_μ(N::Int, order::Int, iv::Union{Sym,Num}) = define_μ(construct_iter_all(N, order), iv)
 function define_μ(N::Int, order::Int) 
     @parameters t
-    return define_μ(construct_iter_all(N, order), t.val)
+    return define_μ(construct_iter_all(N, order), value(t))
 end
 
 
@@ -90,7 +95,7 @@ end
 define_M(N::Int, order::Int, iv::Union{Sym,Num}) = define_M(construct_iter_all(N, order), iv)
 function define_M(N::Int, order::Int) 
     @parameters t
-    return define_M(construct_iter_all(N, order), t.val)
+    return define_M(construct_iter_all(N, order), value(t))
 end
 
 function extract_variables(eqs::Array{Equation, 1}, μ, M)
@@ -274,25 +279,34 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
 
 end
 
-gradient(f, vars) = [expand_derivatives(Differential(v)(f)) for v in vars]
-hessian(f, vars) = [expand_derivatives(Differential(w)(Differential(v)(f))) for v in vars, w in vars]
 
-degree(ex::AbstractArray, ps::Set = Set()) = [degree(e, ps) for e in ex]
-degree(ex::Num, ps::Set = Set()) = degree(expand(ex).val, ps)
-degree(ex::Symbolics.Pow, ps::Set = Set()) = ex ∈ ps ? 0 : ex.exp 
-degree(ex::Symbolics.Mul, ps::Set = Set()) = sum(ex.dict[key] for key in keys(ex.dict) if key ∉ ps)
-degree(ex::Symbolics.Add, ps::Set = Set()) = maximum(degree(sub_ex, ps) for sub_ex in arguments(ex))
-degree(ex::Sym, ps::Set = Set()) = ex ∈ ps ? 0 : 1
-degree(ex::Term, ps::Set = Set()) = ex ∈ ps ? 0 : 1 
-degree(ex::Number, ps::Set = Set()) = 0 
+function degree(p::Num, sym::AbstractVector) 
+    p = value(p)
+    sym = Set(value.(sym))
+    if p isa Number 
+        return 0
+    elseif p ∈ sym
+        return 1
+    elseif p isa Symbolic
+        return degree(p, sym)
+    end
+end
+degree(p::Sym, sym::Set) = Int(p ∈ sym)
+degree(p::Sym, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Term, sym::Set) = Int(p ∈ sym)
+degree(p::Term, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Symbolics.Add, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Symbolics.Mul, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Symbolics.Pow, sym::AbstractVector) = degree(p, Set(value.(sym)))
+
 
 poly_subs(ex::Union{Num, Number, Symbolics.Mul, Symbolics.Add}, subs::AbstractDict, ps::AbstractArray, flag::Bool = false) = poly_subs(ex, subs, Set(ps), flag) 
-poly_subs(ex::Num, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = poly_subs(expand(ex).val, subs, ps, flag) 
+poly_subs(ex::Num, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = poly_subs(value(expand(ex)), subs, ps, flag) 
 poly_subs(ex::Number, ::AbstractDict, ps::Set = Set(), ::Bool = false) = ex 
 poly_subs(ex::Sym, subs::AbstractDict, ::Set, ::Bool = false) = haskey(subs, ex) ? subs[ex] : ex
 poly_subs(ex::Term, subs::AbstractDict, ::Set, ::Bool = false) = haskey(subs, ex) ? subs[ex] : ex
 poly_subs(ex::Symbolics.Pow, subs::AbstractDict, ::Set, flag::Bool = false) = substitute(ex, subs)
-poly_subs(ex::Symbolics.Add, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = sum(poly_subs(term, subs, ps, flag) for term in arguments(expand(ex)))
+poly_subs(ex::Symbolics.Add, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = sum(poly_subs(term, subs, ps, flag) for term in arguments(ex))
 
 function poly_subs(ex::Symbolics.Mul, subs::AbstractDict, ps = Set(), flag::Bool = false) 
     mono = 1
