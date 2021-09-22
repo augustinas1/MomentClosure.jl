@@ -60,7 +60,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     end
 
     # net stoichiometric matrix
-    S = get_S_mat(rn; smap)
+    S = netstoichmat(rn; smap)
 
     # iterator over all moments from lowest to highest moment order
     iter_all = construct_iter_all(N, q_order)
@@ -154,7 +154,9 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         dM[i] = expand(dM[i])
     end
 
-    D = Differential(rn.iv)
+
+    iv = get_iv(rn)
+    D = Differential(iv)
     eqs = Equation[]
     for i in 1:N
         push!(eqs, D(μ[iter_1[i]]) ~ du[i])
@@ -164,7 +166,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     end
 
     vars = extract_variables(eqs, N, q_order)
-    odes = ODESystem(eqs, rn.iv, vars, rn.ps)
+    odename = Symbol(nameof(rn), "_central_moment_eqs_m", m_order, "_q", q_order)
+    odes = ODESystem(eqs, iv, vars, get_ps(rn); name=odename)
 
     CentralMomentEquations(
         odes,

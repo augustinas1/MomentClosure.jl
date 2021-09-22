@@ -1,7 +1,6 @@
 using MomentClosure
 using MomentClosure: define_M, define_μ
-using ModelingToolkit: value
-using SymbolicUtils: expand
+using Symbolics: value, expand
 using Test
 using Catalyst
 

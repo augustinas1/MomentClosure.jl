@@ -23,7 +23,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
                                  combinatoric_ratelaw=true, smap=speciesmap(rn))
 
     N = numspecies(rn)
-    S = get_S_mat(rn; smap)
+    S = netstoichmat(rn; smap)
     a = propensities(rn; combinatoric_ratelaw)
 
     term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
@@ -61,14 +61,16 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
         dμ[i] = expand(dμ[i])
     end
 
-    D = Differential(rn.iv)
+    iv = get_iv(rn)
+    D = Differential(iv)
     eqs = Equation[]
     for i in vcat(iter_1, iter_m)
         push!(eqs, D(μ[i]) ~ dμ[i])
     end
 
     vars = extract_variables(eqs, N, q_order)
-    odes = ODESystem(eqs, rn.iv, vars, rn.ps)
+    odename = Symbol(nameof(rn), "_raw_moment_eqs_m", m_order)
+    odes = ODESystem(eqs, iv, vars, get_ps(rn); name=odename)
 
     RawMomentEquations(
         odes,

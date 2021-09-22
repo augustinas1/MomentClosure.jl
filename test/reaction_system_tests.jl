@@ -28,5 +28,5 @@ rn2 = ReactionSystemMod(t, [X, Y], [c₁, c₂, c₃, c₄, Ω], a, S_mat)
 @test numspecies(rn1) == numspecies(rn2) == 2
 @test numreactions(rn1) == numreactions(rn2) == 4
 @test numparams(rn1) == numparams(rn2) == 5
-@test get_S_mat(rn1) == get_S_mat(rn2) == S_mat
+@test netstoichmat(rn1) == netstoichmat(rn2) == S_mat
 @test isequal(propensities(rn1, combinatoric_ratelaw=false), propensities(rn2))

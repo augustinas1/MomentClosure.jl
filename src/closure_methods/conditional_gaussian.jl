@@ -66,6 +66,8 @@ function conditional_gaussian_closure(sys::MomentEquations,
                 iter_conditional = filter(x -> 0 < sum(x) <= sum(r), nonbernoulli_iters)
                 conditional_sub = Dict([Pair(μ[iter], μ[iter.+bernoulli_iter]/μ[bernoulli_iter])
                                        for iter in iter_conditional])
+                conditional_sub = Dict([Pair(μ[iter], μ[iter.+bernoulli_iter]*μ[bernoulli_iter]^-1)
+                                       for iter in iter_conditional])
                 conditional_μ = substitute(conditional_μ, conditional_sub)
                 conditional_μ = simplify(conditional_μ, expand=true)
 

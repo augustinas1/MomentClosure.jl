@@ -40,7 +40,7 @@ function DiffEqJump.JumpProblem(rn::ReactionSystemMod, prob::DiscreteProblem, ag
     # in case of VariableRateJumps or symbolic params this should be amended
     af = [eval(build_function(a, species(rn)...)) for a in as]
 
-    S_mat = get_S_mat(rn)
+    S_mat = netstoichmat(rn)
 
     is_geometric = fill(false, size(S_mat))
     rngs = similar(S_mat, Any)

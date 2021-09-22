@@ -26,9 +26,11 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
             eⱼ = sys.iter_1[j]
             eₖ = sys.iter_1[k]
             if sys isa CentralMomentEquations
-                Σ[(j,k)] = 1. + M[eⱼ .+ eₖ] / μ[eⱼ] / μ[eₖ]
+                #Σ[(j,k)] = 1. + M[eⱼ .+ eₖ] / μ[eⱼ] / μ[eₖ]
+                Σ[(j,k)] = 1. + M[eⱼ .+ eₖ] * μ[eⱼ]^-1 * μ[eₖ]^-1
             else
-                Σ[(j,k)] = μ[eⱼ .+ eₖ] / μ[eⱼ] / μ[eₖ]
+                #Σ[(j,k)] = μ[eⱼ .+ eₖ] / μ[eⱼ] / μ[eₖ]
+                Σ[(j,k)] = μ[eⱼ .+ eₖ] * μ[eⱼ]^-1 * μ[eₖ]^-1
             end
         end
     end
@@ -63,7 +65,7 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
 
     end
 
-    if typeof(sys) == CentralMomentEquations
+    if sys isa CentralMomentEquations
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained log-normal raw moment expressions
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ, bernoulli=isbernoulli)

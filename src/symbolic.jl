@@ -1,6 +1,6 @@
 function gen_iter(n, d)
     # based on https://twitter.com/evalparse/status/1107964924024635392
-    iter = []
+    iter = NTuple{n, Int}[]
     for x in partitions(d + n, n)
         x = x .- 1
         if all(x .<= d)
@@ -18,7 +18,7 @@ function construct_iter_all(N::Int, order::Int)
     #Construct an ordered iterator going over all moments
     # sequentially in terms of order
 
-    iters = Tuple{repeat([Int], N)...}[]
+    iters = NTuple{N, Int}[]
     for d in 0:order
         x = Base.sort(gen_iter(N, d), rev=true)
         push!(iters, x...)
@@ -40,20 +40,25 @@ expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod])))
 
 function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
 
-    indices = String[]
-    for i in iter
-        push!(indices, MomentClosure.trim_key(i))
-    end
+    #indices = String[]
+    #for i in iter
+#        push!(indices, MomentClosure.trim_key(i))
+#    end
+    indices = map(trim_key, iter)
 
     @parameters t
-    t = [t.val]
+    t = [value(t)]
 
-    μs = OrderedDict()
+    μs = OrderedDict{NTuple{N, Int}, Any}()
     for (i, idx) in enumerate(iter)
         if sum(idx) == 0
             μs[idx] = 1
         else
-            μs[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("μ$(join(map_subscripts(indices[i]), ""))")), t)
+            sym_name = Symbol('μ', join(map_subscripts(indices[i])))
+            sym_raw = Sym{FnType{Tuple{Any}, Real}}(sym_name)
+            term_raw = Term{Real}(sym_raw, t)
+            μs[idx] = setmetadata(term_raw, Symbolics.VariableSource,
+                                  (:momentclosure, sym_name))
         end
     end
 
@@ -64,22 +69,23 @@ end
 
 function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
 
-    indices = String[]
-    for i in iter
-        push!(indices, MomentClosure.trim_key(i))
-    end
+    indices = map(trim_key, iter)
 
     @parameters t
-    t = [t.val]
+    t = [value(t)]
 
-    Ms = OrderedDict()
+    Ms = OrderedDict{NTuple{N, Int}, Any}()
     for (i, idx) in enumerate(iter)
         if sum(idx) == 0
             Ms[idx] = 1
         elseif sum(idx) == 1
             Ms[idx] = 0
         else
-            Ms[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("M$(join(map_subscripts(indices[i]), ""))")), t)
+            sym_name = Symbol('M', join(map_subscripts(indices[i])))
+            sym_raw = Sym{FnType{Tuple{Any}, Real}}(sym_name)
+            term_raw = Term{Real}(sym_raw, t)
+            Ms[idx] = setmetadata(term_raw, Symbolics.VariableSource,
+                                  (:momentclosure, sym_name))
         end
     end
 
@@ -87,6 +93,12 @@ function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
 
 end
 
+#function define_temp_vars(x::Symbol, indices)
+#    indices = map(trim_key, indices)
+#    map(indices) do i
+#        sym_name = Symbol(x, join(map_subscripts(indices[i])))
+#    end
+#end
 
 function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
 
@@ -129,26 +141,24 @@ function isconstant(expr::Union{Symbolic, Number}, vars::Vector, iv::Sym) :: Boo
     # A variable here is defined as a function of the independent variable `iv`, e.g,  X(t) is variable, where t
     # is the independent variable
 
-    if istree(expr)
-        args = arguments(expr)
-        if length(args) == 1
-            if isequal(args[1], iv)
-                !isvar(expr, vars)
-            else
-                isconstant(args[1], vars, iv)
-            end
+    istree(expr) || return true
+
+    args = arguments(expr)
+    if length(args) == 1
+        if isequal(args[1], iv)
+            !isvar(expr, vars)
         else
-            all((isconstant(arg, vars, iv) for arg in args))
+            isconstant(args[1], vars, iv)
         end
     else
-        return true
+        all(arg -> isconstant(arg, vars, iv), args)
     end
 
 end
 
-isvar(x::Symbolic, vars::Vector) = any((isequal(x, var) for var in vars))
+isvar(x::Symbolic, vars::Vector) = any(var -> isequal(x, var), vars)
 
-function extract_pwr(expr::Symbolic, smap::Dict, vars::Vector, powers::Vector)
+function extract_pwr!(powers::Vector, expr::Symbolic, smap::Dict, vars::Vector)
     args = arguments(expr)
     if isvar(args[1], vars) && args[2] isa Int && args[2] >= 0
         idx = smap[args[1]]
@@ -171,7 +181,7 @@ function extract_mul(expr::Symbolic, smap::Dict, vars::Vector, iv::Sym)
         if isconstant(arg, vars, iv)
             push!(factors, arg)
         elseif operation(arg) == ^
-            extract_pwr(arg, smap, vars, powers)
+            extract_pwr!(powers, arg, smap, vars)
         elseif isvar(arg, vars)
             powers[smap[arg]] = 1
         else
@@ -190,10 +200,10 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
     R = length(a)
     N = numspecies(rn)
     vars = [x for (x,y) in Base.sort(collect(smap), by=x->x[2])]
-    iv = rn.iv
+    iv = get_iv(rn)
 
     all_factors = [[] for i = 1:R]
-    all_powers = [[] for i = 1:R]
+    all_powers = [Vector{Int}[] for i = 1:R]
 
     for (rind, expr) in enumerate(a)
 
@@ -213,7 +223,7 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
 
             try
                 powers = zeros(Int, N)
-                extract_pwr(expr, smap, vars, powers)
+                extract_pwr!(powers, expr, smap, vars)
                 push!(all_factors[rind], 1)
                 push!(all_powers[rind], powers)
             catch e
@@ -233,7 +243,6 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
         elseif operation(expr) == + #Symbolics.Add
 
             for term in arguments(expr)
-
                 if isconstant(term, vars, iv)
                     push!(all_factors[rind], term)
                     push!(all_powers[rind], zeros(Int, N))
@@ -242,7 +251,7 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
                         op = operation(term)
                         if op == ^
                             powers = zeros(Int, N)
-                            extract_pwr(term, smap, vars, powers)
+                            extract_pwr!(powers, term, smap, vars)
                             push!(all_factors[rind], 1)
                             push!(all_powers[rind], powers)
                         elseif op == *

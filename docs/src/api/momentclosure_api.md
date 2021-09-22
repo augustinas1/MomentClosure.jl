@@ -27,10 +27,10 @@ paramsmap
 numspecies
 numparams
 numreactions
-get_S_mat
+netstoichmat
 ```
 
-Moreover, we include one slight extension of the Catalyst API:
+Moreover, we include one tiny extension of the Catalyst API:
 
 ```@docs
 propensities

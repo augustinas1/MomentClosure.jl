@@ -1,7 +1,6 @@
 using MomentClosure
 using MomentClosure: define_M, define_μ
-using ModelingToolkit: value
-using SymbolicUtils: expand
+using Symbolics: value, expand
 using Test
 using Catalyst
 
@@ -10,7 +9,7 @@ using Catalyst
 
 S_mat = [ 1 -1  1 -1;
          -1  1  0  0]
-a = [c₁*X*Y*(X-1)/Ω^2, c₂*X, c₃*Ω, c₄*X]
+a = [c₁*X*Y*(X-1)*Ω^-2, c₂*X, c₃*Ω, c₄*X]
 rn = ReactionSystemMod(t, [X, Y], [c₁, c₂, c₃, c₄, Ω], a, S_mat)
 
 μ = define_μ(2,4)
@@ -38,7 +37,7 @@ closed_eqs= moment_closure(sys, "log-normal")
 expr1 = closed_eqs.closure[M[1,2]]
 expr2 = μ[1,0]*μ[0,1]^2*(1.0+M[0,2]*μ[0,1]^-2)*(1.0 + M[1,1]*(μ[0,1]^-1)*(μ[1,0]^-1))^2 -
         M[0,2]*μ[1,0] - μ[1,0]*μ[0,1]^2 - 2*M[1,1]*μ[0,1]
-@test isequal(expr1, expr2)
+@test isequal(expand(expr1), expand(expr2))
 
 closed_eqs = moment_closure(sys, "poisson")
 @test isequal(closed_eqs.closure[M[3,0]], μ[1,0])
@@ -67,9 +66,9 @@ expr1 = closed_eqs.closure[sys.μ[1,2]]
 expr2 = 2*μ[0,1]*μ[1,1] + μ[0,2]*μ[1,0] - 2*μ[1,0]*μ[0,1]^2
 @test isequal(expr1, expr2)
 expr1 = closed_eqs.odes.eqs[5].rhs
-expr2 = c₂*μ[1,0] + 2*c₂*μ[1,1] + c₁*μ[0,1]*μ[2,0]/Ω^2 - c₁*μ[1,1]/Ω^2 - 4*c₁*μ[1,1]^2/Ω^2 + 4*c₁*μ[0,1]*μ[1,1]/Ω^2 -
-    2*c₁*μ[0,1]*μ[1,0]^2/Ω^2 + 2*c₁*μ[0,2]*μ[1,0]/Ω^2 -2*c₁*μ[0,2]*μ[2,0]/Ω^2 + 2*c₁*μ[1,0]*μ[1,1]/Ω^2 -
-    4*c₁*μ[1,0]*μ[0,1]^2/Ω^2 + 4*c₁*μ[0,1]^2*μ[1,0]^2/Ω^2
+expr2 = c₂*μ[1,0] + 2*c₂*μ[1,1] + c₁*μ[0,1]*μ[2,0]*Ω^-2 - c₁*μ[1,1]*Ω^-2 - 4*c₁*μ[1,1]^2*Ω^-2 + 4*c₁*μ[0,1]*μ[1,1]*Ω^-2 -
+    2*c₁*μ[0,1]*μ[1,0]^2*Ω^-2 + 2*c₁*μ[0,2]*μ[1,0]*Ω^-2 -2*c₁*μ[0,2]*μ[2,0]*Ω^-2 + 2*c₁*μ[1,0]*μ[1,1]*Ω^-2 -
+    4*c₁*μ[1,0]*μ[0,1]^2*Ω^-2 + 4*c₁*μ[0,1]^2*μ[1,0]^2*Ω^-2
 expr2 = simplify(value.(expr2))
 @test isequal(expand(expr1), expr2)
 
