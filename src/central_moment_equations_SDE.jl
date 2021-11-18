@@ -1,9 +1,9 @@
-function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, m_order::Int, approx_order::Int = 0, ps = [], iv = nothing) where T <: Union{Sym, Num}
-    # if q_order == 0 => assume that all drift_eqs are polynomials
+function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, m_order::Int, name; approx_order::Int = 0, ps = [], iv = nothing) where T <: Union{Sym, Num}
+    # if approx_order == 0 => assume that all drift_eqs are polynomials
     N = length(drift_eqs)
     ps = Set(ps)
     drift = [e.rhs for e in drift_eqs]
-    diffusion_matrix = diff*diff'
+    diffusion_matrix = diff*transpose(diff)
     if iv === nothing
         for eq in drift_eqs
             if !(eq.lhs isa Number) # assume eq.lhs is either Differential or Number
@@ -12,18 +12,17 @@ function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff:
             end
         end
     end
-
-    vars = OrderedSet()
+    vars = []
     for eq in drift_eqs
         ModelingToolkit.collect_vars!(vars, ps, eq.lhs, iv)
     end
-    var_vec = Num[v for v in vars]
 
     if approx_order == 0
-       approx_order = max(maximum(degree(drift, ps)), maximum(degree(diffusion_matrix, ps)))
+        approx_order = max(maximum(degree(eq, vars) for eq in drift), maximum(degree(eq, vars) for eq in diffusion_matrix))
+        q_order = m_order + max(maximum(degree(eq, vars) for eq in drift) - 1, maximum(degree(eq, vars) for eq in diffusion_matrix) - 2)
+    else
+        q_order = m_order + approx_order - 1
     end
-    q_order = m_order + approx_order - 1
-
     # iterator over all moments from lowest to highest moment order
     iter_all = construct_iter_all(N, q_order)
     # iterator over central moments up to order m
@@ -35,12 +34,12 @@ function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff:
     
     # define moment variables (μ standard, M centered)
     μ = define_μ(iter_1, iv)
-    μ_vec = [μ[iter] for iter in iter_1]
+    μ_vec = [value(μ[iter]) for iter in iter_1]
     M = define_M(iter_all, iv)
-
+    #return vars, μ, μ_vec, approx_order, drift, iv, iter_all, iter_m, iter_q, iter_1
     # determine polynomial approximation
-    poly_drift = [taylor_expand(f, var_vec, μ_vec, approx_order, false) for f in drift]
-    poly_diffusion_matrix = [taylor_expand(f, var_vec, μ_vec, approx_order, false) for f in diffusion_matrix]
+    poly_drift = [taylor_expand(f, vars, μ_vec, approx_order, false) for f in drift]
+    poly_diffusion_matrix = [taylor_expand(f, vars, μ_vec, approx_order, false) for f in diffusion_matrix]
 
     # determine first order moment equations
     mom_eqs = Equation[]
@@ -65,8 +64,8 @@ function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff:
         push!(mom_eqs, Differential(iv)(M[iter]) ~ - offset + poly_subs(poly, mono_to_moment, ps, true))
     end
 
-    return CentralMomentEquations(ODESystem(mom_eqs, iv, moms, ps), μ, M, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
+    return CentralMomentEquations(ODESystem(mom_eqs, iv, moms, ps, name = Symbol(name, :_RAW_CENTRAL)), μ, M, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
 end
 
-generate_central_moment_eqs(sys::SDESystem, m_order::Int, approx_order::Int = 0) = generate_centeral_moment_eqs(sys.eqs, sys.noiseeqs, m_order, approx_order, sys.ps, sys.iv)
+generate_central_moment_eqs(sys::SDESystem, m_order::Int; approx_order::Int = 0) = generate_centeral_moment_eqs(equations(sys), ModelingToolkit.get_noiseeqs(sys), m_order, nameof(sys), approx_order = approx_order, ps = parameters(sys), iv = independent_variable(sys))
 

@@ -84,7 +84,9 @@ function define_M(iter::AbstractVector,  iv::Union{Sym,Num})
         elseif sum(idx) == 1
             Ms[idx] = 0
         else
-            Ms[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("M$(join(map_subscripts(indices[i]), ""))")), [iv])
+            varname = Symbol("M$(join(map_subscripts(indices[i]), ""))")
+            Ms[idx] = (@variables $varname(iv))[1]
+            #Ms[idx] = Term{Real}(Sym{FnType{Tuple{Any}, Real}}(Symbol("M$(join(map_subscripts(indices[i]), ""))")), [iv])
         end
     end
 
@@ -336,7 +338,11 @@ function taylor_expand(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symboli
     @assert order >= 0 "Order of Taylor expansion must be non-negative"
     @assert length(ref_point) == length(vars) "Variables and reference point must have the same dimension" 
     N = length(vars)
-    Δ = vars .- aux_flag * ref_point
+    if aux_flag
+        Δ = vars .- ref_point 
+    else
+        Δ = vars
+    end
     sub_ref_point = Dict(vars[i] => ref_point[i] for i in 1:N)
     f_taylor = substitute(f, sub_ref_point)
     iter_all = filter(x -> sum(x) > 0, MomentClosure.construct_iter_all(N, order))
