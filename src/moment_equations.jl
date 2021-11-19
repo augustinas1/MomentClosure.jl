@@ -1,5 +1,7 @@
 abstract type MomentEquations end
 
+# TODO: implement getters
+
 """
 $(TYPEDEF)
 
@@ -87,4 +89,8 @@ end
 # a basic wrapper
 function SciMLBase.ODEProblem(eqs::MomentEquations, args...; kwargs...)
     ODEProblem(eqs.odes, args...; kwargs...)
+end
+
+function Base.nameof(eqs::MomentEquations)
+    nameof(eqs.odes)
 end

@@ -2,14 +2,8 @@
 # necessary to deal with (independent) stochastic variables
 # NOTE: only geometric distribution is supported
 # the parameter passed is supposed to be the MEAN value
-#function expected_coeff(x::Union{Int, Sym{ModelingToolkit.Parameter{Real}}}, pwr)
-function expected_coeff(x::Union{Int, Symbolic}, pwr)
-    if typeof(x) == Int64
-        x^pwr
-    else
-        geometric_raw_moment(x, pwr)
-    end
-end
+expected_coeff(x::Int, pwr) = x^pwr
+expected_coeff(x::Symbolic, pwr) = geometric_raw_moment(x, pwr)
 
 function eulerian_number(n, k)
     suma = 0

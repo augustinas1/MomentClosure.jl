@@ -31,7 +31,7 @@ function bernoulli_reduce(sys::MomentEquations, binary_vars::Array{Int,1})
     redundant_iter_sub = bernoulli_iter_redundant(sys, binary_vars)
     redundant_iter = keys(redundant_iter_sub)
 
-    redundant_eqs = []
+    redundant_eqs = Int[]
     for ind in binary_vars
         for (i, iter) in enumerate(sys.iter_m)
             if iter[ind] > 1
@@ -40,10 +40,10 @@ function bernoulli_reduce(sys::MomentEquations, binary_vars::Array{Int,1})
         end
     end
 
-    if typeof(sys) == RawMomentEquations
+    if sys isa RawMomentEquations
         μ = copy(sys.μ)
         iter_sub = [μ[key] => μ[val] for (key, val) in redundant_iter_sub]
-    else typeof(sys) == CentralMomentEquations
+    else
         μ = define_μ(N, sys.q_order)
         μ_redundant_sub = [μ[key] => μ[val] for (key, val) in redundant_iter_sub]
 
@@ -107,11 +107,12 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Array{Int,1})
     field_values[ind_iter_all] = clean_iter #sys.iter_all
 
     ## fixing ODE system to preserve consistent ordering of parameters
-    iv = sys.odes.iv
-    ps = sys.odes.ps
-
+    iv = get_iv(sys.odes)
+    ps = get_ps(sys.odes)
+    
     vars = extract_variables(clean_eqs, sys.N, sys.q_order)
-    odes = ODESystem(clean_eqs, iv, vars, ps)
+    odename = Symbol(nameof(sys.odes), "_bernoulli")
+    odes = ODESystem(clean_eqs, iv, vars, ps; name=odename)
 
     new_system = typeof(sys)(odes, field_values[2:end]...)
 

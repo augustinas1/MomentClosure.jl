@@ -211,8 +211,8 @@ function get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
             end
         end
     else
-        μ = Dict{Tuple{fill(Int, N)...}, Float64}()
-        μ[Tuple(fill(0, N))] = 1.
+        μ = Dict{NTuple{N, Float64}}()
+        μ[Tuple(zeros(N))] = 1.
 
         for t_pt in 1:no_t_pts
             tslice = sol[t_pt]
@@ -296,11 +296,13 @@ variables implicit (removes all `(t)`) and removes all trailing zeros (`2.0` →
 """
 function format_moment_eqs(eqs::MomentEquations)
 
-    odes = eqs.odes
+    sys = eqs.odes
+    odes = get_eqs(sys)
     exprs  = []
-    for i in 1:size(odes.eqs)[1]
-        key = odes.states[i]
-        eq = odes.eqs[i].rhs
+
+    for i in 1:size(odes)[1]
+        key = sys.states[i]
+        eq = odes[i].rhs
         expr = "d"*string(key)*"/dt = "*string(eq)
         expr = replace(expr, "(t)"=>"")
         expr = replace(expr, ".0"=>"")

@@ -32,7 +32,11 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
         push!(moms, μ[iter])
         push!(mom_eqs, Differential(iv)(mono_to_moment[mono]) ~ poly_subs(poly, mono_to_moment, ps, true))
     end
-    return RawMomentEquations(ODESystem(mom_eqs, iv, moms, ps, name = Symbol(name, :_RAW)), μ, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
+
+    odename = Symbol(name, "_raw_moment_eqs_m", m_order)
+    odes = ODESystem(mom_eqs, iv, moms, ps; name=odename)
+
+    return RawMomentEquations(odes, μ, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
 end
 
 generate_raw_moment_eqs(sys::SDESystem, m_order::Int) = generate_raw_moment_eqs(equations(sys), ModelingToolkit.get_noiseeqs(sys), m_order, nameof(sys), parameters(sys), independent_variable(sys))

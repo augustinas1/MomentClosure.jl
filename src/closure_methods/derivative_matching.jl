@@ -25,7 +25,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
     end
 
     # construct the raw moments up to mth order from the solved-for central moments
-    if typeof(sys) == CentralMomentEquations
+    if sys isa CentralMomentEquations
         closed_μ = central_to_raw_moments(N, sys.m_order)
         μ = central_to_raw_moments(N, sys.q_order)
     else

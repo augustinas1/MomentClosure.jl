@@ -6,8 +6,8 @@ function zero_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     if !isempty(binary_vars)
         sys = bernoulli_moment_eqs(sys, binary_vars)
     end
-
-    if typeof(sys) == CentralMomentEquations
+    
+    if sys isa CentralMomentEquations
         for i in sys.iter_q
             closure[sys.M[i]] = 0
             closure_exp[sys.M[i]] = 0
@@ -42,7 +42,6 @@ function zero_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
 
         end
     end
-
     close_eqs(sys, closure_exp, closure, true)
 
 end

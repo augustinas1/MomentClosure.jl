@@ -1,11 +1,12 @@
 module MomentClosure
 
+using Catalyst
 import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
 				 numreactions, numparams, substoichmat, prodstoichmat, netstoichmat,
-				 ReactionSystem
+				 ReactionSystem, get_eqs, get_states, get_iv, get_ps
 
 using ModelingToolkit
-using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient
+using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
 import Symbolics: degree
 
 using SciMLBase, SciMLBase.EnsembleAnalysis
@@ -13,6 +14,7 @@ using DiffEqJump
 using Random
 using Distributions: Geometric
 
+# TODO: remove unnecessary imports for SymbolicUtils
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
 					 arguments, @rule, @acrule, isnotflat, flatten_term,
@@ -28,12 +30,11 @@ using DocStringExtensions
 
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
        propensities, ReactionSystemMod, species, params, speciesmap, paramsmap,
-	   numspecies, numreactions, numparams, get_S_mat,
+	   numspecies, numreactions, numparams, netstoichmat,
        moment_closure, deterministic_IC, JumpProblem,
 	   get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
 	   linear_mapping_approximation
 
-# reexporting from ModelingToolkit & Symbolics
 # needed for ReactionSystemMod definition
 export @parameters, @variables
 

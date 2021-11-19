@@ -50,8 +50,10 @@ struct ReactionSystemMod
     a::Vector
     """Stoichiometric matrix"""
     S::Matrix
+    """Name of the reaction system"""
+    name::Symbol
 
-    function ReactionSystemMod(iv, states, ps, a, S)
+    function ReactionSystemMod(iv, states, ps, a, S; name::Symbol=gensym(:ReactionSystemMod))
         if size(S)[1] != size(states)[1]
             error("Inconsistent stoichiometric matrix dimensions and number of species")
         elseif size(S)[2] != size(a)[1]
@@ -62,7 +64,7 @@ struct ReactionSystemMod
             else
             # initially using @parameters and @variables macros we have defined Num type symbols
             # which have to be converted to SymbolicUtils supported types for further manipulations
-                new(value(iv), value.(states), value.(ps), simplify.(value.(a)), value.(S))
+                new(value(iv), value.(states), value.(ps), simplify.(value.(a)), value.(S), name)
             end
         end
     end
@@ -82,7 +84,7 @@ Given a [`ReactionSystemMod`](@ref), return a vector of species variables expres
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function species(rn::ReactionSystemMod)
-    rn.states
+    getfield(rn, :states)
 end
 
 """
@@ -93,7 +95,7 @@ expressed as `Sym{ModelingToolkit.Parameter{Real}`. Extension of  Catalyst's
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function params(rn::ReactionSystemMod)
-    rn.ps
+    getfield(rn, :ps)
 end
 
 """
@@ -125,7 +127,7 @@ Return the number of species within the given [`ReactionSystemMod`](@ref). Exten
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function numspecies(rn::ReactionSystemMod)
-    length(rn.states)
+    length(species(rn))
 end
 
 """
@@ -135,7 +137,7 @@ Return the number of reactions within the given [`ReactionSystemMod`](@ref). Ext
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function numreactions(rn::ReactionSystemMod)
-    length(rn.a)
+    length(propensities(rn))
 end
 
 """
@@ -145,25 +147,18 @@ Return the number of parameters within the given [`ReactionSystemMod`](@ref). Ex
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function numparams(rn::ReactionSystemMod)
-    length(rn.ps)
+    length(params(rn))
 end
 
 """
-    get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod})
-Return the (net) stoichiometric matrix of the given [`ReactionSystem`]
-(https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
-or [`ReactionSystemMod`](@ref). Note that in case of a Catalyst's [`ReactionSystem`]([`ReactionSystem`]
-(https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem),
-the transpose of [`netstoichmat`]((https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.netstoichmat)
-is returned.
+    netstoichmat(rn::ReactionSystemMod)
+Return the (net) stoichiometric matrix of the given [`ReactionSystemMod`](@ref). Extension of Catalyst's
+[`netstoichmat`](https://catalyst.sciml.ai/dev/api/catalyst_api/#Catalyst.netstoichmat) used with a
+[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
-function get_S_mat(rn::Union{ReactionSystem, ReactionSystemMod}; smap=speciesmap(rn))
-    if rn isa ReactionSystem
-        netstoichmat(rn; smap)'
-    else
-        ordering = [smap[s] for s in species(rn)]
-        view(rn.S, ordering, :)
-    end
+function netstoichmat(rn::ReactionSystemMod; smap=speciesmap(rn))
+    ordering = [smap[s] for s in species(rn)]
+    view(getfield(rn, :S), ordering, :)
 end
 
 """
@@ -181,8 +176,12 @@ Notes:
 """
 function propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaw=true)
     if typeof(rn) == ReactionSystem
-        simplify.(jumpratelaw.(reactions(rn), combinatoric_ratelaw=combinatoric_ratelaw))
+        simplify.(jumpratelaw.(reactions(rn); combinatoric_ratelaw))
     else
-        rn.a
+        getfield(rn, :a)
     end
 end
+
+get_iv(rn::ReactionSystemMod) = getfield(rn, :iv)
+get_ps(rn::ReactionSystemMod) = getfield(rn, :ps)
+Base.nameof(rn::ReactionSystemMod) = getfield(rn, :name)

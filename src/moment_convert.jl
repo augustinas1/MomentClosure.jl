@@ -27,7 +27,7 @@ function cumulants_to_raw_moments(N::Int, max_order::Int, μ=nothing)
     iter_1 = filter(x -> sum(x) == 1, iter_all)
 
     if μ == nothing
-        μ = define_μ(N, max_order)
+        μ = define_μ(N, max_order, iter_all)
     else
         @assert (μ isa Dict) && length(μ) == length(iter_all) "passed arguments are inconsistent (μ vs N & order)"
     end
@@ -96,8 +96,8 @@ function cumulants_to_central_moments(N::Int, max_order::Int)
 
     iter_all = construct_iter_all(N, max_order)
     iter_1 = filter(x -> sum(x) == 1, iter_all)
-    μ = define_μ(N, 1)
-    M = define_M(N, max_order)
+    μ = define_μ(N, 1, iter_1)
+    M = define_M(N, max_order, iter_all)
 
     M_star[Tuple(zeros(N))] = 1.0
     for i in 1:N
@@ -158,9 +158,9 @@ function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
 
     iter_all = construct_iter_all(N, order)
     iter_μ = filter(x -> sum(x) == 1, iter_all)
-    M = define_M(N, order)
+    M = define_M(N, order, iter_all)
     if μ == nothing
-        μ = define_μ(N, order)
+        μ = define_μ(N, order, iter_all)
     elseif !(μ isa Dict) || length(μ) != length(iter_all)
         if bernoulli
             iter_all = keys(μ)
@@ -199,12 +199,14 @@ function central_to_raw_moments(N::Int, order::Int)
 
     iter_all = construct_iter_all(N, order)
     iter_μ = filter(x -> sum(x) == 1, iter_all)
-    M = define_M(N, order)
-    μ = define_μ(N, order)
+
+    M = define_M(N, order, iter_all)
+    μ = define_μ(N, order, iter_μ)
 
     central_to_raw = Dict()
 
-    for i in iter_all
+    central_to_raw[iter_all[1]] = 1.0
+    for i in iter_all[2:end]
 
         iter_j = Iterators.filter(x -> all(x .<= i), iter_all)
         suma = 0.0

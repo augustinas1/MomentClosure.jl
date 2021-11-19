@@ -43,19 +43,21 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     # obtain the shape and scale parameters
     # starting with symbolic α initially and substituting the respective
     # central/raw moments after the expressions are simplified
-    iter = Iterators.product(fill(1:N, 2)...)
-    iter = collect(iter)
-    indices = []
-    for i in iter
-        push!(indices, trim_key(i))
-    end
-    @parameters α[indices]
-    @parameters x[1:N]
-    αs = Matrix{Any}(undef, N, N)
-    for (ind, (i,j)) in enumerate(iter)
-        αs[i, j] = α[ind].val
-    end
 
+    #iter = Iterators.product(fill(1:N, 2)...)
+    #α = define_temp_vars(:α, vcat(iter...))
+    #x = define_temp_vars(:x, 1:N)
+
+    #αs = Matrix{typeof(α[1])}(undef, N, N)
+    #for (ind, (i,j)) in enumerate(iter)
+    #    αs[i, j] = α[ind]
+    #end
+
+    @variables αs[1:N, 1:N]
+    @variables x[1:N]
+
+    αs = scalarize(αs)
+    x = scalarize(x)
     for i in 1:N
         for j in i+1:N
             αs[j, i] = αs[i, j]
@@ -63,14 +65,16 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     end
 
     for i in 1:N
-        αs[i, i] = x[i].val
+        αs[i, i] = x[i]
         for k in 1:N
             if i != k
-                αs[i,i] -= αs[i, k]
+                αs[i, i] -= αs[i, k]
             end
         end
     end
-    α = αs
+    # the computations above only work with Num (maybe a bug?), hence `value` only now
+    α = value.(αs)
+    x = value.(x)
 
     symbolic_sub = Dict()
     β = Array{Any}(undef, N)
@@ -78,10 +82,14 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         eᵢ = sys.iter_1[i]
         for j in i+1:N
             eⱼ = sys.iter_1[j]
-            symbolic_sub[αs[i, j]] = M[eᵢ .+ eⱼ] * μ[eᵢ] * μ[eⱼ] / M[2 .* eᵢ] / M[2 .* eⱼ]
+            #symbolic_sub[αs[i, j]] = M[eᵢ .+ eⱼ] * μ[eᵢ] * μ[eⱼ] / M[2 .* eᵢ] / M[2 .* eⱼ]
+            symbolic_sub[αs[i, j]] = M[eᵢ .+ eⱼ] * μ[eᵢ] * μ[eⱼ] * M[2 .* eᵢ]^-1 * M[2 .* eⱼ]^-1
         end
-        symbolic_sub[x[i]] = μ[eᵢ]^2 / M[2 .* eᵢ]
-        β[i] = M[2 .* eᵢ] / μ[eᵢ]
+        #symbolic_sub[x[i]] = μ[eᵢ]^2 / M[2 .* eᵢ]
+        symbolic_sub[x[i]] = μ[eᵢ]^2 * M[2 .* eᵢ]^-1
+        #β[i] = M[2 .* eᵢ] / μ[eᵢ]
+        β[i] = M[2 .* eᵢ] * μ[eᵢ]^-1
+
     end
 
     # construct the raw moments that follow the multivariate gamma distribution
@@ -108,7 +116,8 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
 
         multif_iter = multi_factorial(iter)
         for k in iter_k
-            factor1 = multif_iter / prod([multi_factorial(k_i) for k_i in k])
+            #factor1 = multif_iter / prod([multi_factorial(k_i) for k_i in k])
+            factor1 = multif_iter * prod([multi_factorial(k_i) for k_i in k])^-1
             factor2 = 1.0
             for a in 1:N
                 factor2 *= gamma_factorial(α[a, a], k[a][a])
@@ -189,7 +198,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         redundant_iter, redundant_eqs, iter_sub = bernoulli_reduce(sys, binary_vars)
 
         closed_eqs = Equation[]
-        for (i, eq) in enumerate(sys.odes.eqs)
+        for (i, eq) in enumerate(get_eqs(sys.odes))
             if !(i in redundant_eqs)
 
                 closed_rhs = substitute(eq.rhs, closure_exp)
@@ -215,7 +224,8 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         end
 
         vars = extract_variables(closed_eqs, N, sys.q_order)
-        odes = ODESystem(closed_eqs, sys.odes.iv, vars, sys.odes.ps)
+        odename = Symbol(nameof(sys), "_gamma_closure")
+        odes = ODESystem(closed_eqs, get_iv(sys.odes), vars, get_ps(sys.odes); name=odename)
 
         return ClosedMomentEquations(odes, closure, sys)
 

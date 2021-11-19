@@ -33,13 +33,13 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
 
       # TODO: add further checks that both rn_nonlinear and rn_linear have reactions ordered identically
       @assert !isempty(binary_vars) "LMA does not work if there are no binary species"
-      submat = substoichmat(rn_nonlinear)
+      submat = substoichmat(rn_nonlinear)'
       no_substrates = vcat(sum(submat, dims=2)...)
       no_binary = vcat(sum(submat[:, binary_vars], dims=2)...)
       nonlinear_rs_inds = findall(no_substrates .> 1)
       @assert all(x == 1 for x in no_binary[nonlinear_rs_inds]) "non-linear reactions must involve one type of binary species"
       @assert all(submat[nonlinear_rs_inds, binary_vars] .< 2) "cannot have more than 1 molecules of each binary species"
-      @assert all(sum(substoichmat(rn_linear), dims=2) .<= 1) "the linear network cannot contain nonlinear reactions"
+      @assert all(sum(substoichmat(rn_linear), dims=1) .<= 1) "the linear network cannot contain nonlinear reactions"
 
       linearised_rs = reactions(rn_linear)[nonlinear_rs_inds]
       @assert all(!reaction.only_use_rate for reaction in linearised_rs) "linearised nonlinear reactions must follow the law of mass action (defining reactions using Catalyst's →)"
@@ -62,12 +62,13 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
       μ = sys.μ
       for (coeff, factors, powers, binary_ind) in zip(coeffs, term_factors, term_powers, which_binary)
             sub_params[coeff] = sum(factor*μ[Tuple(power)] for (factor, power) in zip(factors, powers))
-            sub_params[coeff] /= μ[sys.iter_1[binary_ind]]
+            #sub_params[coeff] /= μ[sys.iter_1[binary_ind]]
+            sub_params[coeff] *= μ[sys.iter_1[binary_ind]]^-1
             sub_params[coeff] = simplify(sub_params[coeff])
       end
 
       LMA_eqs = Equation[]
-      for eq in sys.odes.eqs
+      for eq in get_eqs(sys.odes)
             rhs = substitute(eq.rhs, sub_params)
             rhs = expand(rhs)
             push!(LMA_eqs, Equation(eq.lhs, rhs))
@@ -75,10 +76,11 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
 
       field_values = [getfield(sys, field) for field in fieldnames(typeof(sys))]
 
-      iv = sys.odes.iv
+      iv = get_iv(sys.odes)
       ps = params(rn_nonlinear)
-      vars = sys.odes.states
-      odes = ODESystem(LMA_eqs, iv, vars, ps)
+      vars = get_states(sys.odes)
+      odename = Symbol(nameof(sys), "_LMA")
+      odes = ODESystem(LMA_eqs, iv, vars, ps; name=odename)
       new_system = typeof(sys)(odes, field_values[2:end]...)
 
       new_system, sub_params

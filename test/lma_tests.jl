@@ -1,6 +1,6 @@
 using MomentClosure
 using MomentClosure: define_μ
-using ModelingToolkit: value
+using Symbolics: value
 using Catalyst
 using Test
 
@@ -35,7 +35,7 @@ expr1 = LMA_eqs.odes.eqs[2].rhs
 expr2 = ρ_b + ρ_u*μ[1,0] - ρ_b*μ[1,0] - μ[0,1]
 @test isequal(expr1, value.(expr2))
 expr1 = LMA_eqs.odes.eqs[3].rhs
-expr2 = ρ_u*μ[1,0] + σ_u*μ[0,1] - μ[1,1] - σ_u*μ[1,1] - σ_b*μ[1,1]^2/μ[1,0]
+expr2 = ρ_u*μ[1,0] + σ_u*μ[0,1] - μ[1,1] - σ_u*μ[1,1] - σ_b*μ[1,1]^2*μ[1,0]^-1
 @test isequal(expr1, value.(expr2))
 
 # cooperativity cp=2
@@ -50,5 +50,5 @@ end σ_b σ_u ρ_b ρ_u
 binary_vars = [speciesmap(rn_nonlinear)[g]]
 _, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaw=false)
 expr1 = effective_params[value(σ_b_LMA)]
-expr2 = (σ_b*μ[1,2] - σ_b*μ[1,1]) / μ[1,0]
+expr2 = (σ_b*μ[1,2] - σ_b*μ[1,1]) * μ[1,0]^-1
 @test isequal(expr1, value.(expr2))

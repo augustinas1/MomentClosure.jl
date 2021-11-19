@@ -9,7 +9,7 @@ function normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     end
 
     # build symbolic expressions of cumulants up to q_order in terms of central/raw moments
-    if typeof(sys) == CentralMomentEquations
+    if sys isa CentralMomentEquations
         moments = sys.M
         K = cumulants_to_central_moments(N, sys.q_order)
     else

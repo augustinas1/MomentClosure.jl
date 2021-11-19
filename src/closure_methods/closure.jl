@@ -18,12 +18,13 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
         push!(closed_eqs, Equation(eq.lhs, closed_rhs))
     end
 
-    iv = sys.odes.iv
-    ps = sys.odes.ps
+    iv = get_iv(sys.odes)
+    ps = get_ps(sys.odes)
 
     vars = sys.odes.states[1:(length(sys.iter_1)+length(sys.iter_m))]
 
-    odes = ODESystem(closed_eqs, iv, vars, ps, name = Symbol(String(sys.odes.name)[1:end-5], :_CLOSED))
+    odename = Symbol(nameof(sys), "_closed")
+    odes = ODESystem(closed_eqs, iv, vars, ps; name=odename)
 
     ClosedMomentEquations(odes, closure, sys)
 
