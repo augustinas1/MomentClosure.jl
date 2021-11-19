@@ -35,12 +35,12 @@ n = 10
 @test isequal(exp(x), MomentClosure.nth_differential(f, x, 10))
 @test isequal(sum(x^i/factorial(i) for i in 0:n), MomentClosure.taylor_expand(f, [x], [0], n))
 
-f = 1/x
-for n in 1:9
-    @test isequal(sum((-1)^i*(x-1)^i for i in 0:n), MomentClosure.taylor_expand(f, [x], [1], n))
+f = 1/x 
+for n in 1:9 # for higher values of n, numerical inaccuracies preclude comparison ...
+    @test isequal(sum((-1)^i*(x-1)^i for i in 0:n), MomentClosure.taylor_expand(f, [x], [1.0], n))
 end
 
 f = log(x)
-for n in 1:2
+for n in 1:10
     @test isequal((-1)^(n-1)*factorial(n-1)*x^(-n), MomentClosure.nth_differential(f, x, n))
 end
