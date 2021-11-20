@@ -28,8 +28,8 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
     moms = []
     for iter in vcat(iter_1, iter_m)
         mono = prod(vars.^iter)
-        poly = sum(drift .* gradient(mono, vars)) + 1/2*sum( (diffusion_matrix*hessian(mono, vars))[i,i] for i in 1:N )
-        push!(moms, μ[iter])
+        H = hessian(mono, vars)
+        poly = sum(drift .* gradient(mono, vars)) + 1/2*sum(diffusion_matrix[i,:]'*H[:,i] for i in 1:N )
         push!(mom_eqs, Differential(iv)(mono_to_moment[mono]) ~ poly_subs(poly, mono_to_moment, ps, true))
     end
 

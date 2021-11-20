@@ -20,68 +20,79 @@ Notes:
   accessible with [`speciesmap`](@ref).
 """
 function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_order::Int;
-                                 combinatoric_ratelaw=true, smap=speciesmap(rn))
+                                 langevin = false, combinatoric_ratelaw=true, smap=speciesmap(rn))
+    if langevin 
+        specs = species(rn)
+        iv = independent_variable(rn)
+        N = length(specs)
+        S = prodstoichmat(rn) - substoichmat(rn)
+        props = propensities(rn; combinatoric_ratelaw = combinatoric_ratelaw)
+        drift = S*props
+        diff = Num[S[i,k]*props[k]^(1//2) for i in 1:N, k in eachindex(props)]
+        
+        generate_raw_moment_eqs(Equation[Differential(iv)(specs[i]) ~ drift[i] for i in eachindex(specs)], 
+                                diff, m_order, nameof(rn), parameters(rn), iv)
+    else
+        N = numspecies(rn)
+        S = netstoichmat(rn; smap)
+        a = propensities(rn; combinatoric_ratelaw)
 
-    N = numspecies(rn)
-    S = netstoichmat(rn; smap)
-    a = propensities(rn; combinatoric_ratelaw)
+        term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
 
-    term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
+        q_order = poly_order + m_order - 1
 
-    q_order = poly_order + m_order - 1
+        # iterator over all moments from lowest to highest moment order
+        iter_all = construct_iter_all(N, q_order)
+        # iterator over raw moments up to order m
+        iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
+        # iterator over raw moments of order rgrater than m up to q_order
+        iter_q = filter(x -> m_order < sum(x) <= q_order, iter_all)
+        # iterator over the first order moments
+        iter_1 = filter(x -> sum(x) == 1, iter_all)
 
-    # iterator over all moments from lowest to highest moment order
-    iter_all = construct_iter_all(N, q_order)
-    # iterator over raw moments up to order m
-    iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
-    # iterator over raw moments of order rgrater than m up to q_order
-    iter_q = filter(x -> m_order < sum(x) <= q_order, iter_all)
-    # iterator over the first order moments
-    iter_1 = filter(x -> sum(x) == 1, iter_all)
+        μ = define_μ(iter_all, rn.iv)
 
-    μ = define_μ(iter_all, rn.iv)
-
-    dμ = Dict()
-    for i in vcat(iter_1, iter_m)
-        dμ[i] = 0
-        for r = 1:numreactions(rn)
-            iter_j = filter(x -> all(x .<= i) && sum(x) <= sum(i) - 1, iter_all)
-            for j in iter_j
-                factor_j = 1.0
-                for k = 1:N
-                    factor_j *= expected_coeff(S[k, r], i[k] - j[k]) * binomial(i[k], j[k])
+        dμ = Dict()
+        for i in vcat(iter_1, iter_m)
+            dμ[i] = 0
+            for r = 1:numreactions(rn)
+                iter_j = filter(x -> all(x .<= i) && sum(x) <= sum(i) - 1, iter_all)
+                for j in iter_j
+                    factor_j = 1.0
+                    for k = 1:N
+                        factor_j *= expected_coeff(S[k, r], i[k] - j[k]) * binomial(i[k], j[k])
+                    end
+                    suma = 0.0
+                    for k = 1:length(term_factors[r])
+                        suma += term_factors[r][k] * μ[j.+Tuple(term_powers[r][k])]
+                    end
+                    dμ[i] += factor_j * suma
                 end
-                suma = 0.0
-                for k = 1:length(term_factors[r])
-                    suma += term_factors[r][k] * μ[j.+Tuple(term_powers[r][k])]
-                end
-                dμ[i] += factor_j * suma
             end
+            dμ[i] = expand(dμ[i])
         end
-        dμ[i] = expand(dμ[i])
+
+        iv = get_iv(rn)
+        D = Differential(iv)
+        eqs = Equation[]
+        for i in vcat(iter_1, iter_m)
+            push!(eqs, D(μ[i]) ~ dμ[i])
+        end
+
+        vars = extract_variables(eqs, μ, q_order)
+        odename = Symbol(nameof(rn), "_raw_moment_eqs_m", m_order)
+        odes = ODESystem(eqs, iv, vars, get_ps(rn); name=odename)
+
+        RawMomentEquations(
+            odes,
+            μ,
+            N,
+            m_order,
+            q_order,
+            iter_all,
+            iter_m,
+            iter_q,
+            iter_1,
+        )
     end
-
-    iv = get_iv(rn)
-    D = Differential(iv)
-    eqs = Equation[]
-    for i in vcat(iter_1, iter_m)
-        push!(eqs, D(μ[i]) ~ dμ[i])
-    end
-
-    vars = extract_variables(eqs, μ, q_order)
-    odename = Symbol(nameof(rn), "_raw_moment_eqs_m", m_order)
-    odes = ODESystem(eqs, iv, vars, get_ps(rn); name=odename)
-
-    RawMomentEquations(
-        odes,
-        μ,
-        N,
-        m_order,
-        q_order,
-        iter_all,
-        iter_m,
-        iter_q,
-        iter_1,
-    )
-
 end
