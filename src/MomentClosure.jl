@@ -1,11 +1,11 @@
 module MomentClosure
 
+using ModelingToolkit
 using Catalyst
 import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
-				 numreactions, numparams, substoichmat, prodstoichmat, netstoichmat,
-				 ReactionSystem, get_eqs, get_states, get_iv, get_ps
+				 numreactions, numparams, netstoichmat, get_iv, get_ps
+using Catalyst: get_eqs, get_states, substoichmat, prodstoichmat
 
-using ModelingToolkit
 using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
 import Symbolics: degree
 

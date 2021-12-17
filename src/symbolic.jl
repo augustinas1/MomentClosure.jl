@@ -40,12 +40,9 @@ expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod]))) # apply fl
 
 function define_μ(iter::AbstractVector, iv::Union{Sym,Num})
 
-    indices = String[]
-    for i in iter
-        push!(indices, trim_key(i))
-    end
+    indices = map(trim_key, iter)
 
-    μs = OrderedDict()
+    μs = OrderedDict{eltype(iter), Any}()
     for (i, idx) in enumerate(iter)
         if sum(idx) == 0
             μs[idx] = 1
@@ -70,14 +67,11 @@ function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order))
 end
 
 
-function define_M(iter::AbstractVector,  iv::Union{Sym,Num})
+function define_M(iter::AbstractVector, iv::Union{Sym,Num})
 
-    indices = String[]
-    for i in iter
-        push!(indices, trim_key(i))
-    end
+    indices = map(trim_key, iter)
 
-    Ms = OrderedDict()
+    Ms = OrderedDict{eltype(iter), Any}()
     for (i, idx) in enumerate(iter)
         if sum(idx) == 0
             Ms[idx] = 1
@@ -97,12 +91,13 @@ function define_M(iter::AbstractVector,  iv::Union{Sym,Num})
 end
 
 define_M(N::Int, order::Int, iv::Union{Sym,Num}) = define_M(construct_iter_all(N, order), iv)
+
 function define_M(N::Int, order::Int, iter = construct_iter_all(N, order)) 
     @parameters t
     return define_M(iter, value(t))
 end
 
-function extract_variables(eqs::Array{Equation, 1}, μ, M)
+function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
     vars = vcat(values(μ)..., values(M)...)
     # extract variables from rhs of each equation
     eq_vars = unique(vcat(get_variables.(eqs)...))

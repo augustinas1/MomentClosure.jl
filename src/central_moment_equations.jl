@@ -42,8 +42,9 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
                                      m_order::Int, q_order::Int=0;
                                      combinatoric_ratelaw=true, smap=speciesmap(rn))
 
-    N = numspecies(rn) # no. of molecular species in the network
+    N = numspecies(rn)   # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
+    iv = get_iv(rn)      # independent variable (usually time)
 
     # propensity functions of all reactions in the network
     a = propensities(rn; combinatoric_ratelaw)
@@ -75,8 +76,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
        central moments Mᵢ as symbolic variables
        using the functionality of ModelingToolkit.jl =#
 
-    μ = define_μ(iter_1, rn.iv)
-    M = define_M(iter_all, rn.iv)
+    μ = define_μ(iter_1, iv)
+    M = define_M(iter_all, iv)
 
     #= Obtain all derivatives of the propensity functions with respect
     to all molecular species up to order defined by q_order.
@@ -152,8 +153,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         dM[i] = expand(dM[i])
     end
 
-
-    iv = get_iv(rn)
     D = Differential(iv)
     eqs = Equation[]
     for i in 1:N

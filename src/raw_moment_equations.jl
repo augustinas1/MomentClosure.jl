@@ -21,22 +21,20 @@ Notes:
 """
 function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_order::Int;
                                  langevin = false, combinatoric_ratelaw=true, smap=speciesmap(rn))
+    
+    iv = get_iv(rn)
+    N = numspecies(rn)
+    S = netstoichmat(rn; smap)
+    a = propensities(rn; combinatoric_ratelaw)
+
     if langevin 
-        specs = species(rn)
-        iv = independent_variable(rn)
-        N = length(specs)
-        S = prodstoichmat(rn) - substoichmat(rn)
-        props = propensities(rn; combinatoric_ratelaw = combinatoric_ratelaw)
-        drift = S*props
-        diff = Num[S[i,k]*props[k]^(1//2) for i in 1:N, k in eachindex(props)]
+        drift = S*a
+        diff = Num[S[i,k] * a[k]^(1//2) for i in 1:N, k in eachindex(a)]
         
-        generate_raw_moment_eqs(Equation[Differential(iv)(specs[i]) ~ drift[i] for i in eachindex(specs)], 
+        generate_raw_moment_eqs(Equation[Differential(iv)(s) ~ d for (s, d) in zip(species(rn), drift)], 
                                 diff, m_order, nameof(rn), parameters(rn), iv)
     else
-        N = numspecies(rn)
-        S = netstoichmat(rn; smap)
-        a = propensities(rn; combinatoric_ratelaw)
-
+        
         term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
 
         q_order = poly_order + m_order - 1
@@ -50,7 +48,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
         # iterator over the first order moments
         iter_1 = filter(x -> sum(x) == 1, iter_all)
 
-        μ = define_μ(iter_all, rn.iv)
+        μ = define_μ(iter_all, iv)
 
         dμ = Dict()
         for i in vcat(iter_1, iter_m)
@@ -72,7 +70,6 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
             dμ[i] = expand(dμ[i])
         end
 
-        iv = get_iv(rn)
         D = Differential(iv)
         eqs = Equation[]
         for i in vcat(iter_1, iter_m)

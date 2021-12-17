@@ -223,7 +223,12 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
             delete!(closure, moments[i])
         end
 
-        vars = extract_variables(closed_eqs, N, sys.q_order)
+        if sys isa RawMomentEquations
+            vars = extract_variables(closed_eqs, sys.μ)
+        else
+            vars = extract_variables(closed_eqs, sys.μ, sys.M)
+        end
+
         odename = Symbol(nameof(sys), "_gamma_closure")
         odes = ODESystem(closed_eqs, get_iv(sys.odes), vars, get_ps(sys.odes); name=odename)
 

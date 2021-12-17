@@ -81,5 +81,5 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
         closure_exp = closure
     end
     
-    return close_eqs(sys, closure_exp, closure, false)
+    close_eqs(sys, closure_exp, closure, false)
 end

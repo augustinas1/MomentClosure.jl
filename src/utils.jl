@@ -332,7 +332,7 @@ function format_closure(eqs::ClosedMomentEquations; format_all::Bool=false)
     if format_all
         iter = keys(closure)
     else
-        iter = setdiff(eqs.open_eqs.odes.states.value, eqs.odes.states.value)
+        iter = setdiff(states(eqs.open_eqs.odes), states(eqs.odes))
     end
 
     for i in iter
