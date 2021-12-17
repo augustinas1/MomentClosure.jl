@@ -21,14 +21,14 @@ expr = replace(raw"\begin{align*}
 \frac{d\mu{_{10}}}{dt} =& k_{on} - k_{on} \mu{_{10}} - k_{off} \mu{_{10}}^{-1} \mu{_{11}}^{2} \\
 \frac{d\mu{_{01}}}{dt} =& b k_{p} \mu{_{10}} - \gamma_{p} \mu{_{01}} \\
 \frac{d\mu{_{11}}}{dt} =& k_{on} \mu{_{01}} + b k_{p} \mu{_{10}} - k_{on} \mu{_{11}} - \gamma_{p} \mu{_{11}} - k_{off} \mu{_{10}}^{-2} \mu{_{11}}^{3} \\
-\frac{d\mu{_{02}}}{dt} =& \gamma_{p} \mu{_{01}} + b k_{p} \mu{_{10}} + 2 b k_{p} \mu{_{11}} + 2 k_{p} \mu{_{10}} b^{2} - 2 \gamma_{p} \mu{_{02}}
+\frac{d\mu{_{02}}}{dt} =& \gamma_{p} \mu{_{01}} + b k_{p} \mu{_{10}} + 2 b k_{p} \mu{_{11}} + 2 k_{p} b^{2} \mu{_{10}} - 2 \gamma_{p} \mu{_{02}}
 \end{align*}
 ", "\r\n"=>"\n")
 @test latexify(closed_raw_eqs) == expr
 
 expr = replace(raw"\begin{align*}
 \mu{_{12}} =& \mu{_{10}}^{-1} \mu{_{11}}^{2} \\
-\mu{_{13}} =& 3 \mu{_{11}} \mu{_{12}} \mu{_{10}}^{-1} - 2 \mu{_{10}}^{-2} \mu{_{11}}^{3}
+\mu{_{13}} =& 3 \mu{_{10}}^{-1} \mu{_{11}} \mu{_{12}} - 2 \mu{_{10}}^{-2} \mu{_{11}}^{3}
 \end{align*}
 ", "\r\n"=>"\n")
 @test latexify(closed_raw_eqs, :closure) == expr
