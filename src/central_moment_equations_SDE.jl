@@ -1,23 +1,12 @@
-function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, m_order::Int, name; approx_order::Int = 0, ps = [], iv = nothing) where T <: Union{Sym, Num}
+function generate_central_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, 
+                                      m_order, approx_order, vars, name, ps, iv) where T <: Union{Sym, Num}
+    
     # if approx_order == 0 => assume that all drift_eqs are polynomials
     N = length(drift_eqs)
-    ps = Set(ps)
     drift = [e.rhs for e in drift_eqs]
     diffusion_matrix = diff*transpose(diff)
-    if iv === nothing
-        for eq in drift_eqs
-            if !(eq.lhs isa Number) # assume eq.lhs is either Differential or Number
-                iv = ModelingToolkit.iv_from_nested_derivative(eq.lhs)
-                break
-            end
-        end
-    end
-    vars = []
-    for eq in drift_eqs
-        ModelingToolkit.collect_vars!(vars, ps, eq.lhs, iv)
-    end
 
-    if approx_order == 0
+    if iszero(approx_order)
         approx_order = max(maximum(degree(eq, vars) for eq in drift), maximum(degree(eq, vars) for eq in diffusion_matrix))
         q_order = m_order + max(maximum(degree(eq, vars) for eq in drift) - 1, maximum(degree(eq, vars) for eq in diffusion_matrix) - 2)
     else
@@ -50,13 +39,14 @@ function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff:
         push!(moms, μ[iter])
         push!(mom_eqs, Differential(iv)(μ[iter]) ~ poly_subs(sum(poly_drift .* gradient(mono, vars)), mono_to_moment, ps, true))
     end
+
     for iter in iter_m
         mono = prod(vars .^ iter)
         push!(moms, M[iter])
-        poly = sum(poly_drift .* gradient(mono, vars)) + 1/2* sum( (poly_diffusion_matrix*hessian(mono, vars))[i,i] for i in 1:N ) 
+        poly = sum(poly_drift .* gradient(mono, vars)) + 1/2 * sum( (poly_diffusion_matrix*hessian(mono, vars))[i,i] for i in 1:N ) 
         offset = 0
         for i in 1:N
-            if iter[i] != 0 
+            if !iszero(iter[i]) 
                 iter_incr = Tuple(i != j ? iter[j] : iter[j] - 1 for j in 1:N)
                 offset += M[iter_incr]*(iter[i] + 1)*mom_eqs[i].rhs
             end
@@ -64,8 +54,9 @@ function generate_centeral_moment_eqs(drift_eqs::AbstractVector{Equation}, diff:
         push!(mom_eqs, Differential(iv)(M[iter]) ~ - offset + poly_subs(poly, mono_to_moment, ps, true))
     end
 
-    return CentralMomentEquations(ODESystem(mom_eqs, iv, moms, ps, name = Symbol(name, :_RAW_CENTRAL)), μ, M, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
+    CentralMomentEquations(ODESystem(mom_eqs, iv, moms, ps, name = Symbol(name, :_RAW_CENTRAL)), μ, M, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
 end
 
-generate_central_moment_eqs(sys::SDESystem, m_order::Int; approx_order::Int = 0) = generate_centeral_moment_eqs(equations(sys), ModelingToolkit.get_noiseeqs(sys), m_order, nameof(sys), approx_order = approx_order, ps = parameters(sys), iv = independent_variable(sys))
+generate_central_moment_eqs(sys::SDESystem, m_order::Int; approx_order::Int = 0) = generate_central_moment_eqs(equations(sys), get_noiseeqs(sys), m_order, approx_order, 
+                                                                                                                states(sys), nameof(sys), parameters(sys), get_iv(sys))
 
