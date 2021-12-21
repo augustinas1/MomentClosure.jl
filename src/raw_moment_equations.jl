@@ -32,7 +32,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
         diff = Num[S[i,k] * a[k]^(1//2) for i in 1:N, k in eachindex(a)]
         
         generate_raw_moment_eqs(Equation[Differential(iv)(s) ~ d for (s, d) in zip(species(rn), drift)], 
-                                diff, m_order, nameof(rn), parameters(rn), iv)
+                                diff, m_order, states(rn), nameof(rn), parameters(rn), iv)
     else
         
         term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
@@ -43,7 +43,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
         iter_all = construct_iter_all(N, q_order)
         # iterator over raw moments up to order m
         iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
-        # iterator over raw moments of order rgrater than m up to q_order
+        # iterator over raw moments of order greater than m up to q_order
         iter_q = filter(x -> m_order < sum(x) <= q_order, iter_all)
         # iterator over the first order moments
         iter_1 = filter(x -> sum(x) == 1, iter_all)

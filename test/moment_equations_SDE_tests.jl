@@ -8,7 +8,7 @@ using Test
 # Cox-Ingersoll-Ross model for interest rate forecasting 
 # moment equations are naturally closed
 cir_model = SDESystem([Differential(t)(x) ~ κ*(θ - x)], [σ * x^(1//2)], t, [x], [κ, θ, σ], name = :cir)
-@time cir_moments = generate_raw_moment_eqs(cir_model, 2)
+cir_moments = generate_raw_moment_eqs(cir_model, 2)
 
 μ = cir_moments.μ
 @test cir_moments.odes.eqs == [Differential(t)(μ[(1,)]) ~ expand(κ*(θ-μ[(1,)])), 

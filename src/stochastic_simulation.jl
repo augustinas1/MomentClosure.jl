@@ -29,7 +29,7 @@ function DiffEqJump.JumpProblem(rn::ReactionSystemMod, prob::DiscreteProblem, ag
     # construct the mapping from each paramater to their value if the DiscreteProblem
     # contains a vector of parameter values
     if prob.p isa Array{<:Real, 1}
-        pmap = Dict(Pair.(params(rn), prob.p / 1.))
+        pmap = Dict(Pair.(reactionparams(rn), prob.p / 1.))
     else
         # otherwise we assume `prob` already contains the required mapping
         pmap = Dict(prob.p)

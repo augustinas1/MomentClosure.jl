@@ -8,9 +8,9 @@ ps = [k_on, k_off, k_p, γ_p, b]
 S = [1 -1 0 0;
    0 0 b -1]
 as = [k_on*(1-g),    # 0 -> g
-    k_off*g*(p^2), # g -> 0
-    k_p*g,         # 0 -> mP, m ~ Geometric(mean=b)
-    γ_p*p]         # p -> 0
+      k_off*g*(p^2), # g -> 0
+      k_p*g,         # 0 -> mP, m ~ Geometric(mean=b)
+      γ_p*p]         # p -> 0
 binary_vars = [1]
 rn = ReactionSystemMod(t, vars, ps, as, S)
 

@@ -88,13 +88,13 @@ function species(rn::ReactionSystemMod)
 end
 
 """
-    params(rn::ReactionSystemMod)
+    reactionparams(rn::ReactionSystemMod)
 Given a [`ReactionSystemMod`](@ref), return a vector of parameter variables
 expressed as `Sym{ModelingToolkit.Parameter{Real}`. Extension of  Catalyst's
-[`params`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.params) used with a
+[`reactionparams`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.reactionparams) used with a
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
-function params(rn::ReactionSystemMod)
+function reactionparams(rn::ReactionSystemMod)
     getfield(rn, :ps)
 end
 
@@ -117,7 +117,7 @@ parameter indices.  Extension of Catalyst's
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
 function paramsmap(rn::ReactionSystemMod)
-    Dict(p => i for (i,p) in enumerate(params(rn)))
+    Dict(p => i for (i,p) in enumerate(reactionparams(rn)))
 end
 
 """
@@ -138,16 +138,6 @@ Return the number of reactions within the given [`ReactionSystemMod`](@ref). Ext
 """
 function numreactions(rn::ReactionSystemMod)
     length(propensities(rn))
-end
-
-"""
-    numparams(rn::ReactionSystemMod)
-Return the number of parameters within the given [`ReactionSystemMod`](@ref). Extension of Catalyst's
-[`numparams`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.numparams) used with a
-[`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
-"""
-function numparams(rn::ReactionSystemMod)
-    length(params(rn))
 end
 
 """
@@ -175,7 +165,7 @@ Notes:
   propensities are defined directly by the user.
 """
 function propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaw=true)
-    if typeof(rn) == ReactionSystem
+    if rn isa ReactionSystem
         simplify.(jumpratelaw.(reactions(rn); combinatoric_ratelaw))
     else
         getfield(rn, :a)

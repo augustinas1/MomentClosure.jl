@@ -1,10 +1,12 @@
 module MomentClosure
 
 using ModelingToolkit
+using ModelingToolkit: get_noiseeqs, states, get_eqs
+
 using Catalyst
-import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
-				 numreactions, numparams, netstoichmat, get_iv, get_ps
-using Catalyst: get_eqs, get_states, substoichmat, prodstoichmat
+import Catalyst: species, reactionparams, reactions, speciesmap, paramsmap, numspecies,
+				 numreactions, netstoichmat, get_iv, get_ps
+using Catalyst: substoichmat, prodstoichmat
 
 using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
 import Symbolics: degree
@@ -29,8 +31,8 @@ using Latexify
 using DocStringExtensions
 
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
-       propensities, ReactionSystemMod, species, params, speciesmap, paramsmap,
-	   numspecies, numreactions, numparams, netstoichmat,
+       propensities, ReactionSystemMod, species, reactionparams, speciesmap, paramsmap,
+	   numspecies, numreactions, netstoichmat,
        moment_closure, deterministic_IC, JumpProblem,
 	   get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
 	   linear_mapping_approximation
