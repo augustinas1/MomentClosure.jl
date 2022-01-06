@@ -35,7 +35,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
                                 diff, m_order, states(rn), nameof(rn), parameters(rn), iv)
     else
         
-        term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
+        term_factors, term_powers, poly_order = polynomial_propensities(a, iv, smap)
 
         q_order = poly_order + m_order - 1
 
@@ -76,7 +76,7 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
             push!(eqs, D(μ[i]) ~ dμ[i])
         end
 
-        vars = extract_variables(eqs, μ, q_order)
+        vars = extract_variables(eqs, μ)
         odename = Symbol(nameof(rn), "_raw_moment_eqs_m", m_order)
         odes = ODESystem(eqs, iv, vars, get_ps(rn); name=odename)
 

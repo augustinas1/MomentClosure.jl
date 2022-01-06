@@ -53,7 +53,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     # and extract the moment expansion order automatically (if not set by the user)
     if iszero(q_order)
         try
-            _, _, poly_order = polynomial_propensities(a, rn)
+            _, _, poly_order = polynomial_propensities(a, iv, smap)
             q_order = poly_order + m_order - 1
         catch e
             error("non-polynomial rates (OR A BUG): please specify q_order.\n" * string(e))

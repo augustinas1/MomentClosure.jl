@@ -98,6 +98,7 @@ function define_M(N::Int, order::Int, iter = construct_iter_all(N, order))
 end
 
 function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
+    
     vars = vcat(values(μ)..., values(M)...)
     # extract variables from rhs of each equation
     eq_vars = unique(vcat(get_variables.(eqs)...))
@@ -107,30 +108,7 @@ function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
     eq_vars = unique(vcat(eq_vars..., diff_vars...))
     # this should preserve the correct ordering
 
-    vars = intersect!(vars, eq_vars)
-    vars
-
-end
-
-function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
-
-    iters = construct_iter_all(N, q_order)
-    iter_μ = filter(x -> sum(x) > 0, iters)
-    iter_M = filter(x -> sum(x) > 1, iters)
-
-    μs = values(define_μ(N, q_order, iter_μ))
-    Ms = values(define_M(N, q_order, iter_M))
-    vars = vcat(μs..., Ms...)
-    # extract variables from rhs of each equation
-    eq_vars = unique(vcat(get_variables.(eqs)...))
-    # need this as get_variables does not extract var from `Differential(t)(var(t))`
-    diff_vars = [var_from_nested_derivative(eq.lhs)[1] for eq in eqs]
-    # filter out the unique ones
-    eq_vars = unique(vcat(eq_vars..., diff_vars...))
-    # this should preserve the correct ordering
-
-    vars = intersect!(vars, eq_vars)
-    vars
+    intersect!(vars, eq_vars)
 
 end
 
@@ -207,15 +185,13 @@ function extract_mul(expr::Symbolic, smap::Dict, vars::Vector, iv::Sym)
 end
 
 
-function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSystemMod}; smap=speciesmap(rn))
+function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
 
-    R = length(a)
-    N = numspecies(rn)
-    vars = [x for (x,y) in Base.sort(collect(smap), by=x->x[2])]
-    iv = get_iv(rn)
+    vars = [x for (x,_) in Base.sort(collect(smap), by=x->x[2])]
+    N = length(vars)
 
-    all_factors = [[] for i = 1:R]
-    all_powers = [Vector{Int}[] for i = 1:R]
+    all_factors = copy.(fill([], size(a)))
+    all_powers = copy.(fill(Vector{Int}[], size(a)))
 
     for (rind, expr) in enumerate(a)
 
@@ -297,7 +273,6 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
 
 end
 
-
 function degree(p::Num, sym::AbstractVector) 
     p = value(p)
     sym = Set(value.(sym))
@@ -317,7 +292,6 @@ degree(p::Symbolics.Add, sym::AbstractVector) = degree(p, Set(value.(sym)))
 degree(p::Symbolics.Mul, sym::AbstractVector) = degree(p, Set(value.(sym)))
 degree(p::Symbolics.Pow, sym::AbstractVector) = degree(p, Set(value.(sym)))
 
-
 poly_subs(ex::Union{Num, Number, Symbolics.Mul, Symbolics.Add}, subs::AbstractDict, ps::AbstractArray, flag::Bool = false) = poly_subs(ex, subs, Set(ps), flag) 
 poly_subs(ex::Num, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = poly_subs(value(expand(ex)), subs, ps, flag) 
 poly_subs(ex::Number, ::AbstractDict, ps::Set = Set(), ::Bool = false) = ex 
@@ -329,7 +303,7 @@ poly_subs(ex::Symbolics.Add, subs::AbstractDict, ps::Set = Set(), flag::Bool = f
 function poly_subs(ex::Symbolics.Mul, subs::AbstractDict, ps = Set(), flag::Bool = false) 
     mono = 1
     coeff = ex.coeff
-    if flag # flag controls whether there are variables not being subsituted -> those are shifted to the coefficient
+    if flag # flag controls whether there are variables not being substituted -> those are shifted to the coefficient
         for (base, exponent) in pairs(ex.dict)
             if base ∉ ps && haskey(subs, base) # very hacky but does the job ...
                 mono *= base^exponent
