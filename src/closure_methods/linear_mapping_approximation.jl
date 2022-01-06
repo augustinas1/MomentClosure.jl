@@ -48,7 +48,8 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
       # apply LMA: substitute reaction parameters in the linear network moment equations to reflect
       # the nonlinear interactions according to the LMA methodology
 
-      term_factors, term_powers, poly_order = polynomial_propensities(propensities(rn_nonlinear; combinatoric_ratelaw)[nonlinear_rs_inds], rn_nonlinear)
+      term_factors, term_powers, poly_order = polynomial_propensities(propensities(rn_nonlinear; combinatoric_ratelaw)[nonlinear_rs_inds], 
+                                                                      get_iv(rn_nonlinear), speciesmap(rn_nonlinear))
 
       order = iszero(m_order) ? poly_order : max(poly_order, m_order)
       try sys = generate_raw_moment_eqs(rn_linear, order; combinatoric_ratelaw, smap=speciesmap(rn_nonlinear))

@@ -36,10 +36,6 @@ expr1 = sys.odes.eqs[2].rhs
 @test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
 @test isequal(expand(expr1), expr2)
 
-N = numspecies(rn)
-a = propensities(rn; combinatoric_ratelaw=false)
-term_factors, term_powers, poly_order = MomentClosure.polynomial_propensities(a, rn; smap=speciesmap(rn))
-
 sys = generate_raw_moment_eqs(rn, 2)
 μ = sys.μ
 expr1 = sys.odes.eqs[4].rhs
