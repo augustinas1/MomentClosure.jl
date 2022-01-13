@@ -1,5 +1,5 @@
-function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, 
-                                 m_order::Int, vars, name, ps, iv) where T <: Union{Sym, Num}
+function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray, 
+                                 m_order::Int, vars, name, ps, iv)
     
     N = length(drift_eqs)
     drift = [e.rhs for e in drift_eqs]
@@ -20,7 +20,7 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
     
     for i in 1:N
         poly = sum( drift_factors[i][j] * μ[Tuple(drift_powers[i][j])] for j in 1:length(drift_factors[i]) )
-        push!(eqs, Differential(iv)(μ[iter_1[i]]) ~ poly)
+        push!(eqs, Differential(iv)(μ[iter_1[i]]) ~ expand(poly))
     end
     
     for iter in iter_m
@@ -45,7 +45,7 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
             end
         end
         
-        push!(eqs, Differential(iv)(μ[iter]) ~ term1 + term2/2) 
+        push!(eqs, Differential(iv)(μ[iter]) ~ expand(term1 + term2/2)) 
     end
 
     odename = Symbol(name, "_raw_moment_eqs_m", m_order)

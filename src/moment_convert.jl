@@ -26,7 +26,7 @@ function cumulants_to_raw_moments(N::Int, max_order::Int, μ=nothing)
     iter_all = construct_iter_all(N, max_order)
     iter_1 = filter(x -> sum(x) == 1, iter_all)
 
-    if μ == nothing
+    if isnothing(μ)
         μ = define_μ(N, max_order, iter_all)
     else
         @assert (μ isa Dict) && length(μ) == length(iter_all) "passed arguments are inconsistent (μ vs N & order)"
@@ -159,7 +159,7 @@ function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
     iter_all = construct_iter_all(N, order)
     iter_μ = filter(x -> sum(x) == 1, iter_all)
     M = define_M(N, order, iter_all)
-    if μ == nothing
+    if isnothing(μ)
         μ = define_μ(N, order, iter_all)
     elseif !(μ isa Dict) || length(μ) != length(iter_all)
         if bernoulli

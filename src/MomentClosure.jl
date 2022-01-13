@@ -9,20 +9,19 @@ import Catalyst: species, reactionparams, reactions, speciesmap, paramsmap, nums
 using Catalyst: substoichmat, prodstoichmat
 
 using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
-import Symbolics: degree
+#import Symbolics: degree
 
 using SciMLBase, SciMLBase.EnsembleAnalysis
 using DiffEqJump
 using Random
 using Distributions: Geometric
 
-# TODO: remove unnecessary imports for SymbolicUtils
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
 					 arguments, @rule, @acrule, isnotflat, flatten_term,
 					 istree, FnType
 
-using DataStructures: OrderedSet, OrderedDict
+using DataStructures: OrderedDict
 using TupleTools: sort
 using Combinatorics
 using Cumulants

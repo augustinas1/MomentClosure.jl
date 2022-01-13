@@ -273,6 +273,7 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
 
 end
 
+#=
 function degree(p::Num, sym::AbstractVector) 
     p = value(p)
     sym = Set(value.(sym))
@@ -357,3 +358,4 @@ function nth_differential(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symb
     end
     return f
 end
+=#
