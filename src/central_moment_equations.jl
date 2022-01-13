@@ -40,14 +40,22 @@ Notes:
 """
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
                                      m_order::Int, q_order::Int=0;
-                                     combinatoric_ratelaw=true, smap=speciesmap(rn))
+                                     langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
     N = numspecies(rn)   # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
     iv = get_iv(rn)      # independent variable (usually time)
+    a = propensities(rn; combinatoric_ratelaw) # propensity functions of all reactions in the network
+    S = netstoichmat(rn; smap) # net stoichiometric matrix
 
-    # propensity functions of all reactions in the network
-    a = propensities(rn; combinatoric_ratelaw)
+    if langevin 
+        drift = S*a
+        diff = Num[S[i,k] * a[k]^(1//2) for i in 1:N, k in eachindex(a)]
+        
+        return generate_central_moment_eqs(Equation[Differential(iv)(s) ~ d for (s, d) in zip(species(rn), drift)], 
+                                           diff, m_order, q_order, states(rn), nameof(rn), parameters(rn), iv)
+    
+    end
 
     # quite messy way to check whether all propensity functions are polynomials
     # and extract the moment expansion order automatically (if not set by the user)
@@ -59,9 +67,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
             error("non-polynomial rates (OR A BUG): please specify q_order.\n" * string(e))
         end
     end
-
-    # net stoichiometric matrix
-    S = netstoichmat(rn; smap)
 
     # iterator over all moments from lowest to highest moment order
     iter_all = construct_iter_all(N, q_order)
