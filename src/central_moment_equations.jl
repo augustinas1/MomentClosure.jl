@@ -16,8 +16,9 @@ function fact(i)
 end
 
 """
-    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int, q_order=nothing;
-                                combinatoric_ratelaw=true, smap=speciesmap(rn))
+    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
+                                m_order::Int, q_order::Int=0;
+                                langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 or [`ReactionSystemMod`](@ref), return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
@@ -29,6 +30,9 @@ Notes:
   be specified if non-polynomial propensities are included. Note that the expansion
   order ``q`` denotes the highest order of central moments which will be included
   in the ODEs [(due to the Taylor expansion of propensity functions)](@ref central_moment_eqs).
+- if `langevin=true`, instead of the Chemical Master Equation the Chemical Langevin
+  Equation (diffusion approximation) is considered, and the moment equations are 
+  constructed from the corresponding SDE formulation.
 - `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).

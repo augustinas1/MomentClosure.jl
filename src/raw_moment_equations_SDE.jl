@@ -54,6 +54,12 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
     RawMomentEquations(odes, μ, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
 end
 
+"""
+    generate_raw_moment_eqs(sys::SDESystem, m_order::Int)
+
+Given an [`SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingToolkit.SDESystem), 
+return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
+"""
 generate_raw_moment_eqs(sys::SDESystem, m_order::Int) = generate_raw_moment_eqs(equations(sys), get_noiseeqs(sys), m_order, 
                                                                                 states(sys), nameof(sys), parameters(sys), get_iv(sys))
 
