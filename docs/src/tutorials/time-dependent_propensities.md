@@ -1,4 +1,4 @@
-# [Time-dependent propensity functions](@id time-dependent-propensities)
+# [Time-dependent Propensity Functions](@id time-dependent-propensities)
 
 Here we consider an example of using time-dependent propensities in modelling chemical reaction networks using MomentClosure and DifferentialEquations. Following [Schnoerr et al. (2015)](https://doi.org/10.1063/1.4934990), we modify the Brusellator introduced earlier to include entrainment:
 ```math

@@ -1,4 +1,4 @@
-# [Moment Expansion](@id moment_expansion)
+# [Moment Expansion (CME)](@id moment_expansion_CME)
 
 ## [The Chemical Master Equation](@id chemical_master_equation)
 
@@ -111,7 +111,6 @@ where we have also defined
 \end{align*}
 ```
 Although raw moment equations for non-linear mass-action systems already require approximate treatment using moment closure, here we have an additional complication: if a system contains *non-polynomial* propensity functions, the equations for both means and central moments will in principle depend on an *infinite* number of higher order central moments. Hence the *Taylor expansion order* $q$ is of utmost importance as it controls the degree of approximation: the propensity functions are expanded up to $q^{\text{th}}$ order so that $m^{\text{th}}$ central moment equations will depend on central moments of order $q>m$ and lower. Finally, moment closure approximations can be applied similarly as in the case of raw moment equations.
-
 
 ## References
 
