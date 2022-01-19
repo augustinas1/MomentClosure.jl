@@ -17,14 +17,23 @@ rn = ReactionSystemMod(t, vars, ps, as, S)
 raw_eqs = generate_raw_moment_eqs(rn, 2)
 closed_raw_eqs = moment_closure(raw_eqs, "conditional gaussian", binary_vars)
 
-expr = replace(raw"\begin{align*}
+# seesm that two terms in the last equation may switch places due to some internal Latexify processing
+expr1 = replace(raw"\begin{align*}
+\frac{d\mu{_{10}}}{dt} =& k_{on} - k_{on} \mu{_{10}} - k_{off} \mu{_{10}}^{-1} \mu{_{11}}^{2} \\
+\frac{d\mu{_{01}}}{dt} =& b k_{p} \mu{_{10}} - \gamma_{p} \mu{_{01}} \\
+\frac{d\mu{_{11}}}{dt} =& k_{on} \mu{_{01}} + b k_{p} \mu{_{10}} - k_{on} \mu{_{11}} - \gamma_{p} \mu{_{11}} - k_{off} \mu{_{10}}^{-2} \mu{_{11}}^{3} \\
+\frac{d\mu{_{02}}}{dt} =& \gamma_{p} \mu{_{01}} + b k_{p} \mu{_{10}} + 2 b k_{p} \mu{_{11}} + 2 k_{p} b^{2} \mu{_{10}} - 2 \gamma_{p} \mu{_{02}}
+\end{align*}
+", "\r\n"=>"\n")
+expr2 = replace(raw"\begin{align*}
 \frac{d\mu{_{10}}}{dt} =& k_{on} - k_{on} \mu{_{10}} - k_{off} \mu{_{10}}^{-1} \mu{_{11}}^{2} \\
 \frac{d\mu{_{01}}}{dt} =& b k_{p} \mu{_{10}} - \gamma_{p} \mu{_{01}} \\
 \frac{d\mu{_{11}}}{dt} =& k_{on} \mu{_{01}} + b k_{p} \mu{_{10}} - k_{on} \mu{_{11}} - \gamma_{p} \mu{_{11}} - k_{off} \mu{_{10}}^{-2} \mu{_{11}}^{3} \\
 \frac{d\mu{_{02}}}{dt} =& \gamma_{p} \mu{_{01}} + b k_{p} \mu{_{10}} + 2 k_{p} b^{2} \mu{_{10}} + 2 b k_{p} \mu{_{11}} - 2 \gamma_{p} \mu{_{02}}
 \end{align*}
 ", "\r\n"=>"\n")
-@test latexify(closed_raw_eqs) == expr
+exprl = latexify(closed_raw_eqs)
+@test exprl == expr1 || exprl == expr2
 
 expr = replace(raw"\begin{align*}
 \mu{_{12}} =& \mu{_{10}}^{-1} \mu{_{11}}^{2} \\
