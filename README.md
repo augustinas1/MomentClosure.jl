@@ -35,13 +35,19 @@ Please [see the documentation](https://augustinas1.github.io/MomentClosure.jl/de
 
 If you use MomentClosure in your work, please cite [our paper](https://arxiv.org/abs/2105.05475):
 ```
-@misc{sukys2021momentclosurejl,
-      title={MomentClosure.jl: automated moment closure approximations in Julia},
-      author={Augustinas Sukys and Ramon Grima},
-      year={2021},
-      eprint={2105.05475},
-      archivePrefix={arXiv},
-      primaryClass={q-bio.MN}
+@article{MomentClosure2021,
+    author = {Sukys, Augustinas and Grima, Ramon},
+    title = "{MomentClosure.jl: automated moment closure approximations in Julia}",
+    journal = {Bioinformatics},
+    volume = {38},
+    number = {1},
+    pages = {289-290},
+    year = {2021},
+    month = {06},
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btab469},
+    url = {https://doi.org/10.1093/bioinformatics/btab469},
+    eprint = {https://academic.oup.com/bioinformatics/article-pdf/38/1/289/41891091/btab469.pdf},
 }
 ```
 
