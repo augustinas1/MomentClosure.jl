@@ -24,13 +24,13 @@ rn = @reaction_network begin
   (c₃*Ω, c₄), 0 ↔ X
 end c₁ c₂ c₃ c₄ Ω
 ```
-The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using MomentClosure functions [`get_S_mat`](@ref) and [`propensities`](@ref) respectively.
+The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using MomentClosure functions [`netstoichmat`](@ref) and [`propensities`](@ref) respectively.
 
 Note that MomentClosure add support for systems containing geometrically distributed reaction products—see [this tutorial](@ref geometric-and-conditional) for more details.
 
 ## Generating Moment Equations
 
-We can now obtain the moment equations. The system follows the law of mass action, i.e., all propensity functions are polynomials in molecule numbers $X(t)$ and $Y(t)$, and so we can generate either *raw* or *central* moment equations, as described in the **Theory** section on [moment expansion](@ref moment_expansion).
+We can now obtain the moment equations. The system follows the law of mass action, i.e., all propensity functions are polynomials in molecule numbers $X(t)$ and $Y(t)$, and so we can generate either *raw* or *central* moment equations, as described in the **Theory** section on [moment expansion](@ref moment_expansion_CME).
 
 #### Raw Moment Equations
 

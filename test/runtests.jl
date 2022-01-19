@@ -7,6 +7,8 @@ using SafeTestsets
 @safetestset "moment closure" begin include("closure_tests.jl") end
 @safetestset "moment closure (bernoulli)" begin include("bernoulli_closure_tests.jl") end
 @safetestset "conditional closure" begin include("conditional_closure_tests.jl") end
-@safetestset "latexify" begin include("latexify_tests.jl") end
 @safetestset "sample moments" begin include("sample_moment_tests.jl") end
 @safetestset "linear mapping approximation" begin include("lma_tests.jl") end
+@safetestset "moment eqs for SDEs" begin include("moment_equations_SDE_tests.jl") end
+#@safetestset "polynomialization" begin include("polynomialization_tests.jl") end
+@safetestset "latexify" begin include("latexify_tests.jl") end

@@ -1,6 +1,6 @@
 """
-    generate_raw_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int;
-                            combinatoric_ratelaw=true, smap=speciesmap(rn))
+    generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_order::Int;
+                            langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 or [`ReactionSystemMod`](@ref), return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
@@ -10,6 +10,9 @@ Notes:
   determined from the given polynomial form of the propensity functions, see the
   [tutorial](@ref main_tutorial) and the [theory section](@ref raw_moment_eqs) for
   more details on how `q_order` is obtained.
+- if `langevin=true`, instead of the Chemical Master Equation the Chemical Langevin
+  Equation (diffusion approximation) is considered, and the moment equations are 
+  constructed from the corresponding SDE formulation.
 - `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
@@ -20,13 +23,23 @@ Notes:
   accessible with [`speciesmap`](@ref).
 """
 function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_order::Int;
-                                 combinatoric_ratelaw=true, smap=speciesmap(rn))
-
+                                 langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
+    
+    iv = get_iv(rn)
     N = numspecies(rn)
     S = netstoichmat(rn; smap)
     a = propensities(rn; combinatoric_ratelaw)
 
-    term_factors, term_powers, poly_order = polynomial_propensities(a, rn; smap)
+    if langevin
+        drift = S*a
+        diff = Num[S[i,k] * a[k]^(1//2) for i in 1:N, k in eachindex(a)]
+        
+        return generate_raw_moment_eqs(Equation[Differential(iv)(s) ~ d for (s, d) in zip(species(rn), drift)], 
+                                       diff, m_order, states(rn), nameof(rn), parameters(rn), iv)
+    
+    end
+        
+    term_factors, term_powers, poly_order = polynomial_propensities(a, iv, smap)
 
     q_order = poly_order + m_order - 1
 
@@ -34,12 +47,12 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
     iter_all = construct_iter_all(N, q_order)
     # iterator over raw moments up to order m
     iter_m = filter(x -> 1 < sum(x) <= m_order, iter_all)
-    # iterator over raw moments of order rgrater than m up to q_order
+    # iterator over raw moments of order greater than m up to q_order
     iter_q = filter(x -> m_order < sum(x) <= q_order, iter_all)
     # iterator over the first order moments
     iter_1 = filter(x -> sum(x) == 1, iter_all)
 
-    μ = define_μ(N, q_order)
+    μ = define_μ(iter_all, iv)
 
     dμ = Dict()
     for i in vcat(iter_1, iter_m)
@@ -61,14 +74,13 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
         dμ[i] = expand(dμ[i])
     end
 
-    iv = get_iv(rn)
     D = Differential(iv)
     eqs = Equation[]
     for i in vcat(iter_1, iter_m)
         push!(eqs, D(μ[i]) ~ dμ[i])
     end
 
-    vars = extract_variables(eqs, N, q_order)
+    vars = extract_variables(eqs, μ)
     odename = Symbol(nameof(rn), "_raw_moment_eqs_m", m_order)
     odes = ODESystem(eqs, iv, vars, get_ps(rn); name=odename)
 

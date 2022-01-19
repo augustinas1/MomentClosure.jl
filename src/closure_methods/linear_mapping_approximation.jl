@@ -48,7 +48,8 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
       # apply LMA: substitute reaction parameters in the linear network moment equations to reflect
       # the nonlinear interactions according to the LMA methodology
 
-      term_factors, term_powers, poly_order = polynomial_propensities(propensities(rn_nonlinear; combinatoric_ratelaw)[nonlinear_rs_inds], rn_nonlinear)
+      term_factors, term_powers, poly_order = polynomial_propensities(propensities(rn_nonlinear; combinatoric_ratelaw)[nonlinear_rs_inds], 
+                                                                      get_iv(rn_nonlinear), speciesmap(rn_nonlinear))
 
       order = iszero(m_order) ? poly_order : max(poly_order, m_order)
       try sys = generate_raw_moment_eqs(rn_linear, order; combinatoric_ratelaw, smap=speciesmap(rn_nonlinear))
@@ -77,8 +78,8 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
       field_values = [getfield(sys, field) for field in fieldnames(typeof(sys))]
 
       iv = get_iv(sys.odes)
-      ps = params(rn_nonlinear)
-      vars = get_states(sys.odes)
+      ps = reactionparams(rn_nonlinear)
+      vars = states(sys.odes)
       odename = Symbol(nameof(sys), "_LMA")
       odes = ODESystem(LMA_eqs, iv, vars, ps; name=odename)
       new_system = typeof(sys)(odes, field_values[2:end]...)

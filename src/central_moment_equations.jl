@@ -16,8 +16,9 @@ function fact(i)
 end
 
 """
-    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod}, m_order::Int, q_order=nothing;
-                                combinatoric_ratelaw=true, smap=speciesmap(rn))
+    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
+                                m_order::Int, q_order::Int=0;
+                                langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 or [`ReactionSystemMod`](@ref), return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
@@ -29,6 +30,9 @@ Notes:
   be specified if non-polynomial propensities are included. Note that the expansion
   order ``q`` denotes the highest order of central moments which will be included
   in the ODEs [(due to the Taylor expansion of propensity functions)](@ref central_moment_eqs).
+- if `langevin=true`, instead of the Chemical Master Equation the Chemical Langevin
+  Equation (diffusion approximation) is considered, and the moment equations are 
+  constructed from the corresponding SDE formulation.
 - `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
@@ -40,27 +44,33 @@ Notes:
 """
 function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
                                      m_order::Int, q_order::Int=0;
-                                     combinatoric_ratelaw=true, smap=speciesmap(rn))
+                                     langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
-    N = numspecies(rn) # no. of molecular species in the network
+    N = numspecies(rn)   # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
+    iv = get_iv(rn)      # independent variable (usually time)
+    a = propensities(rn; combinatoric_ratelaw) # propensity functions of all reactions in the network
+    S = netstoichmat(rn; smap) # net stoichiometric matrix
 
-    # propensity functions of all reactions in the network
-    a = propensities(rn; combinatoric_ratelaw)
+    if langevin 
+        drift = S*a
+        diff = Num[S[i,k] * a[k]^(1//2) for i in 1:N, k in eachindex(a)]
+        
+        return generate_central_moment_eqs(Equation[Differential(iv)(s) ~ d for (s, d) in zip(species(rn), drift)], 
+                                           diff, m_order, q_order, states(rn), nameof(rn), parameters(rn), iv)
+    
+    end
 
     # quite messy way to check whether all propensity functions are polynomials
     # and extract the moment expansion order automatically (if not set by the user)
     if iszero(q_order)
         try
-            _, _, poly_order = polynomial_propensities(a, rn)
+            _, _, poly_order = polynomial_propensities(a, iv, smap)
             q_order = poly_order + m_order - 1
         catch e
             error("non-polynomial rates (OR A BUG): please specify q_order.\n" * string(e))
         end
     end
-
-    # net stoichiometric matrix
-    S = netstoichmat(rn; smap)
 
     # iterator over all moments from lowest to highest moment order
     iter_all = construct_iter_all(N, q_order)
@@ -75,10 +85,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
        central moments Mᵢ as symbolic variables
        using the functionality of ModelingToolkit.jl =#
 
-    @parameters t # need to define time as a parameter
-
-    μ = define_μ(N, 1, iter_1)
-    M = define_M(N, q_order)
+    μ = define_μ(iter_1, iv)
+    M = define_M(iter_all, iv)
 
     #= Obtain all derivatives of the propensity functions with respect
     to all molecular species up to order defined by q_order.
@@ -154,8 +162,6 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         dM[i] = expand(dM[i])
     end
 
-
-    iv = get_iv(rn)
     D = Differential(iv)
     eqs = Equation[]
     for i in 1:N
@@ -165,7 +171,7 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
         push!(eqs, D(M[i]) ~ dM[i])
     end
 
-    vars = extract_variables(eqs, N, q_order)
+    vars = extract_variables(eqs, μ, M)
     odename = Symbol(nameof(rn), "_central_moment_eqs_m", m_order, "_q", q_order)
     odes = ODESystem(eqs, iv, vars, get_ps(rn); name=odename)
 

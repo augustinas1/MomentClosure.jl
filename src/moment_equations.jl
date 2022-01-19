@@ -16,7 +16,7 @@ struct RawMomentEquations <: MomentEquations
     consisting of the time-evolution equations of raw moments."""
     odes::ODESystem
     """Symbolic variables defining the raw moments."""
-    μ::Dict
+    μ::OrderedDict
     """Number of species within the system."""
     N::Int
     """Order of moment equations."""
@@ -48,7 +48,7 @@ struct CentralMomentEquations <: MomentEquations
     consisting of the time-evolution equations of central moments."""
     odes::ODESystem
     """Symbolic variables defining the means."""
-    μ::Dict
+    μ::OrderedDict
     """Symbolic variables defining the central moments."""
     M::Dict
     """Number of species within the system."""

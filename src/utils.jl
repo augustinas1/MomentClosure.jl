@@ -270,12 +270,13 @@ function deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 
     μ_map = [sys.μ[iter] => u₀[i] for (i, iter) in enumerate(sys.iter_1)]
 
-    no_states = length(odes.states)
+    vars = states(odes)
+    no_states = length(vars)
     if typeof(sys) == CentralMomentEquations
-        moment_map = [odes.states[i] => 0.0 for i in N+1:no_states]
+        moment_map = [vars[i] => 0.0 for i in N+1:no_states]
     else
         reverse_μ = Dict(μ => iter for (iter, μ) in sys.μ)
-        moment_map = [odes.states[i] => prod(u₀ .^ reverse_μ[odes.states[i]]) for i in N+1:no_states]
+        moment_map = [vars[i] => prod(u₀ .^ reverse_μ[vars[i]]) for i in N+1:no_states]
     end
 
     vcat(μ_map, moment_map)
@@ -298,10 +299,11 @@ function format_moment_eqs(eqs::MomentEquations)
 
     sys = eqs.odes
     odes = get_eqs(sys)
+    vars = states(sys)
     exprs  = []
 
     for i in 1:size(odes)[1]
-        key = sys.states[i]
+        key = vars[i]
         eq = odes[i].rhs
         expr = "d"*string(key)*"/dt = "*string(eq)
         expr = replace(expr, "(t)"=>"")
@@ -332,7 +334,7 @@ function format_closure(eqs::ClosedMomentEquations; format_all::Bool=false)
     if format_all
         iter = keys(closure)
     else
-        iter = setdiff(eqs.open_eqs.odes.states.value, eqs.odes.states.value)
+        iter = setdiff(states(eqs.open_eqs.odes), states(eqs.odes))
     end
 
     for i in iter

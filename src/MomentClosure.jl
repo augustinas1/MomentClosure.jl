@@ -1,35 +1,37 @@
 module MomentClosure
 
-using Catalyst
-import Catalyst: species, params, reactions, speciesmap, paramsmap, numspecies,
-				 numreactions, numparams, netstoichmat, get_iv, get_ps
-using Catalyst: get_eqs, get_states, substoichmat, prodstoichmat
+using ModelingToolkit
+using ModelingToolkit: get_noiseeqs, states, get_eqs
 
-using Symbolics: value, var_from_nested_derivative, map_subscripts, setmetadata,
-				 scalarize
+using Catalyst
+import Catalyst: species, reactionparams, reactions, speciesmap, paramsmap, numspecies,
+				 numreactions, netstoichmat, get_iv, get_ps
+using Catalyst: substoichmat, prodstoichmat
+
+using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
+#import Symbolics: degree
 
 using SciMLBase, SciMLBase.EnsembleAnalysis
 using DiffEqJump
 using Random
 using Distributions: Geometric
 
-# TODO: remove unnecessary imports for SymbolicUtils
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
 					 arguments, @rule, @acrule, isnotflat, flatten_term,
 					 istree, FnType
 
-using OrderedCollections: OrderedDict
-using Combinatorics
+using DataStructures: OrderedDict
 using TupleTools: sort
+using Combinatorics
 using Cumulants
 using Latexify
 
 using DocStringExtensions
 
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
-       propensities, ReactionSystemMod, species, params, speciesmap, paramsmap,
-	   numspecies, numreactions, numparams, netstoichmat,
+       propensities, ReactionSystemMod, species, reactionparams, speciesmap, paramsmap,
+	   numspecies, numreactions, netstoichmat,
        moment_closure, deterministic_IC, JumpProblem,
 	   get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
 	   linear_mapping_approximation
@@ -43,7 +45,9 @@ include("symbolic.jl")
 include("moment_convert.jl")
 include("stochastic_stoichiometry.jl")
 include("central_moment_equations.jl")
+include("central_moment_equations_SDE.jl")
 include("raw_moment_equations.jl")
+include("raw_moment_equations_SDE.jl")
 include("closure_methods/closure.jl")
 include("bernoulli.jl")
 include("utils.jl")

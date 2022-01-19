@@ -22,10 +22,9 @@ To keep the API consistent with Catalyst, we provide a number of identical [basi
 ```@docs
 species
 speciesmap
-params
+reactionparams
 paramsmap
 numspecies
-numparams
 numreactions
 netstoichmat
 ```

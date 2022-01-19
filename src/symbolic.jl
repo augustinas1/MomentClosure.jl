@@ -32,31 +32,24 @@ end
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
 
 # Expand a symbolic expression (no binomial expansion)
-expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys))
-expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod)))
-flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x))
-flatten_mod = Fixpoint(PassThrough(flatten_rule_mod))
-expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod])))
+expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys)) # apply distribution law 
+expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod))) # distributes terms until no longer possible
+flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x)) # 
+flatten_mod = Fixpoint(PassThrough(flatten_rule_mod)) # 
+expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod]))) # apply flatten and distribution until no longer possible
 
-function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
+function define_μ(iter::AbstractVector, iv::Union{Sym,Num})
 
-    #indices = String[]
-    #for i in iter
-#        push!(indices, MomentClosure.trim_key(i))
-#    end
     indices = map(trim_key, iter)
 
-    @parameters t
-    t = [value(t)]
-
-    μs = OrderedDict{NTuple{N, Int}, Any}()
+    μs = OrderedDict{eltype(iter), Any}()
     for (i, idx) in enumerate(iter)
         if sum(idx) == 0
             μs[idx] = 1
         else
             sym_name = Symbol('μ', join(map_subscripts(indices[i])))
             sym_raw = Sym{FnType{Tuple{Any}, Real}}(sym_name)
-            term_raw = Term{Real}(sym_raw, t)
+            term_raw = Term{Real}(sym_raw, [iv])
             μs[idx] = setmetadata(term_raw, Symbolics.VariableSource,
                                   (:momentclosure, sym_name))
         end
@@ -66,15 +59,19 @@ function define_μ(N::Int, order::Int, iter=construct_iter_all(N, order))
 
 end
 
+define_μ(N::Int, order::Int, iv::Union{Sym,Num}) = define_μ(construct_iter_all(N, order), iv)
 
-function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
+function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order)) 
+    @parameters t
+    return define_μ(iter, value(t))
+end
+
+
+function define_M(iter::AbstractVector, iv::Union{Sym,Num})
 
     indices = map(trim_key, iter)
 
-    @parameters t
-    t = [value(t)]
-
-    Ms = OrderedDict{NTuple{N, Int}, Any}()
+    Ms = OrderedDict{eltype(iter), Any}()
     for (i, idx) in enumerate(iter)
         if sum(idx) == 0
             Ms[idx] = 1
@@ -83,7 +80,7 @@ function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
         else
             sym_name = Symbol('M', join(map_subscripts(indices[i])))
             sym_raw = Sym{FnType{Tuple{Any}, Real}}(sym_name)
-            term_raw = Term{Real}(sym_raw, t)
+            term_raw = Term{Real}(sym_raw, [iv])
             Ms[idx] = setmetadata(term_raw, Symbolics.VariableSource,
                                   (:momentclosure, sym_name))
         end
@@ -93,22 +90,16 @@ function define_M(N::Int, order::Int, iter=construct_iter_all(N, order))
 
 end
 
-#function define_temp_vars(x::Symbol, indices)
-#    indices = map(trim_key, indices)
-#    map(indices) do i
-#        sym_name = Symbol(x, join(map_subscripts(indices[i])))
-#    end
-#end
+define_M(N::Int, order::Int, iv::Union{Sym,Num}) = define_M(construct_iter_all(N, order), iv)
 
-function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
+function define_M(N::Int, order::Int, iter = construct_iter_all(N, order)) 
+    @parameters t
+    return define_M(iter, value(t))
+end
 
-    iters = construct_iter_all(N, q_order)
-    iter_μ = filter(x -> sum(x) > 0, iters)
-    iter_M = filter(x -> sum(x) > 1, iters)
-
-    μs = values(define_μ(N, q_order, iter_μ))
-    Ms = values(define_M(N, q_order, iter_M))
-    vars = vcat(μs..., Ms...)
+function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
+    
+    vars = vcat(values(μ)..., values(M)...)
     # extract variables from rhs of each equation
     eq_vars = unique(vcat(get_variables.(eqs)...))
     # need this as get_variables does not extract var from `Differential(t)(var(t))`
@@ -117,8 +108,7 @@ function extract_variables(eqs::Array{Equation, 1}, N::Int, q_order::Int)
     eq_vars = unique(vcat(eq_vars..., diff_vars...))
     # this should preserve the correct ordering
 
-    vars = intersect!(vars, eq_vars)
-    vars
+    intersect!(vars, eq_vars)
 
 end
 
@@ -195,15 +185,13 @@ function extract_mul(expr::Symbolic, smap::Dict, vars::Vector, iv::Sym)
 end
 
 
-function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSystemMod}; smap=speciesmap(rn))
+function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
 
-    R = length(a)
-    N = numspecies(rn)
-    vars = [x for (x,y) in Base.sort(collect(smap), by=x->x[2])]
-    iv = get_iv(rn)
+    vars = [x for (x,_) in Base.sort(collect(smap), by=x->x[2])]
+    N = length(vars)
 
-    all_factors = [[] for i = 1:R]
-    all_powers = [Vector{Int}[] for i = 1:R]
+    all_factors = copy.(fill([], size(a)))
+    all_powers = copy.(fill(Vector{Int}[], size(a)))
 
     for (rind, expr) in enumerate(a)
 
@@ -284,3 +272,90 @@ function polynomial_propensities(a::Vector, rn::Union{ReactionSystem, ReactionSy
     all_factors, all_powers, max_power
 
 end
+
+#=
+function degree(p::Num, sym::AbstractVector) 
+    p = value(p)
+    sym = Set(value.(sym))
+    if p isa Number 
+        return 0
+    elseif p ∈ sym
+        return 1
+    elseif p isa Symbolic
+        return degree(p, sym)
+    end
+end
+degree(p::Sym, sym::Set) = Int(p ∈ sym)
+degree(p::Sym, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Term, sym::Set) = Int(p ∈ sym)
+degree(p::Term, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Symbolics.Add, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Symbolics.Mul, sym::AbstractVector) = degree(p, Set(value.(sym)))
+degree(p::Symbolics.Pow, sym::AbstractVector) = degree(p, Set(value.(sym)))
+
+poly_subs(ex::Union{Num, Number, Symbolics.Mul, Symbolics.Add}, subs::AbstractDict, ps::AbstractArray, flag::Bool = false) = poly_subs(ex, subs, Set(ps), flag) 
+poly_subs(ex::Num, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = poly_subs(value(expand(ex)), subs, ps, flag) 
+poly_subs(ex::Number, ::AbstractDict, ps::Set = Set(), ::Bool = false) = ex 
+poly_subs(ex::Sym, subs::AbstractDict, ::Set, ::Bool = false) = haskey(subs, ex) ? subs[ex] : ex
+poly_subs(ex::Term, subs::AbstractDict, ::Set, ::Bool = false) = haskey(subs, ex) ? subs[ex] : ex
+poly_subs(ex::Symbolics.Pow, subs::AbstractDict, ::Set, flag::Bool = false) = substitute(ex, subs)
+poly_subs(ex::Symbolics.Add, subs::AbstractDict, ps::Set = Set(), flag::Bool = false) = sum(poly_subs(term, subs, ps, flag) for term in arguments(ex))
+
+function poly_subs(ex::Symbolics.Mul, subs::AbstractDict, ps = Set(), flag::Bool = false) 
+    mono = 1
+    coeff = ex.coeff
+    if flag # flag controls whether there are variables not being substituted -> those are shifted to the coefficient
+        for (base, exponent) in pairs(ex.dict)
+            if base ∉ ps && haskey(subs, base) # very hacky but does the job ...
+                mono *= base^exponent
+            else
+                coeff *= base^exponent
+            end
+        end
+    else
+        for (base, exponent) in pairs(ex.dict)
+            if base ∉ ps 
+                mono *= base^exponent
+            else
+                coeff *= base^exponent
+            end
+        end
+    end
+    return haskey(subs, mono) ? coeff*subs[mono] : ex
+end
+
+
+function taylor_expand(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symbolics.Pow}, vars::AbstractVector, ref_point::AbstractVector, order::Int, aux_flag::Bool = true)
+    @assert order >= 0 "Order of Taylor expansion must be non-negative"
+    @assert length(ref_point) == length(vars) "Variables and reference point must have the same dimension" 
+    N = length(vars)
+    if aux_flag
+        Δ = vars .- ref_point 
+    else
+        Δ = vars
+    end
+    sub_ref_point = Dict(vars[i] => ref_point[i] for i in 1:N)
+    f_taylor = substitute(f, sub_ref_point)
+    iter_all = filter(x -> sum(x) > 0, MomentClosure.construct_iter_all(N, order))
+    for iter in iter_all
+        f_taylor += substitute(derivative(f, vars, iter), sub_ref_point)*prod(Δ .^ iter)/MomentClosure.fact(iter)
+    end
+    return f_taylor
+end
+
+function derivative(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symbolics.Pow}, vars::AbstractVector, order::Tuple)
+    for i in 1:length(vars)
+        if order[i] != 0
+            f = nth_differential(f, vars[i], order[i])
+        end
+    end
+    return f
+end
+
+function nth_differential(f::Union{Num, Term, Symbolics.Mul, Symbolics.Add, Symbolics.Pow}, var::Union{Num, Sym, Term}, n::Int) 
+    for i in 1:n
+        f = expand_derivatives(Differential(var)(f), true)
+    end
+    return f
+end
+=#
