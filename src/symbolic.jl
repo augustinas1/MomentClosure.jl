@@ -266,7 +266,7 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
                         _denom = 1
                         if term isa Div
                             term, _denom = arguments(term)
-                            isconstant(_denom, vars, iv) || error("Propensity function $expr is non-polynomial? The denominator $denom is not constant.")
+                            isconstant(_denom, vars, iv) || error("Propensity function $expr is non-polynomial? The denominator $_denom is not constant.")
                         end
 
                         if term isa Pow
