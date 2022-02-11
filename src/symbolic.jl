@@ -97,7 +97,8 @@ function define_M(N::Int, order::Int, iter = construct_iter_all(N, order))
     return define_M(iter, value(t))
 end
 
-function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
+#=
+function extract_variables1(eqs::Array{Equation, 1}, μ, M=[])
     
     vars = vcat(values(μ)..., values(M)...)
     # extract variables from rhs of each equation
@@ -109,6 +110,22 @@ function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
     # this should preserve the correct ordering
 
     intersect!(vars, eq_vars)
+
+end
+=#
+
+function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
+    
+    vars = vcat(values(μ)..., values(M)...)
+    # extract variables from rhs of each equation
+    eq_vars = unique(vcat(get_variables.(eqs)...))
+    # get_variables changes the metadata so have to be careful here...
+    intersect!(vars, eq_vars)
+    # need this as get_variables does not extract var from `Differential(t)(var(t))`
+    diff_vars = [var_from_nested_derivative(eq.lhs)[1] for eq in eqs]
+    # filter out the unique ones
+    unique(vcat(diff_vars, vars))
+    # the correct ordering *should* be preserved
 
 end
 
@@ -153,12 +170,12 @@ function extract_pwr!(powers::Vector, expr::Symbolic, smap::Dict, vars::Vector)
     if isvar(args[1], vars) && args[2] isa Int && args[2] >= 0
         idx = smap[args[1]]
         if powers[idx] != 0
-            error(args[1], " occurring multiple times in a monomial is unexpected. In ", expr)
+            error("$args[1] occurring multiple times in a monomial is unexpected. In $expr")
         else
             powers[idx] = args[2]
         end
     else
-        error("Unexpected term: ", expr)
+        error("Unexpected term: $expr")
     end
 end
 
@@ -175,7 +192,7 @@ function extract_mul(expr::Symbolic, smap::Dict, vars::Vector, iv::Sym)
         elseif isvar(arg, vars)
             powers[smap[arg]] = 1
         else
-            error("Unexpected operation: ", operation(arg), " in ", expr)
+            error("Unexpected operation: $(operation(arg)) in $expr")
         end
     end
 
@@ -197,6 +214,15 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
 
         expr = expand(expr)
 
+        denom = 1
+        if expr isa Div # /
+
+            # assuming (correctly?) that any expression has been simplified into a single fraction up to this point 
+            # if the denominator is not constant the whole expression is non-polynomial
+            expr, denom = arguments(expr)
+            isconstant(denom, vars, iv) || error("Propensity function $expr is non-polynomial? The denominator $denom is not constant.")
+        end
+
         if isconstant(expr, vars, iv)
 
             push!(all_factors[rind], expr)
@@ -207,7 +233,7 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
             push!(all_factors[rind], 1)
             push!(all_powers[rind], map(v -> isequal(expr, v), vars))
 
-        elseif operation(expr) == ^ #Symbolics.Pow
+        elseif expr isa Pow # ^
 
             try
                 powers = zeros(Int, N)
@@ -215,20 +241,20 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
                 push!(all_factors[rind], 1)
                 push!(all_powers[rind], powers)
             catch e
-                error("Propensity function ", expr, " is non-polynomial? \n" * string(e))
+                error("Propensity function $expr is non-polynomial? \n" * string(e))
             end
 
-        elseif operation(expr) == * #Symbolics.Mul
+        elseif expr isa Mul # *
 
             try
                 powers, factor = extract_mul(expr, smap, vars, iv)
-                push!(all_powers[rind], powers)
                 push!(all_factors[rind], factor)
+                push!(all_powers[rind], powers)
             catch e
-                error("Propensity function ", expr, " is non-polynomial?\n" * string(e))
+                error("Propensity function $expr is non-polynomial?\n" * string(e))
             end
 
-        elseif operation(expr) == + #Symbolics.Add
+        elseif expr isa Add # +
 
             for term in arguments(expr)
                 if isconstant(term, vars, iv)
@@ -236,13 +262,19 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
                     push!(all_powers[rind], zeros(Int, N))
                 else
                     try
-                        op = operation(term)
-                        if op == ^
+                        
+                        _denom = 1
+                        if term isa Div
+                            term, _denom = arguments(term)
+                            isconstant(_denom, vars, iv) || error("Propensity function $expr is non-polynomial? The denominator $denom is not constant.")
+                        end
+
+                        if term isa Pow
                             powers = zeros(Int, N)
                             extract_pwr!(powers, term, smap, vars)
                             push!(all_factors[rind], 1)
                             push!(all_powers[rind], powers)
-                        elseif op == *
+                        elseif term isa Mul
                             powers, factor = extract_mul(term, smap, vars, iv)
                             push!(all_factors[rind], factor)
                             push!(all_powers[rind], powers)
@@ -252,10 +284,12 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
                             push!(all_factors[rind], 1)
                             push!(all_powers[rind], powers)
                         else
-                            error("Unexpected operation: ", op, " in ", term)
+                            error("Unexpected operation: $op in $term")
                         end
+
+                        all_factors[rind][end] /= _denom
                     catch e
-                        error("Propensity function ", expr, " is non-polynomial?\n" * string(e))
+                        error("Propensity function $expr is non-polynomial?\n" * string(e))
                     end
                 end
             end
@@ -265,6 +299,8 @@ function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
             error("Expression $expr could not be parsed correctly!")
 
         end
+
+        all_factors[rind] ./= denom
 
     end
 

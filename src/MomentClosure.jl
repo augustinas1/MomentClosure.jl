@@ -19,7 +19,7 @@ using Distributions: Geometric
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
 					 arguments, @rule, @acrule, isnotflat, flatten_term,
-					 istree, FnType
+					 istree, FnType, Mul, Add, Pow, Div
 
 using DataStructures: OrderedDict
 using TupleTools: sort
