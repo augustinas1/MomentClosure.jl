@@ -4,28 +4,16 @@ function gen_iter(n, d)
     for x in partitions(d + n, n)
         x = x .- 1
         if all(x .<= d)
-            ys = Set(multiset_permutations(x, n))
-            for y in ys
-                push!(iter, Tuple(y))
-            end
+            append!(iter, Tuple.(multiset_permutations(x, n)))
         end
     end
     iter
 end
 
 function construct_iter_all(N::Int, order::Int)
-
-    #Construct an ordered iterator going over all moments
-    # sequentially in terms of order
-
-    iters = NTuple{N, Int}[]
-    for d in 0:order
-        x = Base.sort(gen_iter(N, d), rev=true)
-        push!(iters, x...)
+    mapreduce(vcat, 0:order) do d
+        Base.sort(gen_iter(N, d), rev=true)
     end
-
-    iters
-
 end
 
 # Trim a string of form "(a, b, c, d, ...)" to "abcd..."
@@ -142,171 +130,104 @@ end
     then the function `polynomial_propensities` will throw an error.
 =#
 
-function isconstant(expr::Union{Symbolic, Number}, vars::Vector, iv::Sym) :: Bool
+isvar(x, vars) = any(isequal(x), vars)
 
-    # Check that the given expression does NOT depend on the given variables `vars` (expr is constant wrt. vars)
-    # A variable here is defined as a function of the independent variable `iv`, e.g,  X(t) is variable, where t
-    # is the independent variable
+"""
+    Check that the given expression does NOT depend on the given variables `vars` (expr is constant wrt. vars)
+    A variable here is defined as a function of the independent variable `iv`, e.g,  X(t) is variable, where t
+    is the independent variable
+"""
 
-    istree(expr) || return true
+isconstant(expr, vars, iv) = !istree(expr) || (!isvar(expr, vars) && all(arg -> isconstant(arg, vars, iv), arguments(expr)))
 
-    args = arguments(expr)
-    if length(args) == 1
-        if isequal(args[1], iv)
-            !isvar(expr, vars)
-        else
-            isconstant(args[1], vars, iv)
-        end
-    else
-        all(arg -> isconstant(arg, vars, iv), args)
-    end
+function split_factor(expr::Pow, iv, smap, vars)
+    base, exp = arguments(expr)
+    (exp isa Int && exp >= 0) || error("Unexpected exponent: $expr")
 
+    factor, powers = split_factor(base, iv, smap, vars)
+    factor ^ exp, powers .* exp
 end
 
-isvar(x::Symbolic, vars::Vector) = any(var -> isequal(x, var), vars)
-
-function extract_pwr!(powers::Vector, expr::Symbolic, smap::Dict, vars::Vector)
-    args = arguments(expr)
-    if isvar(args[1], vars) && args[2] isa Int && args[2] >= 0
-        idx = smap[args[1]]
-        if powers[idx] != 0
-            error("$args[1] occurring multiple times in a monomial is unexpected. In $expr")
-        else
-            powers[idx] = args[2]
-        end
-    else
-        error("Unexpected term: $expr")
-    end
-end
-
-function extract_mul(expr::Symbolic, smap::Dict, vars::Vector, iv::Sym)
-
+function split_factor(expr::Mul, iv, smap, vars)
     powers = zeros(Int, length(smap))
-    factors = []
+    factor = 1
 
     for arg in arguments(expr)
-        if isconstant(arg, vars, iv)
-            push!(factors, arg)
-        elseif operation(arg) == ^
-            extract_pwr!(powers, arg, smap, vars)
-        elseif isvar(arg, vars)
-            powers[smap[arg]] = 1
-        else
-            error("Unexpected operation: $(operation(arg)) in $expr")
-        end
+        factor_arg, power_arg = split_factor(arg, iv, smap, vars)
+        factor *= factor_arg
+        powers .+= power_arg
     end
 
-    factor = isempty(factors) ? 1 : prod(factors)
-    powers, factor
-
+    factor, powers
 end
 
+function split_factor(expr::Div, iv, smap, vars)
+    num, denom = arguments(expr)
+    isconstant(denom, vars, iv) || error("The denominator $denom is not constant.")
+    
+    factor, powers = split_factor(num, iv, smap, vars)
+    
+    factor / denom, powers
+end
 
-function polynomial_propensities(a::AbstractArray, iv::Sym, smap::Dict)
+function split_factor(expr, iv, smap, vars) 
+    if isconstant(expr, vars, iv)
+        expr, zeros(length(vars))
+    elseif isvar(expr, vars)
+        1, map(isequal(expr), vars)
+    else
+        error("Expression $expr could not be parsed correctly!")
+    end
+end
 
-    vars = [x for (x,_) in Base.sort(collect(smap), by=x->x[2])]
-    N = length(vars)
+function polynomial_propensity(expr::Div, iv, smap, vars)
+    num, denom = arguments(expr)
+    isconstant(denom, vars, iv) || error("The denominator $denom is not constant.")
+    factors, powers = polynomial_propensity(num, iv, smap, vars)
+    factors ./ denom, powers
+end
 
-    all_factors = copy.(fill([], size(a)))
-    all_powers = copy.(fill(Vector{Int}[], size(a)))
+function polynomial_propensity(expr::Add, iv, smap, vars)
+    factors = []
+    powers = Vector{Int}[]
+    
+    for term in arguments(expr)
+        factor_term, power_term = try
+            split_factor(term, iv, smap, vars)
+        catch e
+            error("Propensity function $term is non-polynomial? \n" * string(e))
+        end
+        push!(factors, factor_term)
+        push!(powers, power_term)
+    end
 
-    for (rind, expr) in enumerate(a)
+    factors, powers
+end
 
+function polynomial_propensity(expr, iv, smap, vars)
+    factor, powers = try
+        split_factor(expr, iv, smap, vars)
+    catch e
+        error("Propensity function $expr is non-polynomial? \n" * string(e))
+    end
+
+    [ factor ], [ powers ]
+end
+
+function polynomial_propensities(arr::AbstractArray, iv::Sym, smap::AbstractDict)
+    # Do we need sort here?
+    vars = [ x for (x,_) in Base.sort(collect(smap), by=x->x[2]) ]
+
+    all_factors = Array{Vector}(undef, size(arr))
+    all_powers = Array{Vector{Vector{Int}}}(undef, size(arr))
+
+    for (rind, expr) in enumerate(arr)
         expr = expand(expr)
-
-        denom = 1
-        if expr isa Div # /
-
-            # assuming (correctly?) that any expression has been simplified into a single fraction up to this point 
-            # if the denominator is not constant the whole expression is non-polynomial
-            expr, denom = arguments(expr)
-            isconstant(denom, vars, iv) || error("Propensity function $expr is non-polynomial? The denominator $denom is not constant.")
-        end
-
-        if isconstant(expr, vars, iv)
-
-            push!(all_factors[rind], expr)
-            push!(all_powers[rind], zeros(Int, N))
-
-        elseif isvar(expr, vars)
-
-            push!(all_factors[rind], 1)
-            push!(all_powers[rind], map(v -> isequal(expr, v), vars))
-
-        elseif expr isa Pow # ^
-
-            try
-                powers = zeros(Int, N)
-                extract_pwr!(powers, expr, smap, vars)
-                push!(all_factors[rind], 1)
-                push!(all_powers[rind], powers)
-            catch e
-                error("Propensity function $expr is non-polynomial? \n" * string(e))
-            end
-
-        elseif expr isa Mul # *
-
-            try
-                powers, factor = extract_mul(expr, smap, vars, iv)
-                push!(all_factors[rind], factor)
-                push!(all_powers[rind], powers)
-            catch e
-                error("Propensity function $expr is non-polynomial?\n" * string(e))
-            end
-
-        elseif expr isa Add # +
-
-            for term in arguments(expr)
-                if isconstant(term, vars, iv)
-                    push!(all_factors[rind], term)
-                    push!(all_powers[rind], zeros(Int, N))
-                else
-                    try
-                        
-                        _denom = 1
-                        if term isa Div
-                            term, _denom = arguments(term)
-                            isconstant(_denom, vars, iv) || error("Propensity function $expr is non-polynomial? The denominator $_denom is not constant.")
-                        end
-
-                        if term isa Pow
-                            powers = zeros(Int, N)
-                            extract_pwr!(powers, term, smap, vars)
-                            push!(all_factors[rind], 1)
-                            push!(all_powers[rind], powers)
-                        elseif term isa Mul
-                            powers, factor = extract_mul(term, smap, vars, iv)
-                            push!(all_factors[rind], factor)
-                            push!(all_powers[rind], powers)
-                        elseif isvar(term, vars)
-                            powers = zeros(Int, N)
-                            powers[smap[term]] = 1
-                            push!(all_factors[rind], 1)
-                            push!(all_powers[rind], powers)
-                        else
-                            error("Unexpected operation: $op in $term")
-                        end
-
-                        all_factors[rind][end] /= _denom
-                    catch e
-                        error("Propensity function $expr is non-polynomial?\n" * string(e))
-                    end
-                end
-            end
-
-        else
-
-            error("Expression $expr could not be parsed correctly!")
-
-        end
-
-        all_factors[rind] ./= denom
-
+        all_factors[rind], all_powers[rind] = polynomial_propensity(expr, iv, smap, vars)
     end
 
     max_power = maximum(sum.(vcat(all_powers...)))
     all_factors, all_powers, max_power
-
 end
 
 #=
