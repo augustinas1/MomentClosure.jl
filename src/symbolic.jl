@@ -215,7 +215,6 @@ function polynomial_propensity(expr, iv, smap, vars)
 end
 
 function polynomial_propensities(arr::AbstractArray, iv::Sym, smap::AbstractDict)
-    # Do we need sort here?
     vars = [ x for (x,_) in Base.sort(collect(smap), by=x->x[2]) ]
 
     all_factors = Array{Vector}(undef, size(arr))
