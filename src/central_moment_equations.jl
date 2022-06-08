@@ -50,7 +50,8 @@ function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod
     R = numreactions(rn) # no. of reactions in the network
     iv = get_iv(rn)      # independent variable (usually time)
     a = propensities(rn; combinatoric_ratelaw) # propensity functions of all reactions in the network
-    S = netstoichmat(rn; smap) # net stoichiometric matrix
+    S = netstoichmat(rn) # net stoichiometric matrix
+    S = reordered_netstoichmat(rn, S, smap)
 
     if langevin 
         drift = S*a

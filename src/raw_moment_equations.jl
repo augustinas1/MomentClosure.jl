@@ -27,7 +27,8 @@ function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_
     
     iv = get_iv(rn)
     N = numspecies(rn)
-    S = netstoichmat(rn; smap)
+    S = netstoichmat(rn)
+    S = reordered_netstoichmat(rn, S, smap)
     a = propensities(rn; combinatoric_ratelaw)
 
     if langevin

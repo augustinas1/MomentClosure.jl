@@ -141,14 +141,23 @@ function numreactions(rn::ReactionSystemMod)
 end
 
 """
-    netstoichmat(rn::ReactionSystemMod)
+    netstoichmat(rn::ReactionSystemMod, smap::AbstractDict)
 Return the (net) stoichiometric matrix of the given [`ReactionSystemMod`](@ref). Extension of Catalyst's
 [`netstoichmat`](https://catalyst.sciml.ai/dev/api/catalyst_api/#Catalyst.netstoichmat) used with a
 [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 """
-function netstoichmat(rn::ReactionSystemMod; smap=speciesmap(rn))
+function netstoichmat(rn::ReactionSystemMod)
+    smap = speciesmap(rn)
     ordering = [smap[s] for s in species(rn)]
     view(getfield(rn, :S), ordering, :)
+end
+
+
+# TODO: fix this after geometric distributions update
+function reordered_netstoichmat(rn::Union{ReactionSystem,ReactionSystemMod}, 
+                              nmat::AbstractMatrix, smap::AbstractDict)
+    ordering = [smap[s] for s in species(rn)]
+    view(nmat, ordering, :)
 end
 
 """
