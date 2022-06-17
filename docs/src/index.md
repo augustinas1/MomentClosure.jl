@@ -28,11 +28,9 @@ MomentClosure.jl is a tool to automatically obtain time-evolution equations of m
 MomentClosure can be installed through the Julia package manager:
 
 ```julia
-]add https://github.com/augustinas1/MomentClosure.jl
+]add MomentClosure
 using MomentClosure
 ```
-
-Note the use of full link to github repo as the package is currently unregistered.
 
 ## Citation
 
