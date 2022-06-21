@@ -1,21 +1,13 @@
 module MomentClosure
 
 using ModelingToolkit
-using ModelingToolkit: get_noiseeqs, states, get_eqs
-
+using ModelingToolkit: get_noiseeqs, states, get_eqs, get_iv, get_ps
 using Catalyst
-import Catalyst: species, reactionparams, reactions, speciesmap, paramsmap, numspecies,
-				 numreactions, netstoichmat, get_iv, get_ps
-using Catalyst: substoichmat, prodstoichmat
-
-using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
-#import Symbolics: degree
-
 using SciMLBase, SciMLBase.EnsembleAnalysis
-using DiffEqJump
 using Random
 using Distributions: Geometric
 
+using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
 					 arguments, @rule, @acrule, isnotflat, flatten_term,
@@ -30,14 +22,9 @@ using Latexify
 using DocStringExtensions
 
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
-       propensities, ReactionSystemMod, species, reactionparams, speciesmap, paramsmap,
-	   numspecies, numreactions, netstoichmat,
-       moment_closure, deterministic_IC, JumpProblem,
+       propensities, get_stoichiometry, moment_closure, deterministic_IC,
 	   get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
 	   linear_mapping_approximation
-
-# needed for ReactionSystemMod definition
-export @parameters, @variables
 
 include("reaction_systems.jl")
 include("moment_equations.jl")
@@ -60,6 +47,5 @@ include("closure_methods/derivative_matching.jl")
 include("closure_methods/conditional_gaussian.jl")
 include("closure_methods/conditional_derivative_matching.jl")
 include("closure_methods/linear_mapping_approximation.jl")
-include("stochastic_simulation.jl")
 
 end
