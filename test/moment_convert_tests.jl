@@ -1,6 +1,5 @@
 using MomentClosure
 using MomentClosure: define_μ, define_M
-#using SymbolicUtils: expand
 using Symbolics: expand
 using Test
 

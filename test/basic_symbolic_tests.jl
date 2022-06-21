@@ -1,6 +1,7 @@
 using MomentClosure
 using MomentClosure: define_μ, define_M, polynomial_propensities
 using Symbolics: value, expand
+using Catalyst
 using Test
 
 μ = define_μ(3, 3)

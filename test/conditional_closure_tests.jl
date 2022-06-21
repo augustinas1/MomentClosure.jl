@@ -1,23 +1,23 @@
 using MomentClosure
 using MomentClosure: define_M, define_μ
 using Symbolics: value, expand
+using Distributions
 using Test
 using Catalyst
 
-@parameters t, k_on, k_off, k_p, γ_p, b
-@variables p(t), g(t)
+@parameters p, b
+@register_symbolic Distributions.Geometric(p)
+m = rand(Distributions.Geometric(1/(1+b))) # b - mean burst size => p = 1/(1+b)
 
-vars = [g, p]
-ps = [k_on, k_off, k_p, γ_p, b]
-S = [1 -1 0 0;
-   0 0 b -1]
-as = [k_on*(1-g),  # 0 -> g
-    k_off*g*(p^2), # g -> 0
-    k_p*g,         # 0 -> mP, m ~ Geometric(mean=b)
-    γ_p*p]         # p -> 0
+rn = @reaction_network begin
+      k_on*(1-g), 0 --> g
+      k_off*P^2, g --> 0
+      k_p, g --> g + $m*P
+      γ_p, P --> 0
+end k_on k_off k_p γ_p
+
 binary_vars = [1]
-rn = ReactionSystemMod(t, vars, ps, as, S)
-
+@parameters k_on, k_off, k_p, γ_p
 μ = define_μ(2,5)
 M = define_M(2,5)
 

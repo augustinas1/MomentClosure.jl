@@ -1,5 +1,5 @@
 using MomentClosure
-using DiffEqJump, JLD2
+using SciMLBase, JLD2
 using Test
 
 JLD2.@load joinpath(@__DIR__, "test_data.jld2") sol
