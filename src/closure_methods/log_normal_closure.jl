@@ -26,10 +26,8 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
             eⱼ = sys.iter_1[j]
             eₖ = sys.iter_1[k]
             if sys isa CentralMomentEquations
-                #Σ[(j,k)] = 1. + M[eⱼ .+ eₖ] / μ[eⱼ] / μ[eₖ]
-                Σ[(j,k)] = 1. + M[eⱼ .+ eₖ] * μ[eⱼ]^-1 * μ[eₖ]^-1
+                Σ[(j,k)] = 1 + M[eⱼ .+ eₖ] * μ[eⱼ]^-1 * μ[eₖ]^-1
             else
-                #Σ[(j,k)] = μ[eⱼ .+ eₖ] / μ[eⱼ] / μ[eₖ]
                 Σ[(j,k)] = μ[eⱼ .+ eₖ] * μ[eⱼ]^-1 * μ[eₖ]^-1
             end
         end
@@ -44,7 +42,7 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
             for k in j+1:N
                 term *= Σ[j,k]^(i[j]*i[k])
             end
-            term *= Σ[j,j]^(i[j]*(i[j]-1)/2)
+            term *= Σ[j,j]^(i[j]*(i[j]-1)÷2) # ÷ - Integer divide
         end
         μ[i] = simplify(term)
         closure[μ_symbolic[i]] = μ[i]
@@ -56,6 +54,12 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
             iter_perm_ind = sortperm(sortperm(iter_perm))
             for r in sys.iter_all
                 sub[μ_symbolic[r]] = μ_symbolic[r[iter_perm_ind]]
+            end
+
+            if sys isa CentralMomentEquations
+                for r in sys.iter_m
+                    sub[M[r]] = M[r[iter_perm_ind]]
+                end
             end
 
             iter_perm = Tuple(iter_perm)
