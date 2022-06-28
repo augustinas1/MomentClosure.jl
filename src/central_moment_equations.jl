@@ -48,6 +48,7 @@ function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::
     R = numreactions(rn) # no. of reactions in the network
     iv = get_iv(rn)      # independent variable (usually time)
     a = propensities(rn; combinatoric_ratelaw) # propensity functions of all reactions in the network
+    a = div_to_pow.(a) # convert Div to Pow (more stable at the moment than dealing with symbolic fractions)
     S = get_stoichiometry(rn, smap) # net stoichiometric matrix
 
     if langevin 

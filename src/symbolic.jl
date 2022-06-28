@@ -100,6 +100,16 @@ function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
 
 end
 
+
+# a simple hack to convert SymbolicUtils Div (fractions) to Pow (multiplication)
+# more stable in symbolic manipulations that we perform
+function div_to_pow(expr::Div)
+    args = arguments(expr)
+    args[1] * args[2]^-1
+end
+
+div_to_pow(expr) = expr
+
 ## Set of functions to deconstruct polynomial propensities ##
 
 #=
@@ -125,7 +135,8 @@ isconstant(expr, vars, iv) = !istree(expr) || (!isvar(expr, vars) && all(arg -> 
 
 function split_factor(expr::Pow, iv, smap, vars)
     base, exp = arguments(expr)
-    (exp isa Int && exp >= 0) || error("Unexpected exponent: $expr")
+    #(exp isa Int && exp >= 0) || error("Unexpected exponent: $expr")
+    exp isa Int || error("Unexpected exponent: $expr")
 
     factor, powers = split_factor(base, iv, smap, vars)
     factor ^ exp, powers .* exp
