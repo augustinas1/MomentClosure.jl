@@ -1,9 +1,9 @@
 """
-    generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_order::Int;
+    generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
                             langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
-or [`ReactionSystemMod`](@ref), return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
+return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
 
 Notes:
 - The expansion order ``q``, denoted by `q_order` throughout the docs, is automatically
@@ -20,15 +20,16 @@ Notes:
   propensities are defined directly by the user.
 - `smap` sets the variable ordering in the moment equations (which index corresponds to which species
   in the reaction network). By default, this is consistent with the internal system ordering
-  accessible with [`speciesmap`](@ref).
+  accessible with [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap).
 """
-function generate_raw_moment_eqs(rn::Union{ReactionSystem,ReactionSystemMod}, m_order::Int;
+function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
                                  langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
     
     iv = get_iv(rn)
     N = numspecies(rn)
-    S = netstoichmat(rn; smap)
+    S = get_stoichiometry(rn, smap)
     a = propensities(rn; combinatoric_ratelaw)
+    a = div_to_pow.(a) # NOTE: more stable at the moment than dealing with symbolic fractions
 
     if langevin
         drift = S*a

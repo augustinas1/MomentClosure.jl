@@ -16,12 +16,11 @@ function fact(i)
 end
 
 """
-    generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
-                                m_order::Int, q_order::Int=0;
+    generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::Int=0;
                                 langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
-or [`ReactionSystemMod`](@ref), return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
+return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
 
 Notes:
 - if `q_order` is not specified by the user, it is assumed that the reaction network
@@ -40,17 +39,17 @@ Notes:
   propensities are defined directly by the user.
 - `smap` sets the variable ordering in the moment equations (which index corresponds to which species
   in the reaction network). By default, this is consistent with the internal system ordering
-  accessible with [`speciesmap`](@ref).
+  accessible with [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap).
 """
-function generate_central_moment_eqs(rn::Union{ReactionSystem, ReactionSystemMod},
-                                     m_order::Int, q_order::Int=0;
+function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::Int=0;
                                      langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
 
     N = numspecies(rn)   # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
     iv = get_iv(rn)      # independent variable (usually time)
     a = propensities(rn; combinatoric_ratelaw) # propensity functions of all reactions in the network
-    S = netstoichmat(rn; smap) # net stoichiometric matrix
+    a = div_to_pow.(a) # convert Div to Pow (more stable at the moment than dealing with symbolic fractions)
+    S = get_stoichiometry(rn, smap) # net stoichiometric matrix
 
     if langevin 
         drift = S*a

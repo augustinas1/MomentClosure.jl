@@ -1,91 +1,59 @@
 # [Geometrically Distributed Reaction Products and Conditional Closures](@id geometric-and-conditional)
 
-In this tutorial, we demonstrate how MomentClosure's [`ReactionSystemMod`](@ref) type can be used to define chemical systems involving reactions which products are geometrically distributed random variables. As an example, we consider an autoregulatory (repressive) genetic feedback loop where proteins are expressed in bursts with a geometric burst size distribution, as described by Soltani et al. [1]. Moreover, the state of the gene is modelled as a binary variable—we demonstrate how conditional derivative matching and conditional gaussian closures can be used to approximate such systems, in turn reproducing a number of results from Ref. [1].
+In this tutorial, we demonstrate using [Catalyst](https://github.com/SciML/Catalyst.jl) how to define chemical systems involving reactions which products are geometrically distributed random variables. As an example, we consider an autoregulatory (repressive) genetic feedback loop where proteins are expressed in bursts with a geometric burst size distribution, as described by Soltani et al. [1]. Moreover, the state of the gene is modelled as a binary variable—we demonstrate how conditional derivative matching and conditional gaussian closures can be used to approximate such systems, in turn reproducing a number of results from Ref. [1].
 
 We consider a negative feedback loop described by the following reactions:
 ```math
 \begin{align*}
 G^* &\stackrel{k_{on}}{\rightarrow} G, \\
-G + 2P &\stackrel{k_{off}}{\rightarrow} G^*, \\
+G + &\stackrel{k_{off}*P^2}{\rightarrow} G^*, \\
 G  &\stackrel{k_p}{\rightarrow} G + mP, \\
 P &\stackrel{\gamma_p}{\rightarrow} ∅.
 \end{align*}
 ```
 A gene in the network switches between ON ($G$) and OFF ($G^{\\*}$) states: proteins are produced in the transcriptionally active ON state but the gene can be turned OFF by two protein molecules binding to the promoter region and thus blocking transcription (proteins decay at a constant rate irrespective of the gene state). Note that the gene state can be interpreted as a distinct species that have either zero or one copy number per cell. In other words, it is a Bernoulli random variable: $0$ in the OFF state and $1$ in the ON state.
 
-The transcription (mRNA) dynamics are not modelled explicitly in this gene circuit. Instead, under the assumption of fast mRNA decay, proteins are taken to be produced in bursts of size $m$, where $m$ is a random variable sampled from the geometric distribution $\phi(m) = b^m/(1+b)^{m+1}$ (with $b$ denoting the mean burst size) [2]. However, chemical reaction networks that include reactions which products are independent geometrically distributed random variables cannot be defined using [Catalyst](https://github.com/SciML/Catalyst.jl) (allowing them is [currently being considered](https://github.com/SciML/Catalyst.jl/issues/308)). As a temporary solution, we have added (limited) support for such systems: they can be constructed as a [`ReactionSystemMod`](@ref) by defining the net stoichiometry matrix and the corresponding reaction propensity functions. As in Catalyst, the model specification is based on the rich symbolic-numeric modelling framework provided by [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl). Note that we have to explicitly define the molecule numbers of each chemical species as [`Symbolics.@variables`](@ref) and reaction constants as [`ModelingToolkit.@parameters`](@ref). The time, $t$, must also be initialised as a `ModelingToolkit.parameter` and used to indicate the time-dependence of species' molecule numbers. Finally, in order to indicate that a certain reaction product is geometrically distributed, the corresponding stoichiometric matrix element must be a `ModelingToolkit.parameter` specifying the mean of the distribution.
+The transcription (mRNA) dynamics are not modelled explicitly in this gene circuit. Instead, under the assumption of fast mRNA decay, proteins are taken to be produced in bursts of size $m$, where $m$ is a random variable sampled from the geometric distribution $\phi(m) = b^m/(1+b)^{m+1}$ (with $b$ denoting the mean burst size) [2]. Chemical reaction networks that include reactions which products are independent geometrically distributed random variables (or other symbolic variables) can be defined using [Catalyst](https://github.com/SciML/Catalyst.jl) as demonstrated [in this tutorial](https://catalyst.sciml.ai/stable/tutorials/symbolic_stoich/). Note that the referenced tutorial refers back to this tutorial because in the ancient times Catalyst did not provided such functionality and the previous iteration of MomentClosure implemented a `ReactionSystemMod` type that offered limited support for such systems (now deprecated as Catalyst does it better in a unified API).
 
-Using `ReactionSystemMod`, our gene network model can be constructed as follows:
+Using `Catalyst`, our gene network model can be constructed as follows:
 ```julia
 # load all the packages we will need
-using MomentClosure, DiffEqJump, OrdinaryDiffEq, DiffEqBase.EnsembleAnalysis, Plots, Latexify
+using MomentClosure, Catalyst, Distributions, JumpProcesses, DiffEqBase, OrdinaryDiffEq, DiffEqBase.EnsembleAnalysis, Plots, Latexify
 
-@parameters t, k_on, k_off, k_p, γ_p, b
-@variables g(t), p(t)
+# Proteins are produced in bursts of size m, where m is a geometric random variable with mean b.
+# Note that if b is the mean burst size, then p = 1/(1+b). 
+# Implemented by first registering the distribution with Symbolics
+@register_symbolic Distributions.Geometric(b)
+@parameters b
+m = rand(Distributions.Geometric(1/(1+b)))
 
-# species (g - gene state, p - protein number)
-vars = [g, p]
-
-# parameters (b - the mean burst size)
-ps = [k_on, k_off, k_p, γ_p, b]
-
-# net stoichiometry matrix
-S_mat = [1 -1 0 0;
-         0 0 b -1]
-
-# propensity functions
-as = [k_on*(1-g),    # G* -> G
-      k_off*g*(p^2), # G + 2P -> G*
-      k_p*g,         # G -> G + mP, m ~ Geometric(mean=b)
-      γ_p*p]         # P -> ∅
-
-rn = ReactionSystemMod(t, vars, ps, as, S_mat)
-```
-Following Soltani et al. [1], we define all model parameters as:
-```julia
-mean_p = 200
-mean_b = 70
-γ_p_val = 1
-k_off_val = 0.001
-k_on_val = 0.05
-
-k_p_val = mean_p * γ_p_val * (k_off_val * mean_p^2 + k_on_val) / (k_on_val * mean_b)
-
-# parameter mapping
-pmap = [k_on => k_on_val,
-        k_off => k_off_val,
-        k_p => k_p_val,
-        γ_p => γ_p_val,
-        b => mean_b]
-
-# initial gene state and protein number, order [g, p]
-u₀ = [1, 1]
-
-# time interval to solve on
-tspan = (0., 6.0)
-```
-[`ReactionSystemMod`](@ref) [can be converted](@ref stochastic_simulation_utilities) to the usual DifferentialEquations `JumpProblem` and hence simulated using SSA:
-```julia
-# create a discrete problem setting the simulation parameters
-dprob = DiscreteProblem(u₀, tspan, pmap)
-
-# create a JumpProblem compatible with ReactionSystemMod
-jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))
-
-# simulate 2×10⁴ SSA trajectories
-ensembleprob  = EnsembleProblem(jprob)
-@time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=20000)
-# compute the means and variances
-means_ssa, vars_ssa = timeseries_steps_meanvar(sol_SSA)
-```
-```julia
-23.200118 seconds (153.85 M allocations: 5.486 GiB, 31.19% gc time)
+rn = @reaction_network begin
+      k_on*(1-g), 0 --> g  # G* -> G
+      k_off*P^2, g --> 0   # G -> G*
+      k_p, g --> g + $m*P  # G -> G + mP, m ~ Geometric(p)
+      γ_p, P --> 0         # P -> ∅
+end k_on k_off k_p γ_p
 ```
 We can now generate the raw moment equations up to third order:
 ```julia
 eqs = generate_raw_moment_eqs(rn, 3)
 latexify(eqs)
 ```
+```math
+
+\begin{align*}
+\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{on} \mu_{1 0} - k_{off} \mu_{1 2} \\
+\frac{d\mu_{0 1}}{dt} =& b k_{p} \mu_{1 0} - \gamma_{p} \mu_{0 1} \\
+\frac{d\mu_{2 0}}{dt} =& k_{on} + k_{on} \mu_{1 0} + k_{off} \mu_{1 2} - 2 k_{on} \mu_{2 0} - 2 k_{off} \mu_{2 2} \\
+\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + b k_{p} \mu_{2 0} - k_{off} \mu_{1 3} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} \\
+\frac{d\mu_{0 2}}{dt} =& \gamma_{p} \mu_{0 1} + \frac{k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} + 2 b k_{p} \mu_{1 0} + b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} - k_{p} \mu_{1 0}}{b \left( \frac{1}{1 + b} \right)^{2} + \left( \frac{1}{1 + b} \right)^{2}} + 2 b k_{p} \mu_{1 1} - 2 \gamma_{p} \mu_{0 2} \\
+\frac{d\mu_{3 0}}{dt} =& k_{on} + 2 k_{on} \mu_{1 0} + 3 k_{off} \mu_{2 2} - k_{off} \mu_{1 2} - 3 k_{on} \mu_{3 0} - 3 k_{off} \mu_{3 2} \\
+\frac{d\mu_{2 1}}{dt} =& k_{off} \mu_{1 3} + k_{on} \mu_{0 1} + k_{on} \mu_{1 1} + b k_{p} \mu_{3 0} - 2 k_{off} \mu_{2 3} - \gamma_{p} \mu_{2 1} - 2 k_{on} \mu_{2 1} \\
+\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + \gamma_{p} \mu_{1 1} + \frac{k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{2 0} + 2 b k_{p} \mu_{2 0} + b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{2 0} - k_{p} \mu_{2 0}}{b \left( \frac{1}{1 + b} \right)^{2} + \left( \frac{1}{1 + b} \right)^{2}} + 2 b k_{p} \mu_{2 1} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} \\
+\frac{d\mu_{0 3}}{dt} =& \frac{3 k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 1} + 6 b k_{p} \mu_{1 1} + 3 b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 1} - 3 k_{p} \mu_{1 1}}{b \left( \frac{1}{1 + b} \right)^{2} + \left( \frac{1}{1 + b} \right)^{2}} + \frac{k_{p} \left( \frac{-1}{1 + b} \right)^{3} \mu_{1 0} + 6 b k_{p} \mu_{1 0} + 7 k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} + b k_{p} \left( \frac{-1}{1 + b} \right)^{3} \mu_{1 0} + 7 b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} - 6 k_{p} \mu_{1 0}}{b \left( \frac{1}{1 + b} \right)^{3} + \left( \frac{1}{1 + b} \right)^{3}} + 3 \gamma_{p} \mu_{0 2} + 3 b k_{p} \mu_{1 2} - \gamma_{p} \mu_{0 1} - 3 \gamma_{p} \mu_{0 3}
+\end{align*}
+```
+Note that certain symbolic expressions have not been fully simplified: this happens as [Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl) used internally is not yet able to simplify more complicated fractions to the extent that is required here. For reference, the simplified moment equations take the form:
 ```math
 \begin{align*}
 \frac{d\mu{_{10}}}{dt} =& k_{on} - k_{off} \mu{_{12}} - k_{on} \mu{_{10}} \\
@@ -99,6 +67,35 @@ latexify(eqs)
 \frac{d\mu{_{03}}}{dt} =& b k_{p} \mu{_{10}} + 3 \gamma_{p} \mu{_{02}} + 3 b k_{p} \mu{_{11}} + 3 b k_{p} \mu{_{12}} + 6 k_{p} \mu{_{10}} b^{2} + 6 k_{p} \mu{_{10}} b^{3} + 6 k_{p} \mu{_{11}} b^{2} - \gamma_{p} \mu{_{01}} - 3 \gamma_{p} \mu{_{03}}
 \end{align*}
 ```
+The fractions appeared in our equations as we defined the success probability $p$ of the geometric distribution as $p = \frac{1}{1+b}$. This could have been avoided by leaving $p$ in the symbolic expressions and substituting its numerical value expressed in terms of the mean $b$ later on. We proceed to do that and redefine the reaction system accordingly, making the moment equations a little easier to handle:
+```julia
+@parameters p
+m = rand(Distributions.Geometric(p))
+
+rn = @reaction_network begin
+      k_on*(1-g), 0 --> g
+      k_off*P^2, g --> 0*
+      k_p, g --> g + $m*P
+      γ_p, P --> 0
+end k_on k_off k_p γ_p
+
+eqs = generate_raw_moment_eqs(rn, 3)
+latexify(eqs)
+```
+```math
+\begin{align*}
+\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{on} \mu_{1 0} - k_{off} \mu_{1 2} \\
+\frac{d\mu_{0 1}}{dt} =& k_{p} p^{-1} \mu_{1 0} - k_{p} \mu_{1 0} - \gamma_{p} \mu_{0 1} \\
+\frac{d\mu_{2 0}}{dt} =& k_{on} + k_{on} \mu_{1 0} + k_{off} \mu_{1 2} - 2 k_{on} \mu_{2 0} - 2 k_{off} \mu_{2 2} \\
+\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + k_{p} p^{-1} \mu_{2 0} - k_{off} \mu_{1 3} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} - k_{p} \mu_{2 0} \\
+\frac{d\mu_{0 2}}{dt} =& k_{p} \mu_{1 0} + \gamma_{p} \mu_{0 1} + 2 k_{p} p^{-2} \mu_{1 0} + 2 k_{p} p^{-1} \mu_{1 1} - 2 k_{p} \mu_{1 1} - 2 \gamma_{p} \mu_{0 2} - 3 k_{p} p^{-1} \mu_{1 0} \\
+\frac{d\mu_{3 0}}{dt} =& k_{on} + 2 k_{on} \mu_{1 0} + 3 k_{off} \mu_{2 2} - k_{off} \mu_{1 2} - 3 k_{on} \mu_{3 0} - 3 k_{off} \mu_{3 2} \\
+\frac{d\mu_{2 1}}{dt} =& k_{off} \mu_{1 3} + k_{on} \mu_{0 1} + k_{on} \mu_{1 1} + k_{p} p^{-1} \mu_{3 0} - 2 k_{off} \mu_{2 3} - \gamma_{p} \mu_{2 1} - k_{p} \mu_{3 0} - 2 k_{on} \mu_{2 1} \\
+\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + \gamma_{p} \mu_{1 1} + k_{p} \mu_{2 0} + 2 k_{p} p^{-1} \mu_{2 1} + 2 k_{p} p^{-2} \mu_{2 0} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} - 2 k_{p} \mu_{2 1} - 3 k_{p} p^{-1} \mu_{2 0} \\
+\frac{d\mu_{0 3}}{dt} =& 3 k_{p} \mu_{1 1} + 3 \gamma_{p} \mu_{0 2} + 7 k_{p} p^{-1} \mu_{1 0} + 3 k_{p} p^{-1} \mu_{1 2} + 6 k_{p} p^{-3} \mu_{1 0} + 6 k_{p} p^{-2} \mu_{1 1} - \gamma_{p} \mu_{0 1} - k_{p} \mu_{1 0} - 3 k_{p} \mu_{1 2} - 3 \gamma_{p} \mu_{0 3} - 9 k_{p} p^{-1} \mu_{1 1} - 12 k_{p} p^{-2} \mu_{1 0}
+\end{align*}
+```
+
 A lot of information in this system of ODEs is redundant as the gene state is a Bernoulli variable that (in our case) has the following properties:
 ```math
 \begin{align*}
@@ -116,12 +113,12 @@ latexify(clean_eqs)
 ```
 ```math
 \begin{align*}
-\frac{d\mu{_{10}}}{dt} =& k_{on} - k_{off} \mu{_{12}} - k_{on} \mu{_{10}} \\
-\frac{d\mu{_{01}}}{dt} =& b k_{p} \mu{_{10}} - \gamma_{p} \mu{_{01}} \\
-\frac{d\mu{_{11}}}{dt} =& k_{on} \mu{_{01}} + b k_{p} \mu{_{10}} - k_{off} \mu{_{13}} - k_{on} \mu{_{11}} - \gamma_{p} \mu{_{11}} \\
-\frac{d\mu{_{02}}}{dt} =& \gamma_{p} \mu{_{01}} + b k_{p} \mu{_{10}} + 2 b k_{p} \mu{_{11}} + 2 k_{p} \mu{_{10}} b^{2} - 2 \gamma_{p} \mu{_{02}} \\
-\frac{d\mu{_{12}}}{dt} =& k_{on} \mu{_{02}} + \gamma_{p} \mu{_{11}} + b k_{p} \mu{_{10}} + 2 b k_{p} \mu{_{11}} + 2 k_{p} \mu{_{10}} b^{2} - k_{off} \mu{_{14}} - k_{on} \mu{_{12}} - 2 \gamma_{p} \mu{_{12}} \\
-\frac{d\mu{_{03}}}{dt} =& b k_{p} \mu{_{10}} + 3 \gamma_{p} \mu{_{02}} + 3 b k_{p} \mu{_{11}} + 3 b k_{p} \mu{_{12}} + 6 k_{p} \mu{_{10}} b^{2} + 6 k_{p} \mu{_{10}} b^{3} + 6 k_{p} \mu{_{11}} b^{2} - \gamma_{p} \mu{_{01}} - 3 \gamma_{p} \mu{_{03}}
+\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{on} \mu_{1 0} - k_{off} \mu_{1 2} \\
+\frac{d\mu_{0 1}}{dt} =& k_{p} p^{-1} \mu_{1 0} - \gamma_{p} \mu_{0 1} - k_{p} \mu_{1 0} \\
+\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + k_{p} p^{-1} \mu_{1 0} - k_{off} \mu_{1 3} - k_{p} \mu_{1 0} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} \\
+\frac{d\mu_{0 2}}{dt} =& \gamma_{p} \mu_{0 1} + k_{p} \mu_{1 0} + 2 k_{p} p^{-2} \mu_{1 0} + 2 k_{p} p^{-1} \mu_{1 1} - 2 k_{p} \mu_{1 1} - 2 \gamma_{p} \mu_{0 2} - 3 k_{p} p^{-1} \mu_{1 0} \\
+\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + k_{p} \mu_{1 0} + \gamma_{p} \mu_{1 1} + 2 k_{p} p^{-2} \mu_{1 0} + 2 k_{p} p^{-1} \mu_{1 1} - 2 k_{p} \mu_{1 1} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} - 3 k_{p} p^{-1} \mu_{1 0} \\
+\frac{d\mu_{0 3}}{dt} =& 3 k_{p} \mu_{1 1} + 3 \gamma_{p} \mu_{0 2} + 7 k_{p} p^{-1} \mu_{1 0} + 3 k_{p} p^{-1} \mu_{1 2} + 6 k_{p} p^{-3} \mu_{1 0} + 6 k_{p} p^{-2} \mu_{1 1} - \gamma_{p} \mu_{0 1} - k_{p} \mu_{1 0} - 3 k_{p} \mu_{1 2} - 3 \gamma_{p} \mu_{0 3} - 9 k_{p} p^{-1} \mu_{1 1} - 12 k_{p} p^{-2} \mu_{1 0}
 \end{align*}
 ```
 The system of ODEs is now much simpler and we can see that there are two higher-order moments we need to truncate: $\mu_{13}$ and $μ_{14}$. We consider normal, derivative matching, conditional gaussian and conditional derivative matching closures to see how well they compare. First we apply different closures and print out the corresponding higher-order moment expressions in order to check that our results are consistent with those published in [1].
@@ -172,7 +169,51 @@ latexify(cond_dm_eqs, :closure)
 \mu{_{14}} =& \mu{_{10}}^{-1} \mu{_{11}}^{4} \mu{_{12}}^{-6} \mu{_{13}}^{4}
 \end{align*}
 ```
-All these results are consistent with [1], reassuring that the model and closures are implemented as intended. Finally, we can solve the resulting ODEs and compare the resulting means and standard deviations of the protein number:
+All these results are consistent with [1], reassuring that the model and closures are implemented as intended. Finally, we can proceed to solve the resulting ODEs and compare the resulting means and standard deviations to the SSA. Following Soltani et al. [1], we define all model parameters as:
+```julia
+mean_p = 200
+mean_b = 70
+p_val = 1/(1+mean_b) # note we use p = 1/(1+b)
+γ_p_val = 1
+k_off_val = 0.001
+k_on_val = 0.05
+
+k_p_val = mean_p * γ_p_val * (k_off_val * mean_p^2 + k_on_val) / (k_on_val * mean_b)
+
+symmap = [:k_on => k_on_val,
+          :k_off => k_off_val,
+          :k_p => k_p_val,
+          :γ_p => γ_p_val,
+          :p => p_val]
+pmap = symmap_to_varmap(rn, symmap)
+
+# initial gene state and protein number, order [g, p]
+u₀ = [1, 1]
+
+# time interval to solve on
+tspan = (0., 6.0)
+```
+The reaction network with geometric bursts can be simulated using the SSA as usual:
+```julia
+# convert the reaction network into a system of jump processes
+jsys = convert(JumpSystem, rn; combinatoric_ratelaws=false)
+
+# create a discrete problem setting the simulation parameters
+dprob = DiscreteProblem(u₀, tspan, pmap)
+
+# create a JumpProblem compatible with ReactionSystemMod
+jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))
+
+# simulate 2×10⁴ SSA trajectories
+ensembleprob  = EnsembleProblem(jprob)
+@time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=20000)
+# compute the means and variances
+means_ssa, vars_ssa = timeseries_steps_meanvar(sol_SSA)
+```
+```julia
+23.200118 seconds (153.85 M allocations: 5.486 GiB, 31.19% gc time)
+```
+We continue to solve the moment equations for each closure:
 ```julia
 plt_m = plot()   # plot mean protein number
 plt_std = plot() # plot ssd of protein number
@@ -217,35 +258,27 @@ We observe that the two conditional closures give the most accurate results. The
 
 We now turn to a more complex network involving two genes (two Bernoulli variables), a repressor-activator circuit: an activator protein $Y$ expressed by one gene can turn ON another gene which produces a repressor protein $X$, that subsequently can bind to the gene promoter region of the activator-producing gene turning it OFF (see [1] for more details). As before, $X$ and $Y$ proteins are expressed in geometrically-distributed bursts. The system can be specified as follows:
 ```julia
-@parameters t, kx_on, kx_off, ky_on, ky_off, γ_x, γ_y, k_x, k_y, b_x, b_y
-@variables x(t), y(t), g_x(t), g_y(t)
+@parameters b_x b_y
+# could redefine in terms of success probabilities p_x and p_y as above
+m = rand(Distributions.Geometric(1/(1+b_x)))
+l = rand(Distributions.Geometric(1/(1+b_y)))
 
 # g_x - gene state of X protein producing gene
 # g_y - gene state of Y protein producing gene
 # x, y - proteins X and Y
-vars = [g_x, g_y, x, y]
+rn = @reaction_network begin
+      kx_on*(1-g_x)*y, 0 --> g_x  # 0   -> g_x
+      kx_off,          g_x --> 0  # g_x -> 0
+      ky_on*(1-g_y),   0 --> g_y  # 0 -> g_y
+      ky_off*x,        g_y --> 0  # g_y -> 0
+      k_x*g_x,         0 --> $m*x # 0 -> mx, m ~ Geometric(mean=b_x)
+      γ_x,             x --> 0    # x -> 0
+      k_y*g_y,         0 --> $l*y # 0 -> ly, l ~ Geometric(mean_b_y)
+      γ_y,             y --> 0    # y -> 0
+end kx_on kx_off ky_on ky_off k_x γ_x k_y γ_y
 
 # both g_x and g_y are Bernoulli random variables
 binary_vars = [1, 2]
-
-ps = [kx_on, kx_off, ky_on, ky_off, γ_x, γ_y, k_x, k_y, b_x, b_y]
-
-# b_x and b_y denote the mean burst sizes for gene production in geometrically-distributed bursts
-S = [1 -1  0  0  0    0  0    0;
-     0  0  1 -1  0    0  0    0;
-     0  0  0  0  b_x -1  0    0;
-     0  0  0  0  0    0  b_y -1]
-
-as = [kx_on*(1-g_x)*y,    # 0   -> g_x
-      kx_off*g_x,         # g_x -> 0
-      ky_on*(1-g_y),      # 0   -> g_y
-      ky_off*g_y*x,       # g_y -> 0
-      k_x*g_x,            # 0   -> mx, m ~ Geometric(mean=b_x)     
-      γ_x*x,              # x   -> 0
-      k_y*g_y,            # 0   -> ly, l ~ Geometric(mean=b_y)
-      γ_y*y]              # y   -> 0
-
-rn = ReactionSystemMod(t, vars, ps, as, S)
 
 # Parameter initialisation
 
@@ -271,16 +304,17 @@ k_x_val *= 0.00003
 k_y_val *= 0.01
 
 # parameter mapping
-pmap = [kx_on => kx_on_val,
-        kx_off => kx_off_val,
-        ky_on => ky_on_val,
-        ky_off => ky_off_val,
-        k_x => k_x_val,
-        k_y => k_y_val,
-        γ_x => γ_x_val,
-        γ_y => γ_y_val,
-        b_x => mean_b_x,
-        b_y => mean_b_y]
+symmap = [:kx_on => kx_on_val,
+          :kx_off => kx_off_val,
+          :ky_on => ky_on_val,
+          :ky_off => ky_off_val,
+          :k_x => k_x_val,
+          :k_y => k_y_val,
+          :γ_x => γ_x_val,
+          :γ_y => γ_y_val,
+          :b_x => mean_b_x,
+          :b_y => mean_b_y]
+pmap = symmap_to_varmap(rn, symmap)
 
 # initial gene state and protein number, order [g_x, g_y, x, y]
 u₀ = [1, 1, 1, 1]
@@ -292,8 +326,9 @@ Note that here we use a different parameter set from the one considered in [1] a
 
 We can run SSA as follows:
 ```julia
-dprob = DiscreteProblem(u₀, tspan, pmap)
-jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))
+jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
+dprob = DiscreteProblem(jsys, u₀, tspan, pmap)
+jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 
 ensembleprob  = EnsembleProblem(jprob)
 @time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=20000)

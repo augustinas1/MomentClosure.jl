@@ -26,6 +26,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
 
     # construct the raw moments up to mth order from the solved-for central moments
     if sys isa CentralMomentEquations
+        M = sys.M
         closed_μ = central_to_raw_moments(N, sys.m_order)
         μ = central_to_raw_moments(N, sys.q_order)
     else
@@ -43,7 +44,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
     sub = Dict()
 
     for order in sys.m_order+1:sys.q_order
-
+        
         length_k = length(iter_k)
 
         # iterator through all moments of the current truncation order
@@ -89,11 +90,17 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
                 for i in iter_k
                     sub[μ_symbolic[i]] = μ_symbolic[i[iter_perm_ind]]
                 end
+
+                if sys isa CentralMomentEquations
+                    for i in sys.iter_m
+                        sub[M[i]] = M[i[iter_perm_ind]]
+                    end
+                end
+
                 iter_perm = Tuple(iter_perm)
                 closed_μ[iter_perm] = substitute(closed_μ[m], sub)
                 closure[μ_symbolic[iter_perm]] = substitute(closure[μ_symbolic[m]], sub)
             end
-
 
         end
 

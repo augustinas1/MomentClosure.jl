@@ -5,34 +5,15 @@ CurrentModule = MomentClosure
 
 ## Model definition
 
-MomentClosure is fully compatible with reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl) and stored as a [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). Nevertheless, we have implemented our own `ReactionSystemMod`, that allows us to consider systems containing reactions which products are independent geometrically distributed random variables (currently unsupported by Catalyst). For example, such reactions can be encountered in certain types of gene regulatory network models, as discussed in [this tutorial](@ref geometric-and-conditional). Moreover, `ReactionSystemMod` provides an alternative to Catalyst as the model can be now constructed directly in terms of user-defined reaction propensity functions and the stoichiometric matrix, with system parameters and species defined using ModelingToolkit [`@parameters`](https://mtk.sciml.ai/stable/basics/ContextualVariables/#Parameters-1) and Symbolics [`@variables`](https://symbolics.juliasymbolics.org/stable/manual/variables/#Symbolics.@variables) respectively.
-
-We stress that [`ReactionSystemMod`](@ref), as the name suggests, is a rather trivial extension/modification of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). Although [`ReactionSystemMod`](@ref) provides the same basic functions to access network properties as does Catalyst for a `ModelingToolkit.ReactionSystem` ([see below](@ref api-basic-network-properties)), its integration within the broader SciML framework is very limited (only [compatible with SSA solvers](@ref stochastic_simulation_utilities)) and so we advise using Catalyst for model initialisation whenever possible. Finally, note that `ReactionSystemMod` is a temporary solution: we expect this interface to be supported by Catalyst directly soon (see the discussion [here](https://github.com/SciML/Catalyst.jl/issues/308) and [here](https://github.com/SciML/Catalyst.jl/issues/306)).
-
-```@docs
-@parameters
-@variables
-ReactionSystemMod
-```
+MomentClosure is fully compatible with reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl) and stored as a [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). Note that previously we had implemented our own `ReactionSystemMod`, that allowed us to consider systems containing reactions which products are independent geometrically distributed random variables. However, this is now deprecated as Catalyst has added support for such parameteric stoichiometries offering a much more complete and efficient feature set.
 
 ## [Basic model properties](@id api-basic-network-properties)
 
-To keep the API consistent with Catalyst, we provide a number of identical [basic functions](https://catalyst.sciml.ai/stable/api/catalyst_api/#Basic-properties) allowing easy access to network properties:
-
-```@docs
-species
-speciesmap
-reactionparams
-paramsmap
-numspecies
-numreactions
-netstoichmat
-```
-
-Moreover, we include one tiny extension of the Catalyst API:
+Moreover, we include a couple of tiny extensions to the Catalyst API:
 
 ```@docs
 propensities
+get_stoichiometry
 ```
 
 ## Moment Equations
@@ -79,9 +60,7 @@ linear_mapping_approximation
 
 ## [Stochastic Simulation Utilities](@id stochastic_simulation_utilities)
 
-A [`ReactionSystemMod`](@ref) is compatible with the standard DifferentialEquations [`JumpProblem`](https://diffeq.sciml.ai/stable/types/jump_types/#Jump-Problems) and hence can be simulated using SSA. Internally, [`ReactionSystemMod`](@ref) is converted into a system of [ConstantRateJumps](https://diffeq.sciml.ai/stable/types/jump_types/#Types-of-Jumps:-Regular,-Variable,-Constant-Rate-and-Mass-Action) taking into account the geometrically distributed reaction products. Note, however, that the implementation here is very restricted: time-dependent propensities are currently not allowed and [MassActionJumps] (https://diffeq.sciml.ai/stable/types/jump_types/#Types-of-Jumps:-Regular,-Variable,-Constant-Rate-and-Mass-Action) cannot be used due to limitations of the [`ReactionSystemMod`](@ref) API, hence the performance is subpar.
-
-We also provide provides functions for higher-order moment extraction from SSA and FSP data:
+We provide provides functions for higher-order moment extraction from SSA and FSP data:
 ```@docs
 get_raw_moments
 get_central_moments

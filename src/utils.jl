@@ -248,7 +248,9 @@ return a mapping of each moment to its initial value under deterministic initial
   `u₀` with probability one). The higher order raw moments are products of the corresponding
   powers of the means whereas the higher order central moments are simply zero.
 - The ordering of `u₀` elements must be consistent with the ordering of species
-  in the corresponding reaction system (can be checked with the `speciesmap` function).
+  in the corresponding reaction system (can be checked with the 
+  [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap) 
+  function).
 - As higher-order moment functions under log-normal, gamma, derivative matching and
   the conditional closures involve moments raised to negative powers, setting initial
   molecule numbers of certain species to *zeros* will result in NaN errors when solving

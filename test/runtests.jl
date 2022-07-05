@@ -10,5 +10,4 @@ using SafeTestsets
 @safetestset "sample moments" begin include("sample_moment_tests.jl") end
 @safetestset "linear mapping approximation" begin include("lma_tests.jl") end
 @safetestset "moment eqs for SDEs" begin include("moment_equations_SDE_tests.jl") end
-#@safetestset "polynomialization" begin include("polynomialization_tests.jl") end
 @safetestset "latexify" begin include("latexify_tests.jl") end

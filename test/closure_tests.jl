@@ -4,25 +4,27 @@ using Symbolics: value, expand
 using Test
 using Catalyst
 
-@parameters t, c₁, c₂, c₃, c₄, Ω
-@variables X(t), Y(t)
+rn = @reaction_network begin
+    (c₁/Ω^2), 2X + Y → 3X
+    (c₂), X → Y
+    (Ω*c₃, c₄), 0 ↔ X
+end c₁ c₂ c₃ c₄ Ω
 
-S_mat = [ 1 -1  1 -1;
-         -1  1  0  0]
-a = [c₁*X*Y*(X-1)*Ω^-2, c₂*X, c₃*Ω, c₄*X]
-rn = ReactionSystemMod(t, [X, Y], [c₁, c₂, c₃, c₄, Ω], a, S_mat)
-
+#@parameters c₁, c₂, c₃, c₄, Ω
+@syms c₁::Real c₂::Real c₃::Real c₄::Real Ω::Real
 μ = define_μ(2,4)
 M = define_M(2,4)
-sys = generate_central_moment_eqs(rn, 2, 4)
-expr1 = sys.odes.eqs[1].rhs
 
+# --- Test closures on central moment equations ---
+
+sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaw=false)
+expr1 = sys.odes.eqs[1].rhs
 closed_eqs = moment_closure(sys, "zero")
 @test closed_eqs.closure[M[2,2]] == 0
 expr1 = closed_eqs.odes.eqs[1].rhs
 expr2 = c₃*Ω + M[1,1]*c₁*μ[1,0]*(Ω^-2) + M[1,1]*c₁*(Ω^-2)*(μ[1,0]- 1) + c₁*M[2,0]*μ[0,1]*(Ω^-2) +
         c₁*μ[0,1]*μ[1,0]*(Ω^-2)*(μ[1,0] - 1) - c₂*μ[1,0] - c₄*μ[1,0]
-expr2 = simplify(value.(expr2))
+expr2 = value.(expand(expr2))
 @test isequal(expand(expr1), expand(expr2))
 
 # check that deterministic_IC is working with central moments
@@ -47,7 +49,6 @@ expr1 = closed_eqs.closure[M[2,1]]
 expr2 = M[2,0]*μ[0,1] + μ[0,1]*μ[1,0]^2 + 2*M[1,1]*μ[1,0] + 2*M[1,1]*M[2,0]*μ[1,0]^-1 -
     M[2,0]*μ[0,1] - μ[0,1]*μ[1,0]^2 - 2*M[1,1]*μ[1,0]
 @test isequal(expr1, expr2)
-expr1
 
 closed_eqs = moment_closure(sys, "derivative matching")
 expr1 = closed_eqs.closure[sys.M[0,4]]
@@ -55,7 +56,9 @@ expr2 = μ[0,1]^4*(M[0,2]+μ[0,1]^2)^-6*(M[0,3]+μ[0,1]^3+3*M[0,2]*μ[0,1])^4 - 
     6*M[0,2]*μ[0,1]^2 - 4*M[0,3]*μ[0,1]
 @test isequal(expr1, expr2)
 
-sys = generate_raw_moment_eqs(rn, 2)
+# --- Test closures on raw moment equations ---
+
+sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
 closed_eqs = moment_closure(sys, "zero")
 expr1 = closed_eqs.closure[μ[3,0]]
 expr2 = -2*μ[1,0]^3 + 3*μ[1,0]*μ[2,0]

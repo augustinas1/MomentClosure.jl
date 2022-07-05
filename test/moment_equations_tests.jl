@@ -1,25 +1,38 @@
 using MomentClosure
 using MomentClosure: expected_coeff
 using Symbolics: value, simplify, expand
+using Distributions: Geometric
 using Catalyst
 using Test
 
-@parameters b
-b = value(b)
-@test expected_coeff(2, 3) == 8
-@test isequal(expected_coeff(b, 3), b*(1 + (6b) + (6(b^2))))
-expr = ((b*((1 + b)^-1)) + ((b^6)*((1 + b)^-6)) + (57(b^2)*((1 + b)^-2)) + (302(b^3)*((1 + b)^-3)) + (302(b^4)*((1 + b)^-4)) + (57(b^5)*((1 + b)^-5)))*((1 + b)^6)
-@test isequal(expected_coeff(b, 6), expr)
+# --- check that expected values of stoichiometric coefficients are computed correctly ---
+
+@parameters b, d, p
+b = value(b); d = value(d); p = value(p)
+@test isequal(expected_coeff(2, 3), 8)
+@test isequal(expected_coeff(b, 2), b^2)
+@test isequal(expected_coeff(b*d, 2), b^2*d^2)
+@test isequal(expected_coeff(b/d, 2), b^2/d^2)
+@test isequal(expected_coeff(b+1, 2), b^2+2b+1)
+@test isequal(expected_coeff(sin(b), 2), sin(b)^2)
+@register_symbolic Geometric(p)
+m = rand(Geometric(p))
+@test isequal(expected_coeff(m, 1), p^-1 - 1)
+@test isequal(expected_coeff(m, 3), -1 + 7p^-1 - 12p^-2 + 6p^-3)
+@register_symbolic Bernoulli(p)
+@test_throws AssertionError expected_coeff(rand(Bernoulli(p)), 1)
+
+# --- check that moment equations are generated correctly ---
 
 @parameters t, c₁, c₂, c₃, c₄, Ω
-@variables X(t), Y(t)
 
-S_mat = [ 1 -1  1 -1;
-         -1  1  0  0]
-a = [c₁*X*Y*(X-1)*Ω^-2, c₂*X, c₃*Ω, c₄*X]
-rn = ReactionSystemMod(t, [X, Y], [c₁, c₂, c₃, c₄, Ω], a, S_mat)
+rn = @reaction_network begin
+    (c₁*Ω^-2), 2X + Y → 3X
+    (c₂), X → Y
+    (Ω*c₃, c₄), 0 ↔ X
+end c₁ c₂ c₃ c₄ Ω
 
-sys = generate_central_moment_eqs(rn, 2, 4)
+sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaw=false)
 expr1 = sys.odes.eqs[2].rhs
 @test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
 μ = sys.μ
@@ -30,13 +43,12 @@ expr2 = c₂*μ[1,0] + c₁*M[1,1]*(Ω^-2) + c₁*μ[0,1]*μ[1,0]*Ω^-2 - c₁*M
 expr2 = simplify(value.(expr2))
 @test isequal(expand(expr1), expr2)
 
-# CHANGED /Ω^ to *Ω^-2
-sys = generate_central_moment_eqs(rn, 2)
+sys = generate_central_moment_eqs(rn, 2, combinatoric_ratelaw=false)
 expr1 = sys.odes.eqs[2].rhs
 @test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
 @test isequal(expand(expr1), expr2)
 
-sys = generate_raw_moment_eqs(rn, 2)
+sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
 μ = sys.μ
 expr1 = sys.odes.eqs[4].rhs
 expr2 = c₂*μ[2,0] + c₁*μ[1,1]*Ω^-2 - c₁*μ[3,1]*Ω^-2 -c₂*(μ[1,0] + μ[1,1]) +
