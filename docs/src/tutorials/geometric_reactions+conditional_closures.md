@@ -67,7 +67,7 @@ Note that certain symbolic expressions have not been fully simplified: this happ
 \frac{d\mu{_{03}}}{dt} =& b k_{p} \mu{_{10}} + 3 \gamma_{p} \mu{_{02}} + 3 b k_{p} \mu{_{11}} + 3 b k_{p} \mu{_{12}} + 6 k_{p} \mu{_{10}} b^{2} + 6 k_{p} \mu{_{10}} b^{3} + 6 k_{p} \mu{_{11}} b^{2} - \gamma_{p} \mu{_{01}} - 3 \gamma_{p} \mu{_{03}}
 \end{align*}
 ```
-The fractions appeared in our equations as we defined the success probability $p$ of the geometric distribution as $p = \frac{1}{1+b}$. This could have been avoided by leaving $p$ in the symbolic expressions and substituting its numerical value expressed in terms of the mean $b$ later on. We proceed to do that and redefine the reaction system accordingly, making the moment equations a little easier to handle:
+The fractions appeared in our equations as we defined the success probability $p$ of the geometric distribution as $p = \frac{1}{1+b}$. This could have been avoided by leaving $p$ in the symbolic expressions and substituting its numerical value expressed in terms of the mean $b$ later on. We proceed to do that and redefine the reaction system accordingly, making the moment equations easier to handle:
 ```julia
 @parameters p
 m = rand(Distributions.Geometric(p))
@@ -211,7 +211,7 @@ ensembleprob  = EnsembleProblem(jprob)
 means_ssa, vars_ssa = timeseries_steps_meanvar(sol_SSA)
 ```
 ```julia
-23.200118 seconds (153.85 M allocations: 5.486 GiB, 31.19% gc time)
+4.858357 seconds (14.30 M allocations: 901.032 MiB, 6.25% gc time, 63.45% compilation time)
 ```
 We continue to solve the moment equations for each closure:
 ```julia
@@ -331,11 +331,11 @@ dprob = DiscreteProblem(jsys, u₀, tspan, pmap)
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 
 ensembleprob  = EnsembleProblem(jprob)
-@time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=20000)
+@time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=10000)
 means_ssa, vars_ssa = timeseries_steps_meanvar(sol_SSA)
 ```
 ```julia
-959.286216 seconds (3.43 G allocations: 107.662 GiB, 64.66% gc time)
+13.712331 seconds (43.27 M allocations: 1.697 GiB, 6.56% gc time, 10.01% compilation time)
 ```
 We use fourth order moment expansion and apply different closure methods as done for the negative feedback loop, considering the number of activator proteins $Y$ and its standard deviation:
 ```julia
