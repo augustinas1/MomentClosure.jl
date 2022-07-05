@@ -34,9 +34,9 @@ TupleTools = "1.2.0"
 julia = "1.6"
 
 [extras]
-JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+JumpProcesses = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "SafeTestsets", "JLD2"]
+test = ["Test", "SafeTestsets", "JumpProcesses"]

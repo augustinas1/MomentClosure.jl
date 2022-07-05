@@ -28,8 +28,8 @@ closed_eqs = moment_closure(sys, "normal", binary_vars)
 @test length(closed_eqs.odes.states) == 4 && isequal(closed_eqs.closure[M[0,4]], 3*M[0,2]^2)
 
 closed_eqs= moment_closure(sys, "log-normal", binary_vars)
-expr1 = closed_eqs.closure[M[0,3]]
-expr2 = μ[0,1]^3*(1+M[0,2]*μ[0,1]^-2)^3 - μ[0,1]^3 - 3*M[0,2]*μ[0,1]
+expr1 = expand(closed_eqs.closure[M[0,3]])
+expr2 = M[0,2]^3*μ[0,1]^-3 + 3*M[0,2]^2*μ[0,1]^-1
 @test length(closed_eqs.odes.states) == 4 && isequal(expand(expr1), expr2)
 
 closed_eqs = moment_closure(sys, "poisson", binary_vars)
@@ -41,8 +41,8 @@ expr2 = 2*M[0,2]^2*μ[0,1]^-1
 @test length(closed_eqs.odes.states) == 4 && isequal(expr1, expr2)
 
 closed_eqs = moment_closure(sys, "derivative matching", binary_vars)
-expr1 = closed_eqs.closure[sys.M[0,3]]
-expr2 = μ[0,1]^-3 * (M[0,2]+μ[0,1]^2)^3 - μ[0,1]^3 - 3*M[0,2]*μ[0,1]
+expr1 = expand(closed_eqs.closure[sys.M[0,3]])
+expr2 = M[0,2]^3*μ[0,1]^-3 + 3*M[0,2]^2*μ[0,1]^-1
 @test length(closed_eqs.odes.states) == 4 && isequal(expr1, expr2)
 
 sys = generate_raw_moment_eqs(rn, 2)

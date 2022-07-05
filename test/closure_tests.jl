@@ -5,12 +5,13 @@ using Test
 using Catalyst
 
 rn = @reaction_network begin
-    (c₁*Ω^-2), 2X + Y → 3X
+    (c₁/Ω^2), 2X + Y → 3X
     (c₂), X → Y
     (Ω*c₃, c₄), 0 ↔ X
 end c₁ c₂ c₃ c₄ Ω
 
-@parameters c₁, c₂, c₃, c₄, Ω
+#@parameters c₁, c₂, c₃, c₄, Ω
+@syms c₁::Real c₂::Real c₃::Real c₄::Real Ω::Real
 μ = define_μ(2,4)
 M = define_M(2,4)
 
@@ -18,13 +19,12 @@ M = define_M(2,4)
 
 sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaw=false)
 expr1 = sys.odes.eqs[1].rhs
-
 closed_eqs = moment_closure(sys, "zero")
 @test closed_eqs.closure[M[2,2]] == 0
 expr1 = closed_eqs.odes.eqs[1].rhs
 expr2 = c₃*Ω + M[1,1]*c₁*μ[1,0]*(Ω^-2) + M[1,1]*c₁*(Ω^-2)*(μ[1,0]- 1) + c₁*M[2,0]*μ[0,1]*(Ω^-2) +
         c₁*μ[0,1]*μ[1,0]*(Ω^-2)*(μ[1,0] - 1) - c₂*μ[1,0] - c₄*μ[1,0]
-expr2 = simplify(value.(expr2))
+expr2 = value.(expand(expr2))
 @test isequal(expand(expr1), expand(expr2))
 
 # check that deterministic_IC is working with central moments
