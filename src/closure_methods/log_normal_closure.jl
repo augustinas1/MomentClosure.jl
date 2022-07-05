@@ -12,7 +12,7 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
     end
 
     if sys isa CentralMomentEquations
-        M = copy(sys.M)
+        M = sys.M
         μ = central_to_raw_moments(N, sys.m_order)
         μ_symbolic = define_μ(N, sys.q_order)
     else
@@ -33,8 +33,9 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
         end
     end
 
-    unique_iter_q = unique(sort(i) for i in sys.iter_q)
+    iter_k = vcat(sys.iter_1, sys.iter_m) # iterator through all moments of lower order
     sub = Dict()
+    unique_iter_q = unique(sort(i) for i in sys.iter_q)
 
     for i in unique_iter_q
         term = prod([μ[sys.iter_1[j]]^i[j] for j in 1:N])
@@ -52,7 +53,7 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
         for iter_perm in perms
 
             iter_perm_ind = sortperm(sortperm(iter_perm))
-            for r in sys.iter_all
+            for r in iter_k
                 sub[μ_symbolic[r]] = μ_symbolic[r[iter_perm_ind]]
             end
 
@@ -66,7 +67,6 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
             μ[iter_perm] = substitute(μ[i], sub)
             closure[μ_symbolic[iter_perm]] = μ[iter_perm]
         end
-
     end
 
     if sys isa CentralMomentEquations
