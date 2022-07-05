@@ -45,7 +45,8 @@ The supported `closure` options are:
 
 # Notes
 - `binary_vars` *must* be specified for conditional closures as an array of indices of all species
-  (as in [`speciesmap`](@ref)) which molecule number is a Bernoulli variable. Although not necessary
+  (as in [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap)) 
+  which molecule number is a Bernoulli variable. Although not necessary
   for other closures, specifying `binary_vars` is recommended as the properties of Bernoulli variables
   will be used to remove the redundant moment equations and simplify the expressions, which can
   significantly improve numerical stability.

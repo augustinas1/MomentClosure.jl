@@ -18,15 +18,15 @@ The terminology and the notation used throughout is consistent with the **Theory
 ```julia
 using Catalyst
 rn = @reaction_network begin
-  # also including system-size parameter Ω
+  # including system-size parameter Ω
   (c₁/Ω^2), 2X + Y → 3X
   (c₂), X → Y
   (c₃*Ω, c₄), 0 ↔ X
 end c₁ c₂ c₃ c₄ Ω
 ```
-The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using MomentClosure functions [`netstoichmat`](@ref) and [`propensities`](@ref) respectively.
+The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using [`Catalyst.netstoichmat`](https://catalyst.sciml.ai/dev/api/catalyst_api/#Catalyst.netstoichmat) and MomentClosure function [`propensities`](@ref) respectively.
 
-Note that MomentClosure add support for systems containing geometrically distributed reaction products—see [this tutorial](@ref geometric-and-conditional) for more details.
+Note that MomentClosure also supports systems containing geometrically distributed reaction products that can be defined [using Catalyst](https://catalyst.sciml.ai/dev/tutorials/symbolic_stoich/)—see [this tutorial](@ref geometric-and-conditional) for more details.
 
 ## Generating Moment Equations
 
@@ -48,11 +48,11 @@ latexify(raw_eqs)
 ```
 ```math
 \begin{align*}
-\frac{d\mu{_{10}}}{dt} =& c{_3} \Omega + c{_1} \mu{_{21}} \Omega^{-2} - c{_2} \mu{_{10}} - c{_4} \mu{_{10}} - c{_1} \mu{_{11}} \Omega^{-2} \\
-\frac{d\mu{_{01}}}{dt} =& c{_2} \mu{_{10}} + c{_1} \mu{_{11}} \Omega^{-2} - c{_1} \mu{_{21}} \Omega^{-2} \\
-\frac{d\mu{_{20}}}{dt} =& c{_2} \mu{_{10}} + c{_3} \Omega + c{_4} \mu{_{10}} + 2 c{_1} \mu{_{31}} \Omega^{-2} + 2 c{_3} \Omega \mu{_{10}} - 2 c{_2} \mu{_{20}} - 2 c{_4} \mu{_{20}} - c{_1} \mu{_{11}} \Omega^{-2} - c{_1} \mu{_{21}} \Omega^{-2} \\
-\frac{d\mu{_{11}}}{dt} =& c{_2} \mu{_{20}} + c{_1} \mu{_{11}} \Omega^{-2} + c{_1} \mu{_{22}} \Omega^{-2} + c{_3} \Omega \mu{_{01}} - c{_2} \mu{_{10}} - c{_2} \mu{_{11}} - c{_4} \mu{_{11}} - c{_1} \mu{_{12}} \Omega^{-2} - c{_1} \mu{_{31}} \Omega^{-2} \\
-\frac{d\mu{_{02}}}{dt} =& c{_2} \mu{_{10}} + c{_1} \mu{_{21}} \Omega^{-2} + 2 c{_2} \mu{_{11}} + 2 c{_1} \mu{_{12}} \Omega^{-2} - c{_1} \mu{_{11}} \Omega^{-2} - 2 c{_1} \mu{_{22}} \Omega^{-2}
+\frac{d\mu_{1 0}}{dt} =& c_3 \Omega + c_1 \Omega^{-2} \mu_{2 1} - c_2 \mu_{1 0} - c_4 \mu_{1 0} - c_1 \Omega^{-2} \mu_{1 1} \\
+\frac{d\mu_{0 1}}{dt} =& c_2 \mu_{1 0} + c_1 \Omega^{-2} \mu_{1 1} - c_1 \Omega^{-2} \mu_{2 1} \\
+\frac{d\mu_{2 0}}{dt} =& c_2 \mu_{1 0} + c_3 \Omega + c_4 \mu_{1 0} + 2 c_3 \Omega \mu_{1 0} + 2 c_1 \Omega^{-2} \mu_{3 1} - 2 c_2 \mu_{2 0} - 2 c_4 \mu_{2 0} - c_1 \Omega^{-2} \mu_{1 1} - c_1 \Omega^{-2} \mu_{2 1} \\
+\frac{d\mu_{1 1}}{dt} =& c_2 \mu_{2 0} + c_3 \Omega \mu_{0 1} + c_1 \Omega^{-2} \mu_{1 1} + c_1 \Omega^{-2} \mu_{2 2} - c_2 \mu_{1 0} - c_2 \mu_{1 1} - c_4 \mu_{1 1} - c_1 \Omega^{-2} \mu_{1 2} - c_1 \Omega^{-2} \mu_{3 1} \\
+\frac{d\mu_{0 2}}{dt} =& c_2 \mu_{1 0} + 2 c_2 \mu_{1 1} + c_1 \Omega^{-2} \mu_{2 1} + 2 c_1 \Omega^{-2} \mu_{1 2} - c_1 \Omega^{-2} \mu_{1 1} - 2 c_1 \Omega^{-2} \mu_{2 2}
 \end{align*}
 ```
 The raw moments are defined as
@@ -68,7 +68,6 @@ Dict{Term{Real},Int64} with 2 entries:
   X(t) => 1
   Y(t) => 2
 ```
-Note that [`speciesmap`](@ref) can be used in the same way with a [`ReactionSystemMod`](@ref).
 
 Coming back to the generated moment equations, we observe that they depend on higher-order moments. For example, the ODE for $\mu_{02}$ depends on third order moments $μ_{12}$ and $μ_{21}$ and the fourth order moment $\mu_{22}$. Consider the general case of [raw moment equations](@ref raw_moment_eqs): if a network involves reactions that are polynomials (in molecule numbers) of *at most* order $k$, then its $m^{\text{th}}$ order moment equations will depend on moments up to order $m+k-1$. Hence the relationship seen above is expected as the Brusselator involves a trimolecular reaction whose corresponding propensity function is a third order polynomial in $X(t)$ and $Y(t)$. The number denoting the highest order of moments encountered in the generated [`RawMomentEquations`](@ref MomentClosure.RawMomentEquations) can also be accessed as `raw_eqs.q_order` (returning `4` in this case).
 
@@ -84,11 +83,11 @@ latexify(central_eqs)
 ```
 ```math
 \begin{align*}
-\frac{d\mu{_{10}}}{dt} =& c{_3} \Omega + c{_1} M{_{21}} \Omega^{-2} + c{_1} M{_{20}} \mu{_{01}} \Omega^{-2} + c{_1} \mu{_{01}} \Omega^{-2} \mu{_{10}}^{2} + 2 c{_1} M{_{11}} \mu{_{10}} \Omega^{-2} - c{_2} \mu{_{10}} - c{_4} \mu{_{10}} - c{_1} M{_{11}} \Omega^{-2} - c{_1} \mu{_{01}} \mu{_{10}} \Omega^{-2} \\
-\frac{d\mu{_{01}}}{dt} =& c{_2} \mu{_{10}} + c{_1} M{_{11}} \Omega^{-2} + c{_1} \mu{_{01}} \mu{_{10}} \Omega^{-2} - c{_1} M{_{21}} \Omega^{-2} - 2 c{_1} M{_{11}} \mu{_{10}} \Omega^{-2} - c{_1} M{_{20}} \mu{_{01}} \Omega^{-2} - c{_1} \mu{_{01}} \Omega^{-2} \mu{_{10}}^{2} \\
-\frac{dM{_{20}}}{dt} =& c{_2} \mu{_{10}} + c{_3} \Omega + c{_4} \mu{_{10}} + 2 c{_1} M{_{31}} \Omega^{-2} + c{_1} \mu{_{01}} \Omega^{-2} \mu{_{10}}^{2} + 2 c{_1} M{_{11}} \Omega^{-2} \mu{_{10}}^{2} + 4 c{_1} M{_{21}} \mu{_{10}} \Omega^{-2} + 2 c{_1} M{_{30}} \mu{_{01}} \Omega^{-2} + 4 c{_1} M{_{20}} \mu{_{01}} \mu{_{10}} \Omega^{-2} - 2 c{_2} M{_{20}} - 2 c{_4} M{_{20}} - c{_1} M{_{11}} \Omega^{-2} - c{_1} M{_{21}} \Omega^{-2} - c{_1} M{_{20}} \mu{_{01}} \Omega^{-2} - c{_1} \mu{_{01}} \mu{_{10}} \Omega^{-2} \\
-\frac{dM{_{11}}}{dt} =& c{_2} M{_{20}} + c{_1} M{_{11}} \Omega^{-2} + c{_1} M{_{22}} \Omega^{-2} + c{_1} M{_{02}} \Omega^{-2} \mu{_{10}}^{2} + c{_1} M{_{21}} \mu{_{01}} \Omega^{-2} + c{_1} \mu{_{01}} \mu{_{10}} \Omega^{-2} + 2 c{_1} M{_{12}} \mu{_{10}} \Omega^{-2} + 2 c{_1} M{_{11}} \mu{_{01}} \mu{_{10}} \Omega^{-2} - c{_2} M{_{11}} - c{_2} \mu{_{10}} - c{_4} M{_{11}} - c{_1} M{_{12}} \Omega^{-2} - c{_1} M{_{31}} \Omega^{-2} - c{_1} M{_{02}} \mu{_{10}} \Omega^{-2} - c{_1} M{_{11}} \mu{_{01}} \Omega^{-2} - c{_1} M{_{11}} \mu{_{10}} \Omega^{-2} - c{_1} M{_{11}} \Omega^{-2} \mu{_{10}}^{2} - 2 c{_1} M{_{21}} \mu{_{10}} \Omega^{-2} - c{_1} M{_{30}} \mu{_{01}} \Omega^{-2} - c{_1} \mu{_{01}} \Omega^{-2} \mu{_{10}}^{2} - 2 c{_1} M{_{20}} \mu{_{01}} \mu{_{10}} \Omega^{-2} \\
-\frac{dM{_{02}}}{dt} =& c{_2} \mu{_{10}} + c{_1} M{_{21}} \Omega^{-2} + 2 c{_2} M{_{11}} + 2 c{_1} M{_{12}} \Omega^{-2} + c{_1} M{_{20}} \mu{_{01}} \Omega^{-2} + c{_1} \mu{_{01}} \Omega^{-2} \mu{_{10}}^{2} + 2 c{_1} M{_{02}} \mu{_{10}} \Omega^{-2} + 2 c{_1} M{_{11}} \mu{_{01}} \Omega^{-2} + 2 c{_1} M{_{11}} \mu{_{10}} \Omega^{-2} - c{_1} M{_{11}} \Omega^{-2} - 2 c{_1} M{_{22}} \Omega^{-2} - 2 c{_1} M{_{02}} \Omega^{-2} \mu{_{10}}^{2} - 4 c{_1} M{_{12}} \mu{_{10}} \Omega^{-2} - 2 c{_1} M{_{21}} \mu{_{01}} \Omega^{-2} - c{_1} \mu{_{01}} \mu{_{10}} \Omega^{-2} - 4 c{_1} M{_{11}} \mu{_{01}} \mu{_{10}} \Omega^{-2}
+\frac{d\mu_{1 0}}{dt} =& c_3 \Omega + c_1 \Omega^{-2} M_{2 1} + c_1 \Omega^{-2} \mu_{1 0}^{2} \mu_{0 1} + c_1 \Omega^{-2} M_{2 0} \mu_{0 1} + 2 c_1 \Omega^{-2} M_{1 1} \mu_{1 0} - c_2 \mu_{1 0} - c_4 \mu_{1 0} - c_1 \Omega^{-2} M_{1 1} - c_1 \Omega^{-2} \mu_{0 1} \mu_{1 0} \\
+\frac{d\mu_{0 1}}{dt} =& c_2 \mu_{1 0} + c_1 \Omega^{-2} M_{1 1} + c_1 \Omega^{-2} \mu_{0 1} \mu_{1 0} - c_1 \Omega^{-2} M_{2 1} - c_1 \Omega^{-2} \mu_{1 0}^{2} \mu_{0 1} - c_1 \Omega^{-2} M_{2 0} \mu_{0 1} - \frac{2}{1} c_1 \Omega^{-2} M_{1 1} \mu_{1 0} \\
+\frac{dM_{2 0}}{dt} =& c_3 \Omega + c_2 \mu_{1 0} + c_4 \mu_{1 0} + 2 c_1 \Omega^{-2} M_{3 1} + c_1 \Omega^{-2} \mu_{1 0}^{2} \mu_{0 1} + 2 c_1 \Omega^{-2} \mu_{1 0}^{2} M_{1 1} + 2 c_1 \Omega^{-2} M_{3 0} \mu_{0 1} + 4 c_1 \Omega^{-2} M_{2 1} \mu_{1 0} + 4 c_1 \Omega^{-2} M_{2 0} \mu_{0 1} \mu_{1 0} - 2 c_2 M_{2 0} - 2 c_4 M_{2 0} - c_1 \Omega^{-2} M_{1 1} - c_1 \Omega^{-2} M_{2 1} - c_1 \Omega^{-2} M_{2 0} \mu_{0 1} - c_1 \Omega^{-2} \mu_{0 1} \mu_{1 0} \\
+\frac{dM_{1 1}}{dt} =& c_2 M_{2 0} + c_1 \Omega^{-2} M_{1 1} + c_1 \Omega^{-2} M_{2 2} + c_1 \Omega^{-2} \mu_{1 0}^{2} M_{0 2} + c_1 \Omega^{-2} M_{2 1} \mu_{0 1} + c_1 \Omega^{-2} \mu_{0 1} \mu_{1 0} + 2 c_1 \Omega^{-2} M_{1 2} \mu_{1 0} + 2 c_1 \Omega^{-2} M_{1 1} \mu_{0 1} \mu_{1 0} - c_2 M_{1 1} - c_4 M_{1 1} - c_2 \mu_{1 0} - c_1 \Omega^{-2} M_{1 2} - c_1 \Omega^{-2} M_{3 1} - c_1 \Omega^{-2} \mu_{1 0}^{2} M_{1 1} - c_1 \Omega^{-2} \mu_{1 0}^{2} \mu_{0 1} - c_1 \Omega^{-2} M_{0 2} \mu_{1 0} - c_1 \Omega^{-2} M_{1 1} \mu_{0 1} - c_1 \Omega^{-2} M_{3 0} \mu_{0 1} - c_1 \Omega^{-2} M_{1 1} \mu_{1 0} - 2 c_1 \Omega^{-2} M_{2 1} \mu_{1 0} - 2 c_1 \Omega^{-2} M_{2 0} \mu_{0 1} \mu_{1 0} \\
+\frac{dM_{0 2}}{dt} =& c_2 \mu_{1 0} + 2 c_2 M_{1 1} + c_1 \Omega^{-2} M_{2 1} + 2 c_1 \Omega^{-2} M_{1 2} + c_1 \Omega^{-2} \mu_{1 0}^{2} \mu_{0 1} + c_1 \Omega^{-2} M_{2 0} \mu_{0 1} + 2 c_1 \Omega^{-2} M_{0 2} \mu_{1 0} + 2 c_1 \Omega^{-2} M_{1 1} \mu_{0 1} + 2 c_1 \Omega^{-2} M_{1 1} \mu_{1 0} - c_1 \Omega^{-2} M_{1 1} - 2 c_1 \Omega^{-2} M_{2 2} - 2 c_1 \Omega^{-2} \mu_{1 0}^{2} M_{0 2} - c_1 \Omega^{-2} \mu_{0 1} \mu_{1 0} - 2 c_1 \Omega^{-2} M_{2 1} \mu_{0 1} - 4 c_1 \Omega^{-2} M_{1 2} \mu_{1 0} - 4 c_1 \Omega^{-2} M_{1 1} \mu_{0 1} \mu_{1 0}
 \end{align*}
 ```
 Unfortunately, central moment equations often take a visually painful form. Note that the first two ODEs, as before, indicate the means, and the central moments are denoted as
@@ -198,9 +197,9 @@ The obtained moment dynamics show damped oscillations which is the expected aver
 
 ## Stochastic Simulation
 
-To run the SSA for a given reaction network, we build a [DiffEqJump](https://github.com/SciML/DiffEqJump.jl) [`JumpProblem`](https://diffeq.sciml.ai/latest/types/jump_types/) using Gillespie's `Direct` method (other SSA variants are also available, see the [documentation](https://diffeq.sciml.ai/dev/types/jump_types/#Constant-Rate-Jump-Aggregators)). Moreover, in order to run many realisations of the jump process, we define a corresponding [`EnsembleProblem`](https://diffeq.sciml.ai/stable/features/ensemble/#ensemble). All of this can be done as follows:
+To run the SSA for a given reaction network, we build a [JumpProcesses](https://github.com/SciML/JumpProcesses.jl) (formerly known as [DiffEqJump](https://github.com/SciML/DiffEqJump.jl)) [`JumpProblem`](https://diffeq.sciml.ai/latest/types/jump_types/) using Gillespie's `Direct` method. Note that other SSA variants are also available, see the [documentation](https://diffeq.sciml.ai/dev/types/jump_types/#Constant-Rate-Jump-Aggregators). Moreover, in order to run many realisations of the jump process, we define a corresponding [`EnsembleProblem`](https://diffeq.sciml.ai/stable/features/ensemble/#ensemble). All of this can be done as follows:
 ```julia
-using DiffEqJump
+using JumpProcesses
 
 # convert ReactionSystem into JumpSystem
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)

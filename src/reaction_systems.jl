@@ -17,13 +17,12 @@ end
 Return the net stoichiometry matrix using the specified mapping of species to their indices.
 
 Notes:
-- This is a modification of [`Catalyst.netstoichmat`]
-(https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.netstoichmat) that is used 
-internally to deal with reactions involving symbolic stoichiometry coefficients.
-- The function also allows custom `smap`, so it is not limited to the default [`Catalyst.speciesmap`]
-(https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap) ordering.
+- This is a modification of [`Catalyst.netstoichmat`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.netstoichmat) 
+  that is used internally to deal with reactions involving symbolic stoichiometry coefficients.
+- The function also allows custom `smap`, so it is not limited to the default 
+  [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap) ordering.
 - TODO: remove once [this Catalyst issue](https://github.com/SciML/Catalyst.jl/issues/489)
-is resolved.
+  is resolved.
 """
 function get_stoichiometry(rn::ReactionSystem, smap::AbstractDict)
     nmat = Matrix(undef, numspecies(rn), numreactions(rn))

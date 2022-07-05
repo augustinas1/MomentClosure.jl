@@ -14,7 +14,8 @@ Notes:
   updated accordingly. Although this requires a lot of manual input, automating the linearisation further is
   difficult due to arbitrary choices that may be mane in constructing the reaction networks.
 - `binary_vars` *must* be specified for conditional closures as an array of indices of all species
-  (as in [`speciesmap`](@ref)) which molecule number is a Bernoulli variable. Note that `rn_nonlinear`
+  (as in [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap)) 
+  which molecule number is a Bernoulli variable. Note that `rn_nonlinear`
   and `rn_linear` may internally order the species differently: `binary_vars` must be consistent with
   the ordering in the *nonlinear* network.
 - By default the moment equations will be generated up to the order determined by the degree of nonlinearity
@@ -23,8 +24,6 @@ Notes:
 - `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
--  [`ReactionSystemMod`](@ref) is currently unsupported as by design it does not contain information of reaction
-  substrates and hence requires an API change. To be updated in the future!
 """
 function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars::Array{Int,1}=Int[], m_order::Int=0;
                                       combinatoric_ratelaw = true) where T <: ReactionSystem

@@ -20,7 +20,7 @@ Notes:
   propensities are defined directly by the user.
 - `smap` sets the variable ordering in the moment equations (which index corresponds to which species
   in the reaction network). By default, this is consistent with the internal system ordering
-  accessible with [`speciesmap`](@ref).
+  accessible with [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap).
 """
 function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
                                  langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
