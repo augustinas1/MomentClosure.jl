@@ -20,13 +20,13 @@ end
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
 
 # Expand a symbolic expression (no binomial expansion)
-expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys)) # apply distribution law 
+expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys)) # apply distribution law
 expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod))) # distributes terms until no longer possible
-flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x)) # 
-flatten_mod = Fixpoint(PassThrough(flatten_rule_mod)) # 
+flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x)) #
+flatten_mod = Fixpoint(PassThrough(flatten_rule_mod)) #
 expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod]))) # apply flatten and distribution until no longer possible
 
-function define_μ(iter::AbstractVector, iv::Union{Sym,Num})
+function define_μ(iter::AbstractVector, iv::SymbolicUtils.BasicSymbolic)
 
     indices = map(trim_key, iter)
 
@@ -47,15 +47,15 @@ function define_μ(iter::AbstractVector, iv::Union{Sym,Num})
 
 end
 
-define_μ(N::Int, order::Int, iv::Union{Sym,Num}) = define_μ(construct_iter_all(N, order), iv)
+define_μ(N::Int, order::Int, iv::SymbolicUtils.BasicSymbolic) = define_μ(construct_iter_all(N, order), iv)
 
-function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order)) 
+function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order))
     @parameters t
     return define_μ(iter, value(t))
 end
 
 
-function define_M(iter::AbstractVector, iv::Union{Sym,Num})
+function define_M(iter::AbstractVector, iv::SymbolicUtils.BasicSymbolic)
 
     indices = map(trim_key, iter)
 
@@ -78,15 +78,15 @@ function define_M(iter::AbstractVector, iv::Union{Sym,Num})
 
 end
 
-define_M(N::Int, order::Int, iv::Union{Sym,Num}) = define_M(construct_iter_all(N, order), iv)
+define_M(N::Int, order::Int, iv::SymbolicUtils.BasicSymbolic) = define_M(construct_iter_all(N, order), iv)
 
-function define_M(N::Int, order::Int, iter = construct_iter_all(N, order)) 
+function define_M(N::Int, order::Int, iter = construct_iter_all(N, order))
     @parameters t
     return define_M(iter, value(t))
 end
 
 function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
-    
+
     vars = vcat(values(μ)..., values(M)...)
     # extract variables from rhs of each equation
     eq_vars = unique(vcat(get_variables.(eqs)...))
@@ -158,13 +158,13 @@ end
 function split_factor(expr::Div, iv, smap, vars)
     num, denom = arguments(expr)
     isconstant(denom, vars, iv) || error("The denominator $denom is not constant.")
-    
+
     factor, powers = split_factor(num, iv, smap, vars)
-    
+
     factor / denom, powers
 end
 
-function split_factor(expr, iv, smap, vars) 
+function split_factor(expr, iv, smap, vars)
     if isconstant(expr, vars, iv)
         expr, zeros(length(vars))
     elseif isvar(expr, vars)
@@ -184,7 +184,7 @@ end
 function polynomial_propensity(expr::Add, iv, smap, vars)
     factors = []
     powers = Vector{Int}[]
-    
+
     for term in arguments(expr)
         factor_term, power_term = try
             split_factor(term, iv, smap, vars)
@@ -208,7 +208,7 @@ function polynomial_propensity(expr, iv, smap, vars)
     [ factor ], [ powers ]
 end
 
-function polynomial_propensities(arr::AbstractArray, iv::Sym, smap::AbstractDict)
+function polynomial_propensities(arr::AbstractArray, iv::SymbolicUtils.BasicSymbolic, smap::AbstractDict)
     vars = [ x for (x,_) in Base.sort(collect(smap), by=x->x[2]) ]
 
     all_factors = Array{Vector}(undef, size(arr))
