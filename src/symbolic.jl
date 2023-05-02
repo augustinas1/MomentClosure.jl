@@ -26,7 +26,7 @@ flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x)) #
 flatten_mod = Fixpoint(PassThrough(flatten_rule_mod)) #
 expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod]))) # apply flatten and distribution until no longer possible
 
-function define_μ(iter::AbstractVector, iv::SymbolicUtils.BasicSymbolic)
+function define_μ(iter::AbstractVector, iv::BasicSymbolic)
 
     indices = map(trim_key, iter)
 
@@ -47,7 +47,7 @@ function define_μ(iter::AbstractVector, iv::SymbolicUtils.BasicSymbolic)
 
 end
 
-define_μ(N::Int, order::Int, iv::SymbolicUtils.BasicSymbolic) = define_μ(construct_iter_all(N, order), iv)
+define_μ(N::Int, order::Int, iv::BasicSymbolic) = define_μ(construct_iter_all(N, order), iv)
 
 function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order))
     @parameters t
@@ -55,7 +55,7 @@ function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order))
 end
 
 
-function define_M(iter::AbstractVector, iv::SymbolicUtils.BasicSymbolic)
+function define_M(iter::AbstractVector, iv::BasicSymbolic)
 
     indices = map(trim_key, iter)
 
@@ -78,7 +78,7 @@ function define_M(iter::AbstractVector, iv::SymbolicUtils.BasicSymbolic)
 
 end
 
-define_M(N::Int, order::Int, iv::SymbolicUtils.BasicSymbolic) = define_M(construct_iter_all(N, order), iv)
+define_M(N::Int, order::Int, iv::BasicSymbolic) = define_M(construct_iter_all(N, order), iv)
 
 function define_M(N::Int, order::Int, iter = construct_iter_all(N, order))
     @parameters t
@@ -103,12 +103,14 @@ end
 
 # a simple hack to convert SymbolicUtils Div (fractions) to Pow (multiplication)
 # more stable in symbolic manipulations that we perform
-function div_to_pow(expr::Div)
-    args = arguments(expr)
-    args[1] * args[2]^-1
+function div_to_pow(expr)
+    if isdiv(expr)
+        args = arguments(expr)
+        args[1] * args[2]^-1
+    else
+        expr
+    end
 end
-
-div_to_pow(expr) = expr
 
 ## Set of functions to deconstruct polynomial propensities ##
 
@@ -133,21 +135,20 @@ isvar(x, vars) = any(isequal(x), vars)
 
 isconstant(expr, vars, iv) = !istree(expr) || (!isvar(expr, vars) && all(arg -> isconstant(arg, vars, iv), arguments(expr)))
 
-function split_factor(expr::Pow, iv, smap, vars)
+function split_factor_pow(expr, iv, vars)
     base, exp = arguments(expr)
-    #(exp isa Int && exp >= 0) || error("Unexpected exponent: $expr")
     exp isa Int || error("Unexpected exponent: $expr")
 
-    factor, powers = split_factor(base, iv, smap, vars)
+    factor, powers = split_factor(base, iv, vars)
     factor ^ exp, powers .* exp
 end
 
-function split_factor(expr::Mul, iv, smap, vars)
-    powers = zeros(Int, length(smap))
+function split_factor_mul(expr, iv, vars)
+    powers = zeros(Int, length(vars))
     factor = 1
 
     for arg in arguments(expr)
-        factor_arg, power_arg = split_factor(arg, iv, smap, vars)
+        factor_arg, power_arg = split_factor(arg, iv, vars)
         factor *= factor_arg
         powers .+= power_arg
     end
@@ -155,17 +156,24 @@ function split_factor(expr::Mul, iv, smap, vars)
     factor, powers
 end
 
-function split_factor(expr::Div, iv, smap, vars)
+function split_factor_div(expr, iv, vars)
     num, denom = arguments(expr)
-    isconstant(denom, vars, iv) || error("The denominator $denom is not constant.")
+    isconstant(denom, vars, iv) || error("The denominator $denom in propensity $expr is not constant.")
 
-    factor, powers = split_factor(num, iv, smap, vars)
+    factor, powers = split_factor(num, iv, vars)
 
     factor / denom, powers
 end
 
-function split_factor(expr, iv, smap, vars)
-    if isconstant(expr, vars, iv)
+function split_factor(expr, iv, vars)
+    
+    if ispow(expr)
+        split_factor_pow(expr, iv, vars)
+    elseif ismul(expr)
+        split_factor_mul(expr, iv, vars)
+    elseif isdiv(expr)
+        split_factor_div(expr, iv, vars)
+    elseif isconstant(expr, vars, iv)
         expr, zeros(length(vars))
     elseif isvar(expr, vars)
         1, map(isequal(expr), vars)
@@ -174,20 +182,21 @@ function split_factor(expr, iv, smap, vars)
     end
 end
 
-function polynomial_propensity(expr::Div, iv, smap, vars)
+
+function polynomial_propensity_div(expr, iv, vars)
     num, denom = arguments(expr)
-    isconstant(denom, vars, iv) || error("The denominator $denom is not constant.")
-    factors, powers = polynomial_propensity(num, iv, smap, vars)
-    factors ./ denom, powers
+    isconstant(denom, vars, iv) || error("The denominator $denom in propensity $expr is not constant.")
+    factors, powers = polynomial_propensity(num, iv, vars)
+    factors ./denom, powers
 end
 
-function polynomial_propensity(expr::Add, iv, smap, vars)
+function polynomial_propensity_add(expr, iv, vars)
     factors = []
     powers = Vector{Int}[]
 
     for term in arguments(expr)
         factor_term, power_term = try
-            split_factor(term, iv, smap, vars)
+            split_factor(term, iv, vars)
         catch e
             error("Propensity function $term is non-polynomial? \n" * string(e))
         end
@@ -198,17 +207,18 @@ function polynomial_propensity(expr::Add, iv, smap, vars)
     factors, powers
 end
 
-function polynomial_propensity(expr, iv, smap, vars)
-    factor, powers = try
-        split_factor(expr, iv, smap, vars)
-    catch e
-        error("Propensity function $expr is non-polynomial? \n" * string(e))
+function polynomial_propensity(expr, iv, vars)
+    if isdiv(expr)
+        polynomial_propensity_div(expr, iv, vars)
+    elseif isadd(expr)
+        polynomial_propensity_add(expr, iv, vars)
+    else
+        factor, powers = split_factor(expr, iv, vars)
+        [factor], [powers]
     end
-
-    [ factor ], [ powers ]
 end
 
-function polynomial_propensities(arr::AbstractArray, iv::SymbolicUtils.BasicSymbolic, smap::AbstractDict)
+function polynomial_propensities(arr::AbstractArray, iv::BasicSymbolic, smap::AbstractDict)
     vars = [ x for (x,_) in Base.sort(collect(smap), by=x->x[2]) ]
 
     all_factors = Array{Vector}(undef, size(arr))
@@ -216,7 +226,7 @@ function polynomial_propensities(arr::AbstractArray, iv::SymbolicUtils.BasicSymb
 
     for (rind, expr) in enumerate(arr)
         expr = expand(expr)
-        all_factors[rind], all_powers[rind] = polynomial_propensity(expr, iv, smap, vars)
+        all_factors[rind], all_powers[rind] = polynomial_propensity(expr, iv, vars)
     end
 
     max_power = maximum(sum.(vcat(all_powers...)))
