@@ -19,7 +19,7 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 
 [compat]
-Catalyst = "11, 12"
+Catalyst = "11, 12, 13"
 Combinatorics = "1"
 Cumulants = "1"
 DataStructures = "0.18"
