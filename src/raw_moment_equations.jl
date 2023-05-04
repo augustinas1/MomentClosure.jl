@@ -29,7 +29,6 @@ function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
     N = numspecies(rn)
     S = get_stoichiometry(rn, smap)
     a = propensities(rn; combinatoric_ratelaws)
-    a = div_to_pow.(a) # NOTE: more stable at the moment than dealing with symbolic fractions
 
     if langevin
         drift = S*a

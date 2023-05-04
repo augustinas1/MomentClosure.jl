@@ -102,17 +102,6 @@ function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
 end
 
 
-# a simple hack to convert SymbolicUtils Div (fractions) to Pow (multiplication)
-# more stable in symbolic manipulations that we perform
-function div_to_pow(expr)
-    if isdiv(expr)
-        args = arguments(expr)
-        args[1] * args[2]^-1
-    else
-        expr
-    end
-end
-
 ## Set of functions to deconstruct polynomial propensities ##
 
 #=
