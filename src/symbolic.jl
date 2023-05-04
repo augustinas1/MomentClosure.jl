@@ -25,6 +25,7 @@ expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod))) # distributes te
 flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x)) #
 flatten_mod = Fixpoint(PassThrough(flatten_rule_mod)) #
 expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod]))) # apply flatten and distribution until no longer possible
+expand_div = PassThrough(@acrule( +(~~xs) / ~a => sum(map(x -> x / ~a, ~~xs))))
 
 function define_μ(iter::AbstractVector, iv::BasicSymbolic)
 
