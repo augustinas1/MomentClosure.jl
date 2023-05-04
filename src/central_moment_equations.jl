@@ -128,7 +128,7 @@ function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::
             else
                 du[i] = S[i, r]*suma + du[i]
             end
-            du[i] = expand(du[i])
+            du[i] = simplify(du[i])
         end
     end
 
@@ -158,7 +158,7 @@ function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::
                 dM[i] -= i[j]*du[j]*M[i.-iter_1[j]]
             end
         end
-        dM[i] = expand(dM[i])
+        dM[i] = simplify(dM[i])
     end
 
     D = Differential(iv)

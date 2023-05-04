@@ -1,5 +1,5 @@
 using MomentClosure
-using MomentClosure: expected_coeff
+using MomentClosure: expected_coeff, expand_div
 using Symbolics: value, simplify, expand
 using Distributions: Geometric
 using Catalyst
@@ -17,8 +17,8 @@ b = value(b); d = value(d); p = value(p)
 @test isequal(expected_coeff(sin(b), 2), sin(b)^2)
 @register_symbolic Geometric(p)
 m = rand(Geometric(p))
-@test isequal(expected_coeff(m, 1), p^-1 - 1)
-@test isequal(expected_coeff(m, 3), -1 + 7p^-1 - 12p^-2 + 6p^-3)
+@test isequal(expand_div(expected_coeff(m, 1)), p^-1 - 1)
+@test isequal(expand_div(expected_coeff(m, 3)), expand(-1 + 7/p - 12/p^2 + 6/p^3))
 @register_symbolic Bernoulli(p)
 @test_throws AssertionError expected_coeff(rand(Bernoulli(p)), 1)
 
@@ -30,7 +30,7 @@ rn = @reaction_network begin
     (c₁*Ω^-2), 2X + Y → 3X
     (c₂), X → Y
     (Ω*c₃, c₄), 0 ↔ X
-end c₁ c₂ c₃ c₄ Ω
+end
 
 sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaw=false)
 expr1 = sys.odes.eqs[2].rhs
@@ -41,12 +41,14 @@ M = sys.M
 expr2 = c₂*μ[1,0] + c₁*M[1,1]*(Ω^-2) + c₁*μ[0,1]*μ[1,0]*Ω^-2 - c₁*M[2,1]*Ω^-2 -
         2*c₁*M[1,1]*μ[1,0]*Ω^-2 - c₁*M[2,0]*μ[0,1]*Ω^-2 - c₁*μ[0,1]*Ω^-2*μ[1,0]^2
 expr2 = simplify(value.(expr2))
-@test isequal(expand(expr1), expr2)
+#@test isequal(expand(expr1), expr2)
+@test isequal(expr1, expr2)
+
 
 sys = generate_central_moment_eqs(rn, 2, combinatoric_ratelaw=false)
 expr1 = sys.odes.eqs[2].rhs
 @test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
-@test isequal(expand(expr1), expr2)
+@test isequal(expr1, expr2)
 
 sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
 μ = sys.μ
@@ -54,7 +56,7 @@ expr1 = sys.odes.eqs[4].rhs
 expr2 = c₂*μ[2,0] + c₁*μ[1,1]*Ω^-2 - c₁*μ[3,1]*Ω^-2 -c₂*(μ[1,0] + μ[1,1]) +
         c₃*μ[0,1]*Ω - c₄*μ[1,1] - c₁*μ[1,2]*Ω^-2 + c₁*μ[2,2]*Ω^-2
 expr2 = simplify(value.(expr2))
-@test isequal(expand(expr1), expand(expr2))
+@test isequal(expr1, expr2)
 
 # corner case - a linear propensity with rate coefficient 1
 rn = @reaction_network begin
@@ -68,21 +70,21 @@ sys = generate_raw_moment_eqs(rn, 2)
 
 rn = @reaction_network begin
         (X^1.5), X ⇒ Y
-end c₁
+end
 @test_throws ErrorException generate_raw_moment_eqs(rn, 2)
 
 rn = @reaction_network begin
         (c₁*Y^3*X^1.5), X ⇒ Y
-end c₁
+end
 @test_throws ErrorException generate_raw_moment_eqs(rn, 2)
 
 rn = @reaction_network begin
         (c₁*sin(exp(X)+Y)), X ⇒ Y
-end c₁
+end
 @test_throws ErrorException generate_raw_moment_eqs(rn, 2)
 
 rn = @reaction_network begin
         (c₁*sin(exp(t))+Y^(3+1)), X ⇒ Y
-end c₁
+end
 eqs = generate_raw_moment_eqs(rn, 2)
 @test eqs.q_order == 5

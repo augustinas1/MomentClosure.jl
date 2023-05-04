@@ -14,7 +14,7 @@ rn = @reaction_network begin
       k_off*P^2, g --> 0
       k_p, g --> g + $m*P
       γ_p, P --> 0
-end k_on k_off k_p γ_p
+end
 
 binary_vars = [1]
 @parameters k_on, k_off, k_p, γ_p
@@ -39,10 +39,10 @@ expr2 = simplify(value.(expr2))
 closed_eqs = moment_closure(sys, "conditional gaussian", binary_vars)
 expr1 = closed_eqs.closure[μ[1,4]]
 expr2 = 4*μ[1,1]*μ[1,3]*μ[1,0]^-1 + 3*μ[1,2]^2*μ[1,0]^-1 - 12*μ[1,2]*μ[1,1]^2*μ[1,0]^-2 + 6*μ[1,1]^4*μ[1,0]^-3
-@test isequal(expr1, expr2)
+@test isequal(expr1, simplify(expr2))
 expr1 = closed_eqs.closure[μ[1,3]]
 expr2 = 3*μ[1,2]*μ[1,1]*μ[1,0]^-1 - 2*μ[1,1]^3*μ[1,0]^-2
-@test isequal(expr1, expr2)
+@test isequal(expr1, simplify(expr2))
 
 closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
 expr1 = closed_eqs.closure[μ[1,4]]
@@ -74,4 +74,4 @@ closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
 expr1 = closed_eqs.closure[M[1,3]]
 expr2 = μ[1,0]*(M[1,1]+μ[0,1]*μ[1,0])^-3*(M[1,2]+M[0,2]*μ[1,0]+μ[1,0]*μ[0,1]^2+2*M[1,1]*μ[0,1])^3 -
     M[0,3]*μ[1,0] - 3*M[1,1]*μ[0,1]^2 - 3*M[1,2]*μ[0,1] - μ[1,0]*μ[0,1]^3- 3*M[0,2]*μ[0,1]*μ[1,0]
-@test isequal(expand(expr1), expand(expr2))
+@test isequal(expr1, simplify(expr2))

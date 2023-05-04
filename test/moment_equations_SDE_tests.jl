@@ -24,11 +24,12 @@ cir_central_moments = generate_central_moment_eqs(cir_model, 2)
 ## Chemical Reaction Networks via Chemical Langevin Equation
 # unimolecular system
 schloegl = @reaction_network begin
+    @parameters k1 k2
     1.0, 2X → 3X
     1.0, 3X → 2X
     k1, ∅ → X
     k2, X → ∅
-end k1 k2
+end
 
 k1, k2 = parameters(schloegl)
 for order in 2:6
@@ -51,10 +52,11 @@ expr = k1 + 9*M[(3,)] + k2*μ[(1,)] + μ[(1,)]^3 + 19*M[(2,)]*μ[(1,)] + μ[(1,)
 
 # check if things work for multiple species
 rn = @reaction_network begin
+    @parameters c1 c2 c3 c4
     (c1), 2X + Y → 3X
     (c2), X → Y
     (c3, c4), 0 ↔ X
-end c1 c2 c3 c4
+end 
 
 c1, c2, c3, c4 = parameters(rn)
 

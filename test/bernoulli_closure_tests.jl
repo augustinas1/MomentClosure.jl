@@ -13,7 +13,7 @@ rn = @reaction_network begin
       k_off*P^2, g --> 0
       k_p, g --> g + $m*P
       γ_p, P --> 0
-end k_on k_off k_p γ_p
+end 
 
 binary_vars = [1]
 
@@ -30,7 +30,7 @@ closed_eqs = moment_closure(sys, "normal", binary_vars)
 closed_eqs= moment_closure(sys, "log-normal", binary_vars)
 expr1 = expand(closed_eqs.closure[M[0,3]])
 expr2 = M[0,2]^3*μ[0,1]^-3 + 3*M[0,2]^2*μ[0,1]^-1
-@test length(closed_eqs.odes.states) == 4 && isequal(expand(expr1), expr2)
+@test length(closed_eqs.odes.states) == 4 && isequal(simplify(expr1), simplify(expr2))
 
 closed_eqs = moment_closure(sys, "poisson", binary_vars)
 @test length(closed_eqs.odes.states) == 4 && isequal(closed_eqs.closure[M[0,3]], μ[0,1])
@@ -43,7 +43,7 @@ expr2 = 2*M[0,2]^2*μ[0,1]^-1
 closed_eqs = moment_closure(sys, "derivative matching", binary_vars)
 expr1 = expand(closed_eqs.closure[sys.M[0,3]])
 expr2 = M[0,2]^3*μ[0,1]^-3 + 3*M[0,2]^2*μ[0,1]^-1
-@test length(closed_eqs.odes.states) == 4 && isequal(expr1, expr2)
+@test length(closed_eqs.odes.states) == 4 && isequal(simplify(expr1), simplify(expr2))
 
 sys = generate_raw_moment_eqs(rn, 2)
 
@@ -60,7 +60,7 @@ closed_eqs = moment_closure(sys, "poisson", binary_vars)
 @test length(closed_eqs.odes.states) == 4
 
 closed_eqs = moment_closure(sys, "gamma", binary_vars)
-@test isequal(expr1, expr2)
+@test length(closed_eqs.odes.states) == 4
 
 closed_eqs = moment_closure(sys, "derivative matching", binary_vars)
-@test isequal(expr1, expr2)
+@test length(closed_eqs.odes.states) == 4

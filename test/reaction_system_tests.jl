@@ -3,7 +3,7 @@ using MomentClosure
 using Catalyst
 
 @parameters t, c₁, c₂, c₃, c₄, Ω
-@variables X(t), Y(t)
+@species X(t), Y(t)
 
 S_mat = [ 1 -1  1 -1;
          -1  1  0  0]
