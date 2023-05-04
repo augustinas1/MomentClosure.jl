@@ -7,7 +7,8 @@ using SciMLBase, SciMLBase.EnsembleAnalysis
 using Random
 using Distributions: Geometric
 
-using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata
+using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, 
+				 gradient, setmetadata, scalarize
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: BasicSymbolic, Real, Term, FnType, expand, simplify, 
 					 operation, arguments, @rule, @acrule, isnotflat, flatten_term,
