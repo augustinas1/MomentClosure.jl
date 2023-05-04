@@ -163,10 +163,9 @@ function conditional_derivative_matching(sys::MomentEquations,
         raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ_M_exp, bernoulli=true)
         raw_to_central = raw_to_central_moments(N, sys.q_order, μ_M, bernoulli=true)
         for i in sys.iter_q
-            closure_exp[sys.M[i]] = simplify(raw_to_central_exp[i])
-            closure[sys.M[i]] = simplify(raw_to_central[i])
+            closure_exp[sys.M[i]] = raw_to_central_exp[i]
+            closure[sys.M[i]] = raw_to_central[i]
         end
-
 
     else
         closure_exp = closure_μ_exp
