@@ -7,7 +7,7 @@ using Catalyst
 
 S_mat = [ 1 -1  1 -1;
          -1  1  0  0]
-# NOTE: only holds if combinatoric_ratelaw=false
+# NOTE: only holds if combinatoric_ratelaws=false
 a = [c₁*X*Y*(X-1)/Ω^2, c₂*X, c₃*Ω, c₄*X]
 
 rn = @reaction_network begin
@@ -19,4 +19,4 @@ end
 smap = speciesmap(rn)
 
 @test isequal(get_stoichiometry(rn, smap), S_mat)
-@test isequal(propensities(rn, combinatoric_ratelaw=false), a)
+@test isequal(propensities(rn, combinatoric_ratelaws=false), a)

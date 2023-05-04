@@ -33,7 +33,7 @@ end
 
 k1, k2 = parameters(schloegl)
 for order in 2:6
-    schloegl_moments = generate_raw_moment_eqs(schloegl, order; langevin = true, combinatoric_ratelaw = false)
+    schloegl_moments = generate_raw_moment_eqs(schloegl, order; langevin = true, combinatoric_ratelaws = false)
     local μ = schloegl_moments.μ
     rhs(j) = j > 1 ? expand( j * ( k1*μ[(j-1,)] - k2*μ[(j,)] + (μ[(j+1,)] - μ[(j,)]) - (μ[(j+2,)] - 3*μ[(j+1,)] + 2*μ[(j,)]) ) 
                             + j*(j-1)/2 * ( k1*μ[(j-2,)] + k2*μ[(j-1,)] + (μ[(j,)] - μ[(j-1,)]) + (μ[(j+1,)] - 3*μ[(j,)] + 2*μ[(j-1,)]) ) ) : 
@@ -43,7 +43,7 @@ for order in 2:6
 end
 
 μ = define_μ(1, 4); M = define_M(1, 4)
-schloegl_moments = generate_central_moment_eqs(schloegl, 2, 4, langevin=true, combinatoric_ratelaw = false)
+schloegl_moments = generate_central_moment_eqs(schloegl, 2, 4, langevin=true, combinatoric_ratelaws = false)
 expr = k1 + 4*μ[(1,)]^2 + 4*M[(2,)] - μ[(1,)]^3 - M[(3,)] - 3*μ[(1,)] - k2*μ[(1,)] - 3*M[(2,)]*μ[(1,)]
 @test isequal(schloegl_moments.odes.eqs[1].rhs, expr)
 expr = k1 + 9*M[(3,)] + k2*μ[(1,)] + μ[(1,)]^3 + 19*M[(2,)]*μ[(1,)] + μ[(1,)] - 2*μ[(1,)]^2 - 
@@ -61,7 +61,7 @@ end
 c1, c2, c3, c4 = parameters(rn)
 
 for order in 2:10
-    rn_moments = generate_raw_moment_eqs(rn, order; langevin = true, combinatoric_ratelaw = false)
+    rn_moments = generate_raw_moment_eqs(rn, order; langevin = true, combinatoric_ratelaws = false)
     local μ = rn_moments.μ
     rhs(i,j) = (i >= 1 ? i*( c1*(μ[(i+1,j+1)]-μ[(i,j+1)]) - (c2 + c4)*μ[(i,j)] + c3*μ[(i-1,j)] ) : 0) +
             (j >= 1 ? j*( -c1*(μ[(i+2,j)]-μ[(i+1,j)]) + c2*μ[(i+1,j-1)] ) : 0) +
@@ -75,8 +75,8 @@ for order in 2:10
     @test isequal(analytic_moment_eqs, rn_moments.odes.eqs)
 end
 
-raw_eqs = generate_raw_moment_eqs(rn, 2, langevin = true, combinatoric_ratelaw=false)
-central_eqs = generate_central_moment_eqs(rn, 2, langevin=true, combinatoric_ratelaw=false)
+raw_eqs = generate_raw_moment_eqs(rn, 2, langevin = true, combinatoric_ratelaws=false)
+central_eqs = generate_central_moment_eqs(rn, 2, langevin=true, combinatoric_ratelaws=false)
 μ = define_μ(2, 4); M = define_μ(2, 4)
 central_to_raw = central_to_raw_moments(2, 4)
 subdict = Dict( μ[iter] => central_to_raw[iter] for iter in filter(x -> sum(x) > 1, raw_eqs.iter_all))

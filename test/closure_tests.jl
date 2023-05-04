@@ -16,7 +16,7 @@ M = define_M(2,4)
 
 # --- Test closures on central moment equations ---
 
-sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaw=false)
+sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaws=false)
 expr1 = sys.odes.eqs[1].rhs
 closed_eqs = moment_closure(sys, "zero")
 @test closed_eqs.closure[M[2,2]] == 0
@@ -56,7 +56,7 @@ expr2 = μ[0,1]^4*(M[0,2]+μ[0,1]^2)^-6*(M[0,3]+μ[0,1]^3+3*M[0,2]*μ[0,1])^4 - 
 
 # --- Test closures on raw moment equations ---
 
-sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 closed_eqs = moment_closure(sys, "zero")
 expr1 = closed_eqs.closure[μ[3,0]]
 expr2 = -2*μ[1,0]^3 + 3*μ[1,0]*μ[2,0]

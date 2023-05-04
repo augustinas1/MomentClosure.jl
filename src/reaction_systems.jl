@@ -1,15 +1,15 @@
 """
-    propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaw=true)
+    propensities(rn::Union{ReactionSystem, ReactionSystemMod}; combinatoric_ratelaws=true)
 Return a vector of propensity functions of all reactions in the given [`ReactionSystem`]
 (https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem).
 
 Notes:
-- `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
+- `combinatoric_ratelaws=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
 """
-function propensities(rn::ReactionSystem; combinatoric_ratelaw=true)
-    simplify.(jumpratelaw.(reactions(rn); combinatoric_ratelaw))
+function propensities(rn::ReactionSystem; combinatoric_ratelaws::Bool=true)
+    simplify.(jumpratelaw.(reactions(rn); combinatoric_ratelaw=combinatoric_ratelaws))
 end
 
 """

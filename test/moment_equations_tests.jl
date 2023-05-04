@@ -32,7 +32,7 @@ rn = @reaction_network begin
     (Ω*c₃, c₄), 0 ↔ X
 end
 
-sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaw=false)
+sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaws=false)
 expr1 = sys.odes.eqs[2].rhs
 @test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
 μ = sys.μ
@@ -45,12 +45,12 @@ expr2 = simplify(value.(expr2))
 @test isequal(expr1, expr2)
 
 
-sys = generate_central_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+sys = generate_central_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 expr1 = sys.odes.eqs[2].rhs
 @test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
 @test isequal(expr1, expr2)
 
-sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 μ = sys.μ
 expr1 = sys.odes.eqs[4].rhs
 expr2 = c₂*μ[2,0] + c₁*μ[1,1]*Ω^-2 - c₁*μ[3,1]*Ω^-2 -c₂*(μ[1,0] + μ[1,1]) +

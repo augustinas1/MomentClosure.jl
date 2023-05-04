@@ -17,7 +17,7 @@ end
 
 """
     generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::Int=0;
-                                langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
+                                langevin::Bool=false, combinatoric_ratelaws::Bool=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
@@ -32,7 +32,7 @@ Notes:
 - if `langevin=true`, instead of the Chemical Master Equation the Chemical Langevin
   Equation (diffusion approximation) is considered, and the moment equations are 
   constructed from the corresponding SDE formulation.
-- `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
+- `combinatoric_ratelaws=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
   *Note* that this field is irrelevant using `ReactionSystemMod` as then the
@@ -42,12 +42,12 @@ Notes:
   accessible with [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap).
 """
 function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::Int=0;
-                                     langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
+                                     langevin::Bool=false, combinatoric_ratelaws::Bool=true, smap=speciesmap(rn))
 
     N = numspecies(rn)   # no. of molecular species in the network
     R = numreactions(rn) # no. of reactions in the network
     iv = get_iv(rn)      # independent variable (usually time)
-    a = propensities(rn; combinatoric_ratelaw) # propensity functions of all reactions in the network
+    a = propensities(rn; combinatoric_ratelaws) # propensity functions of all reactions in the network
     a = div_to_pow.(a) # convert Div to Pow (more stable at the moment than dealing with symbolic fractions)
     S = get_stoichiometry(rn, smap) # net stoichiometric matrix
 

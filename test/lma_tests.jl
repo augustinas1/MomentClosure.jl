@@ -25,7 +25,7 @@ rn_linear = @reaction_network begin
 end
 
 binary_vars = [speciesmap(rn_nonlinear)[g]]
-LMA_eqs, _ = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaw=false)
+LMA_eqs, _ = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaws=false)
 
 μ = define_μ(2,3)
 expr1 = LMA_eqs.odes.eqs[1].rhs
@@ -48,7 +48,7 @@ rn_nonlinear = @reaction_network begin
 end
 
 binary_vars = [speciesmap(rn_nonlinear)[g]]
-_, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaw=false)
+_, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaws=false)
 expr1 = effective_params[value(σ_b_LMA)]
 expr2 = (σ_b*μ[1,2] - σ_b*μ[1,1]) * μ[1,0]^-1
 @test isequal(expr1, value(expr2))

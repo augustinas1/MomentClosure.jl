@@ -19,7 +19,7 @@ binary_vars = [1]
 
 μ = define_μ(2,4)
 M = define_M(2,4)
-sys = generate_central_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+sys = generate_central_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 
 closed_eqs = moment_closure(sys, "zero", binary_vars)
 @test length(closed_eqs.odes.states) == 4 && isequal(closed_eqs.closure[M[0,4]], 0)

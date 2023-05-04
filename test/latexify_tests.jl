@@ -16,7 +16,7 @@ rn = @reaction_network begin
 end
 binary_vars = [1]
 
-raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 clean_eqs = bernoulli_moment_eqs(raw_eqs, binary_vars)
 closed_raw_eqs = moment_closure(raw_eqs, "conditional gaussian", binary_vars)
 
