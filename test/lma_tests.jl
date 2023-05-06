@@ -14,7 +14,7 @@ rn_nonlinear = @reaction_network begin
       ρ_u, g → g + p
       ρ_b*(1-g), 0 ⇒ p
       1, p → 0
-end σ_b σ_u ρ_b ρ_u
+end
 
 rn_linear = @reaction_network begin
       σ_b_LMA, g → 0
@@ -22,10 +22,10 @@ rn_linear = @reaction_network begin
       ρ_u, g → g+p
       (ρ_b*(1-g)), 0 ⇒ p
       1, p → 0
-end σ_b_LMA σ_u ρ_b ρ_u
+end
 
 binary_vars = [speciesmap(rn_nonlinear)[g]]
-LMA_eqs, _ = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaw=false)
+LMA_eqs, _ = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaws=false)
 
 μ = define_μ(2,3)
 expr1 = LMA_eqs.odes.eqs[1].rhs
@@ -36,7 +36,7 @@ expr2 = ρ_b + ρ_u*μ[1,0] - ρ_b*μ[1,0] - μ[0,1]
 @test isequal(expr1, value.(expr2))
 expr1 = LMA_eqs.odes.eqs[3].rhs
 expr2 = ρ_u*μ[1,0] + σ_u*μ[0,1] - μ[1,1] - σ_u*μ[1,1] - σ_b*μ[1,1]^2*μ[1,0]^-1
-@test isequal(expr1, value.(expr2))
+@test isequal(simplify(expr1), simplify(expr2))
 
 # cooperativity cp=2
 rn_nonlinear = @reaction_network begin
@@ -45,10 +45,10 @@ rn_nonlinear = @reaction_network begin
       ρ_u, g → g + p
       ρ_b*(1-g), 0 ⇒ p
       1, p → 0
-end σ_b σ_u ρ_b ρ_u
+end
 
 binary_vars = [speciesmap(rn_nonlinear)[g]]
-_, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaw=false)
+_, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaws=false)
 expr1 = effective_params[value(σ_b_LMA)]
 expr2 = (σ_b*μ[1,2] - σ_b*μ[1,1]) * μ[1,0]^-1
-@test isequal(expr1, value.(expr2))
+@test isequal(expr1, value(expr2))

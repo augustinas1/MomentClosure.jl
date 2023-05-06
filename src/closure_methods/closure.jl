@@ -1,7 +1,6 @@
 function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
                    closure::OrderedDict, polynorm::Bool)
 
-    # TODO: improve performance
     closed_eqs = Equation[]
     for eq in sys.odes.eqs
 
@@ -10,7 +9,7 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
         if polynorm # depending on the functional form
             closed_rhs = expand(closed_rhs)
         else
-            closed_rhs = expand_expr(closed_rhs)
+            closed_rhs = expand_mod(closed_rhs)
         end
         push!(closed_eqs, Equation(eq.lhs, closed_rhs))
     end

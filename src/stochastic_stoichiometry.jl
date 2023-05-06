@@ -4,21 +4,31 @@
 # TODO: follow changes in Catalyst and extend the compatibility accordingly
 # TODO: extend for other univariate discrete distributions
 
-expected_coeff(x, n::Int) = x^n # covers Number/Sym/Pow
-expected_coeff(x::Mul, n::Int) = prod(expected_coeff(a, n) for a in arguments(x))
+expected_coeff_mul(x) = prod(expected_coeff(a) for a in arguments(x))
+expected_coeff_pow(x) = expected_coeff(arguments(x)...)
+expected_coeff_term(x) = expected_coeff(x, 1)
 
-function expected_coeff(x::Div, n::Int)
+function expected_coeff(x)
+    if ismul(x)
+        expected_coeff_mul(x)
+    elseif ispow(x)
+        expected_coeff_pow(x)
+    elseif isterm(x)
+        expected_coeff_term(x)
+    else
+        x
+    end
+end
+
+expected_coeff_add(x, n::Int) = sum( expected_coeff(a) for a in arguments(expand(x^n)) )
+expected_coeff_mul(x, n::Int) = prod(expected_coeff(a, n) for a in arguments(x))
+
+function expected_coeff_div(x, n::Int)
     num, denom = arguments(x)
     (expected_coeff(num, n) / expected_coeff(denom, n))
 end
 
-expected_coeff(x::Add, n::Int) = sum( expected_coeff(a) for a in arguments(expand(x^n)) )
-expected_coeff(x::Mul) = prod(expected_coeff(a) for a in arguments(x))
-expected_coeff(x::Pow) = expected_coeff(arguments(x)...)
-expected_coeff(x::Term) = expected_coeff(x, 1)
-expected_coeff(x) = x
-
-function expected_coeff(x::Term, n::Int)
+function expected_coeff_term(x, n::Int)
     if isequal(operation(x), rand)
         args = arguments(x)
         isone(length(args)) || error("Unexpected arguments in $x")  
@@ -27,6 +37,21 @@ function expected_coeff(x::Term, n::Int)
         x^n
     end
 end
+
+function expected_coeff(x, n::Int)
+    if ismul(x)
+        expected_coeff_mul(x, n)
+    elseif isdiv(x)
+        expected_coeff_div(x, n)
+    elseif isadd(x)
+        expected_coeff_add(x, n)
+    elseif isterm(x)
+        expected_coeff_term(x, n)
+    else
+        x^n
+    end
+end
+
 
 function resolve_moment(d, args, n)
     @assert isequal(d, Geometric) "Can only compute moments for the geometric distribution."

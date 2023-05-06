@@ -7,16 +7,17 @@ We first redefine the system and its parameters for completeness:
 using MomentClosure, Catalyst, OrdinaryDiffEq, Plots
 
 rn = @reaction_network begin
+  @parameters c₁ c₂ c₃ c₄ Ω
   (c₁/Ω^2), 2X + Y → 3X
   (c₂), X → Y
   (c₃*Ω, c₄), 0 ↔ X
-end c₁ c₂ c₃ c₄ Ω
+end
 
 p = [0.9, 2, 1, 1, 100]
 u₀ = [1, 1]
 tspan = (0., 100.)
 
-raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 ```
 As we have seen earlier, second-order moment expansion using normal closure approximates the true system dynamics sufficiently accurately but it's interesting to see how other closures compare. Let's try applying zero closure:
 ```julia
@@ -26,7 +27,7 @@ u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
-plot(sol, vars=(0, [1,2]), lw=2)
+plot(sol, idxs=[1,2], lw=2)
 ```
 ![Brusselator issue 1](../assets/brusselator_issue_1.svg)
 
@@ -40,7 +41,7 @@ u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
-plot(sol, vars=(0, [1,2]), lw=2, legend=:bottomright)
+plot(sol, idxs=[1,2], lw=2, legend=:bottomright)
 ```
 ![Brusselator issue 2](../assets/brusselator_issue_2.svg)
 
@@ -48,66 +49,66 @@ We observe sustained oscillatory behaviour instead of the expected damped oscill
 
 Normal closure is also quite fragile. This can be seen by simply including the combinatorial scaling of the mass-action propensity functions with `combinatoric_ratelaw=true` which leads to unphysical sustained oscillatory trajectories:
 ```julia
-raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=true)
+raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, "normal")
 
 u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
-plot(sol, vars=(0, [1,2]), lw=2)
+plot(sol, idxs=[1,2], lw=2)
 ```
 ![Brusselator issue 3](../assets/brusselator_issue_3.svg)
 
 Nevertheless, this can be improved upon by increasing the order of moment expansion:
 ```julia
-raw_eqs = generate_raw_moment_eqs(rn, 3, combinatoric_ratelaw=true)
+raw_eqs = generate_raw_moment_eqs(rn, 3, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, "normal")
 
 u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
-plot(sol, vars=(0, [1,2]), lw=2, legend=:bottomright)
+plot(sol, idxs=[1,2], lw=2, legend=:bottomright)
 ```
 ![Brusselator issue 4](../assets/brusselator_issue_4.svg)
 
 Some dampening in the system is now visible. Increasing the expansion order to `4` finally leads to physically sensible results:
 ```julia
-raw_eqs = generate_raw_moment_eqs(rn, 4, combinatoric_ratelaw=true)
+raw_eqs = generate_raw_moment_eqs(rn, 4, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, "normal")
 
 u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
-plot(sol, vars=(0, [1,2]), lw=2)
+plot(sol, idxs=[1,2], lw=2)
 ```
 ![Brusselator issue 5](../assets/brusselator_issue_5.svg)
 
 For dessert, we consider unphysical divergent trajectories—a frequent problem with moment equations [3]. A good example is the second-order moment expansion including the combinatorial scaling of propensities with log-normal closure applied:
 ```julia
-raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=true)
+raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, "log-normal")
 
 u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 sol = solve(oprob, Rodas4P(), saveat=0.1)
 
-plot(sol, vars=(0, [1,2]), lw=2)
+plot(sol, idxs=[1,2], lw=2)
 ```
 ![Brusselator issue 6](../assets/brusselator_issue_6.svg)
 
 In contrast to normal closure, increasing the expansion order makes the problem worse:
 ```julia
-raw_eqs = generate_raw_moment_eqs(rn, 3, combinatoric_ratelaw=true)
+raw_eqs = generate_raw_moment_eqs(rn, 3, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, "log-normal")
 
 u₀map = deterministic_IC(u₀, closed_raw_eqs)
 oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 sol = solve(oprob, Rodas4P(), saveat=0.1)
 
-plot(sol, vars=(0, [1,2]), lw=2)
+plot(sol, idxs=[1,2], lw=2)
 ```
 ```julia
 ┌ Warning: Interrupted. Larger maxiters is needed.

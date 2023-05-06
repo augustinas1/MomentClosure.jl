@@ -111,7 +111,7 @@ closed_moment_prob = ODEProblem(LV_moments, u0map, (0.0, Tf), zeros(5))
 function obj_MCA(p)
     prob = remake(closed_moment_prob; p=p)
     sol = solve(prob, Tsit5(), saveat = t_data)
-    if sol.retcode == :Success
+    if sol.retcode == ReturnCode.Success
         obj = sum(norm(sol.u[i][1:2] - means[i])^2 for i in 1:length(t_data))
         obj += 1e4*sum((sol.u[i][3] - sol.u[i][1]^2  - vars[i][1])^2 for i in 1:length(t_data))
         obj += 1e4*sum((sol.u[i][5] - sol.u[i][2]^2  - vars[i][2])^2 for i in 1:length(t_data))

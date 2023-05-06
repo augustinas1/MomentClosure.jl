@@ -20,12 +20,13 @@ where $c_2^0$ is a fixed value and the sinusoidal modulation with frequency $\om
 using Catalyst, MomentClosure, Latexify
 
 rn = @reaction_network begin
+  @parameters c₁ c₂ c₃ c₄ Ω ω τ
   (c₁/Ω^2), 2X + Y → 3X
   (c₂*(1+0.5*sin(ω*(t<τ)*t))), X → Y
   (c₃*Ω, c₄), 0 ↔ X
-end c₁ c₂ c₃ c₄ Ω ω τ
+end
 
-raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 latexify(raw_eqs)
 ```
 ```math
@@ -60,13 +61,13 @@ oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
 
 # solve using Tsit5 solver
 sol = solve(oprob, Tsit5(), saveat=0.2)
-plot(sol, vars=(0, [1,2]), lw=2)
+plot(sol, idxs=[1,2], lw=2)
 ```
 ![Time-dependent Brusselator normal](../assets/Brusselator_time-dependent_normal.svg)
 
 It would be great to compare our results to the true dynamics. Using DifferentialEquations, we can run a modified SSA taking into account the time-dependent propensity functions ([VariableRateJumps](https://diffeq.sciml.ai/stable/tutorials/discrete_stochastic_example/#Adding-a-VariableRateJump)). This requires some care and is done by combining an `ODEProblem` with a `JumpProblem`:
 ```julia
-using DiffEqJump
+using JumpProcesses
 
 # convert ReactionSystem into JumpSystem
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)

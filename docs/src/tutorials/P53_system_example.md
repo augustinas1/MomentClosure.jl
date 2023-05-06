@@ -40,7 +40,7 @@ with parameters
 
 We begin by loading all the packages we will need
 ```julia
-using Catalyst, MomentClosure, OrdinaryDiffEq, DiffEqJump,
+using Catalyst, MomentClosure, OrdinaryDiffEq, JumpProcesses,
       DiffEqBase.EnsembleAnalysis, Plots, Plots.PlotMeasures
 ```
 and then build the model using Catalyst and set its parameters as follows:
@@ -48,13 +48,14 @@ and then build the model using Catalyst and set its parameters as follows:
 # → for mass-actions rate
 # ⇒ for non mass-actions rate
 rn = @reaction_network begin
+    @parameters k₁ k₂ k₃ k₄ k₅ k₆ k₇
     (k₁), 0 → x
     (k₂), x → 0
     (k₃*x*y/(x+k₇)), x ⇒ 0
     (k₄*x), 0 ⇒ y₀
     (k₅), y₀ → y
     (k₆), y → 0
-end k₁ k₂ k₃ k₄ k₅ k₆ k₇
+end
 
 # parameters [k₁, k₂, k₃, k₄, k₅, k₆, k₇]
 p = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
@@ -106,7 +107,7 @@ h2 = histogram(data[2], normalize=true, xlabel="y₀", ylabel="P(y₀)")
 h3 = histogram(data[3], normalize=true, xlabel="y", ylabel="P(y)")
 using Plots.PlotMeasures
 plot(h1, h2, h3, legend=false, layout=(1,3), size = (1050, 250),
-     left_margin = 5mm, bottom_margin = 7mm, guidefontsize=10)
+     left_margin = 5PlotMeasures.mm, bottom_margin = 7PlotMeasures.mm, guidefontsize=10)
 ```
 ![P53-Mdm2 distribution](../assets/p53-Mdm2_distribution.svg)
 
@@ -120,7 +121,7 @@ closures = ["normal", "log-normal", "gamma"]
 plts = [plot() for i in 1:length(closures)]
 
 for q in 3:6
-    eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaw=false)
+    eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaws=false)
     for (closure, plt) in zip(closures, plts)
         closed_eqs = moment_closure(eqs, closure)
 
@@ -128,7 +129,7 @@ for q in 3:6
         oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
 
         sol = solve(oprob, Tsit5(), saveat=0.1)
-        plt = plot!(plt, sol, vars=(0, 1), lw=3, label  = "q = "*string(q))
+        plt = plot!(plt, sol, idxs=[1], lw=3, label  = "q = "*string(q))
     end
 end
 
@@ -139,13 +140,13 @@ end
 ```
 Normal closure:
 ```julia
-plot(plts[1], size=(750, 450), leftmargin=2mm)
+plot(plts[1], size=(750, 450), leftmargin=2PlotMeasures.mm)
 ```
 ![P53-Mdm2 normal means 2nd order expansion](../assets/p53-Mdm2_normal_2nd_order.svg)
 
 Log-normal closure:
 ```julia
-plot(plts[2], size=(750, 450), leftmargin=2mm)
+plot(plts[2], size=(750, 450), leftmargin=2PlotMeasures.mm)
 ```
 ![P53-Mdm2 log-normal means 2nd order expansion](../assets/p53-Mdm2_log-normal_2nd_order.svg)
 
@@ -157,7 +158,7 @@ plot(plts[2], xlims=(0., 50.), lw=3)
 
 Gamma closure:
 ```julia
-plot(plts[3], size=(750, 450), leftmargin=2mm)
+plot(plts[3], size=(750, 450), leftmargin=2PlotMeasures.mm)
 ```
 ![P53-Mdm2 gamma means 2nd order expansion](../assets/p53-Mdm2_gamma_2nd_order.svg)
 
@@ -168,7 +169,7 @@ We can also plot the variance predictions:
 # rerunning the same calculations as they are reasonably fast
 plt = plot()
 for q in [4,6]
-    eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaw=false)
+    eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaws=false)
     for closure in closures
         closed_eqs = moment_closure(eqs, closure)
 
@@ -177,7 +178,7 @@ for q in [4,6]
         sol = solve(oprob, Tsit5(), saveat=0.1)
 
         # index of M₂₀₀ can be checked with `u₀map` or `closed_eqs.odes.states`
-        plt = plot!(plt, sol, vars=(0, 4), lw=3, label  = closure*" q = "*string(q))
+        plt = plot!(plt, sol, idxs=[4], lw=3, label  = closure*" q = "*string(q))
     end
 end
 
@@ -200,7 +201,7 @@ q_vals = [4, 6]
 
 for (q, plt_m, plt_v) in zip(q_vals, plt_means, plt_vars)
 
-    eqs = generate_central_moment_eqs(rn, 3, q, combinatoric_ratelaw=false)
+    eqs = generate_central_moment_eqs(rn, 3, q, combinatoric_ratelaws=false)
     for closure in closures
 
         closed_eqs = moment_closure(eqs, closure)
@@ -209,8 +210,8 @@ for (q, plt_m, plt_v) in zip(q_vals, plt_means, plt_vars)
         oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
 
         sol = solve(oprob, Tsit5(), saveat=0.1)
-        plt_m = plot!(plt_m, sol, vars=(0, 1), label = closure)    
-        plt_v = plot!(plt_v, sol, vars=(0, 4), label = closure)
+        plt_m = plot!(plt_m, sol, idxs=[1], label = closure)    
+        plt_v = plot!(plt_v, sol, idxs=[4], label = closure)
 
     end
 
@@ -270,7 +271,7 @@ Finally, we can check whether better estimates can be obtained using even higher
 plt = plot()
 closures = ["zero", "normal", "log-normal", "gamma"]
 
-eqs = generate_central_moment_eqs(rn, 5, 6, combinatoric_ratelaw=false)
+eqs = generate_central_moment_eqs(rn, 5, 6, combinatoric_ratelaws=false)
 # faster to store than recompute in case we want to try different solvers/params
 oprobs = Dict()
 
@@ -281,7 +282,7 @@ for closure in closures
     oprobs[closure] = ODEProblem(closed_eqs, u₀map, tspan, p)
     sol = solve(oprobs[closure], Tsit5(), saveat=0.1)
 
-    plt = plot!(plt, sol, vars=(0, 1), label = closure)    
+    plt = plot!(plt, sol, idxs=[1], label = closure)    
 end
 
 plt = plot!(plt, xlabel = "Time [h]", ylabel = "Mean p53 molecule number")

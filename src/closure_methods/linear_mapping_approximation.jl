@@ -1,6 +1,6 @@
 """
       linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars::Array{Int,1}=Int[], m_order::Int=0;
-                                   combinatoric_ratelaw = true) where T <: ReactionSystem
+                                   combinatoric_ratelaws = true) where T <: ReactionSystem
 
 Given a *nonlinear* [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 and an equivalent *linear* `ReactionSystem`, perform the Linear Mapping Approximation (LMA)
@@ -21,12 +21,12 @@ Notes:
 - By default the moment equations will be generated up to the order determined by the degree of nonlinearity
   of the nonlinear system's reactions. However, if higher order moment information is required, the optional
   `m_order` argument may be provided to increase the expansion order manually.
-- `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
+- `combinatoric_ratelaws=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
 """
 function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars::Array{Int,1}=Int[], m_order::Int=0;
-                                      combinatoric_ratelaw = true) where T <: ReactionSystem
+                                      combinatoric_ratelaws = true) where T <: ReactionSystem
 
       # check that all necessary information is provided and that LMA is applicable on the given nonlinear system
 
@@ -47,11 +47,11 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
       # apply LMA: substitute reaction parameters in the linear network moment equations to reflect
       # the nonlinear interactions according to the LMA methodology
 
-      term_factors, term_powers, poly_order = polynomial_propensities(propensities(rn_nonlinear; combinatoric_ratelaw)[nonlinear_rs_inds], 
+      term_factors, term_powers, poly_order = polynomial_propensities(propensities(rn_nonlinear; combinatoric_ratelaws)[nonlinear_rs_inds], 
                                                                       get_iv(rn_nonlinear), speciesmap(rn_nonlinear))
 
       order = iszero(m_order) ? poly_order : max(poly_order, m_order)
-      try sys = generate_raw_moment_eqs(rn_linear, order; combinatoric_ratelaw, smap=speciesmap(rn_nonlinear))
+      try sys = generate_raw_moment_eqs(rn_linear, order; combinatoric_ratelaws, smap=speciesmap(rn_nonlinear))
       catch e
             error("LMA cannot handle reactions with non-polynomial rates\n $e")
       end

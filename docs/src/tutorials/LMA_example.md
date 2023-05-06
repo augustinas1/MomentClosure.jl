@@ -20,20 +20,22 @@ using Catalyst
 # how the nonlinear reactions are to be transformed using LMA
 
 rn_nonlinear = @reaction_network begin
+      @parameters σ_b σ_u ρ_b ρ_u
       σ_b, g + p → 0
       σ_u*(1-g), 0 ⇒ g + p
       ρ_u, g → g + p
       ρ_b*(1-g), 0 ⇒ p
       1, p → 0
-end σ_b σ_u ρ_b ρ_u
+end 
 
 rn_linear = @reaction_network begin
+      @parameters σ_b_LMA σ_u ρ_b ρ_u
       σ_b_LMA, g → 0      # typing ̄σ_b is not allowed it seems
       σ_u*(1-g), 0 ⇒ g
       ρ_u, g → g+p
       (ρ_b*(1-g)), 0 ⇒ p
       1, p → 0
-end σ_b_LMA σ_u ρ_b ρ_u
+end 
 ```
 We can now apply the LMA to find the effective parameter $\bar{σ}_b$ and generate the corresponding moment equations of the linear GRN using MomentClosure's [`linear_mapping_approximation`](@ref):
 ```julia
@@ -45,7 +47,7 @@ using MomentClosure
 @variables g(t)
 binary_vars = [speciesmap(rn_nonlinear)[g]]
 
-LMA_eqs, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaw=false)
+LMA_eqs, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaws=false)
 display(effective_params)
 ```
 ```julia
@@ -79,7 +81,7 @@ u₀map = deterministic_IC(u₀, LMA_eqs)
 oprob_LMA = ODEProblem(LMA_eqs, u₀map, tspan, p)
 sol_LMA = solve(oprob_LMA, CVODE_BDF(), saveat=dt)
 
-plot(sol_LMA, vars=(0, [2]), label="LMA", ylabel="⟨p⟩", xlabel="time", fmt="svg")
+plot(sol_LMA, idxs=[2], label="LMA", ylabel="⟨p⟩", xlabel="time", fmt="svg")
 ```
 ![LMA feedback loop mean protein number](../assets/LMA_feedback_loop_mean_protein_number.svg)
 
@@ -141,11 +143,12 @@ As pointed out by the authors in [1], a more efficient way is to expand the gene
 However, TaylorSeries only supports elementary function operations at the time and hence evaluating the Kummer's function $M(\cdot,\cdot,\cdot)$ requires some more work (these specialised numerics are readily available in more established scientific computing frameworks such as Mathematica but there's no fun in that). We can extend the TaylorSeries framework by constructing a function `t_pFq` that implements a recurrence relation between the Taylor coefficients for the generalized hypergeometric function `pFq` as defined in [HypergeometricFunctions.jl](https://github.com/JuliaMath/HypergeometricFunctions.jl). This can be done as follows (note that our construction is valid only for a single-variable Taylor series [`Taylor1`](https://juliadiff.org/TaylorSeries.jl/stable/api/#TaylorSeries.Taylor1)):
 ```julia
 using TaylorSeries, HypergeometricFunctions
+using HypergeometricFunctions: pFqweniger
 
 # please let me know if a simpler and more efficient way to do this exists!
 function t_pFq(α::AbstractVector, β::AbstractVector, a::Taylor1)
     order = a.order
-    aux = pFq(α, β, constant_term(a))
+    aux = pFqweniger(α, β, constant_term(a))
     c = Taylor1(aux, order)
 
     iszero(order) && return c
@@ -170,13 +173,13 @@ oprob_LMA = remake(oprob_LMA, tspan=tspan)
 sol_LMA = solve(oprob_LMA, CVODE_BDF(), saveat=dt)
 
 # rebuild the symbolic expression for the effective parameter as a function of raw moments
-μ_sym = LMA_eqs.odes.states
-p_sub = Pair.(LMA_eqs.odes.ps, p)
+μ_sym = [LMA_eqs.odes.states...]
+p_sub = Dict.(Pair.(LMA_eqs.odes.ps, p)...)
 avg_σ_b_sym = collect(values(effective_params))[1]
 fn = build_function(substitute(avg_σ_b_sym, p_sub), μ_sym)
 avg_σ_b = eval(fn)
 # evaluate the time-averaged value of the effective parameter
-σ_b_avg = sum(avg_σ_b.(sol_LMA[:])) * dt / T
+@time σ_b_avg = sum(avg_σ_b.(sol_LMA.u)) * dt / T
 ```
 We proceed with the very last steps of the LMA to obtain the probability distribution:
 ```julia

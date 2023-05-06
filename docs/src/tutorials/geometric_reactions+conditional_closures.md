@@ -28,11 +28,12 @@ using MomentClosure, Catalyst, Distributions, JumpProcesses, DiffEqBase, Ordinar
 m = rand(Distributions.Geometric(1/(1+b)))
 
 rn = @reaction_network begin
+      @parameters k_on k_off k_p γ_p
       k_on*(1-g), 0 --> g  # G* -> G
       k_off*P^2, g --> 0   # G -> G*
       k_p, g --> g + $m*P  # G -> G + mP, m ~ Geometric(p)
       γ_p, P --> 0         # P -> ∅
-end k_on k_off k_p γ_p
+end
 ```
 We can now generate the raw moment equations up to third order:
 ```julia
@@ -40,62 +41,18 @@ eqs = generate_raw_moment_eqs(rn, 3)
 latexify(eqs)
 ```
 ```math
-
 \begin{align*}
-\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{on} \mu_{1 0} - k_{off} \mu_{1 2} \\
+\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{off} \mu_{1 2} - k_{on} \mu_{1 0} \\
 \frac{d\mu_{0 1}}{dt} =& b k_{p} \mu_{1 0} - \gamma_{p} \mu_{0 1} \\
-\frac{d\mu_{2 0}}{dt} =& k_{on} + k_{on} \mu_{1 0} + k_{off} \mu_{1 2} - 2 k_{on} \mu_{2 0} - 2 k_{off} \mu_{2 2} \\
-\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + b k_{p} \mu_{2 0} - k_{off} \mu_{1 3} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} \\
-\frac{d\mu_{0 2}}{dt} =& \gamma_{p} \mu_{0 1} + \frac{k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} + 2 b k_{p} \mu_{1 0} + b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} - k_{p} \mu_{1 0}}{b \left( \frac{1}{1 + b} \right)^{2} + \left( \frac{1}{1 + b} \right)^{2}} + 2 b k_{p} \mu_{1 1} - 2 \gamma_{p} \mu_{0 2} \\
-\frac{d\mu_{3 0}}{dt} =& k_{on} + 2 k_{on} \mu_{1 0} + 3 k_{off} \mu_{2 2} - k_{off} \mu_{1 2} - 3 k_{on} \mu_{3 0} - 3 k_{off} \mu_{3 2} \\
-\frac{d\mu_{2 1}}{dt} =& k_{off} \mu_{1 3} + k_{on} \mu_{0 1} + k_{on} \mu_{1 1} + b k_{p} \mu_{3 0} - 2 k_{off} \mu_{2 3} - \gamma_{p} \mu_{2 1} - 2 k_{on} \mu_{2 1} \\
-\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + \gamma_{p} \mu_{1 1} + \frac{k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{2 0} + 2 b k_{p} \mu_{2 0} + b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{2 0} - k_{p} \mu_{2 0}}{b \left( \frac{1}{1 + b} \right)^{2} + \left( \frac{1}{1 + b} \right)^{2}} + 2 b k_{p} \mu_{2 1} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} \\
-\frac{d\mu_{0 3}}{dt} =& \frac{3 k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 1} + 6 b k_{p} \mu_{1 1} + 3 b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 1} - 3 k_{p} \mu_{1 1}}{b \left( \frac{1}{1 + b} \right)^{2} + \left( \frac{1}{1 + b} \right)^{2}} + \frac{k_{p} \left( \frac{-1}{1 + b} \right)^{3} \mu_{1 0} + 6 b k_{p} \mu_{1 0} + 7 k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} + b k_{p} \left( \frac{-1}{1 + b} \right)^{3} \mu_{1 0} + 7 b k_{p} \left( \frac{-1}{1 + b} \right)^{2} \mu_{1 0} - 6 k_{p} \mu_{1 0}}{b \left( \frac{1}{1 + b} \right)^{3} + \left( \frac{1}{1 + b} \right)^{3}} + 3 \gamma_{p} \mu_{0 2} + 3 b k_{p} \mu_{1 2} - \gamma_{p} \mu_{0 1} - 3 \gamma_{p} \mu_{0 3}
+\frac{d\mu_{2 0}}{dt} =& k_{on} + k_{off} \mu_{1 2} + k_{on} \mu_{1 0} - 2 k_{on} \mu_{2 0} - 2 k_{off} \mu_{2 2} \\
+\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + b k_{p} \mu_{2 0} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} - k_{off} \mu_{1 3} \\
+\frac{d\mu_{0 2}}{dt} =& \gamma_{p} \mu_{0 1} + b k_{p} \mu_{1 0} + 2 b k_{p} \mu_{1 1} + 2 k_{p} b^{2} \mu_{1 0} - 2 \gamma_{p} \mu_{0 2} \\
+\frac{d\mu_{3 0}}{dt} =& k_{on} + 3 k_{off} \mu_{2 2} + 2 k_{on} \mu_{1 0} - k_{off} \mu_{1 2} - 3 k_{off} \mu_{3 2} - 3 k_{on} \mu_{3 0} \\
+\frac{d\mu_{2 1}}{dt} =& k_{on} \mu_{0 1} + k_{on} \mu_{1 1} + k_{off} \mu_{1 3} + b k_{p} \mu_{3 0} - 2 k_{on} \mu_{2 1} - \gamma_{p} \mu_{2 1} - 2 k_{off} \mu_{2 3} \\
+\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + \gamma_{p} \mu_{1 1} + b k_{p} \mu_{2 0} + 2 k_{p} b^{2} \mu_{2 0} + 2 b k_{p} \mu_{2 1} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} \\
+\frac{d\mu_{0 3}}{dt} =& b k_{p} \mu_{1 0} + 3 \gamma_{p} \mu_{0 2} + 3 b k_{p} \mu_{1 1} + 3 b k_{p} \mu_{1 2} + 6 k_{p} b^{2} \mu_{1 0} + 6 k_{p} b^{3} \mu_{1 0} + 6 k_{p} b^{2} \mu_{1 1} - \gamma_{p} \mu_{0 1} - 3 \gamma_{p} \mu_{0 3}
 \end{align*}
 ```
-Note that certain symbolic expressions have not been fully simplified: this happens as [Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl) used internally is not yet able to simplify more complicated fractions to the extent that is required here. For reference, the simplified moment equations take the form:
-```math
-\begin{align*}
-\frac{d\mu{_{10}}}{dt} =& k_{on} - k_{off} \mu{_{12}} - k_{on} \mu{_{10}} \\
-\frac{d\mu{_{01}}}{dt} =& b k_{p} \mu{_{10}} - \gamma_{p} \mu{_{01}} \\
-\frac{d\mu{_{20}}}{dt} =& k_{on} + k_{off} \mu{_{12}} + k_{on} \mu{_{10}} - 2 k_{off} \mu{_{22}} - 2 k_{on} \mu{_{20}} \\
-\frac{d\mu{_{11}}}{dt} =& k_{on} \mu{_{01}} + b k_{p} \mu{_{20}} - k_{off} \mu{_{13}} - k_{on} \mu{_{11}} - \gamma_{p} \mu{_{11}} \\
-\frac{d\mu{_{02}}}{dt} =& \gamma_{p} \mu{_{01}} + b k_{p} \mu{_{10}} + 2 b k_{p} \mu{_{11}} + 2 k_{p} \mu{_{10}} b^{2} - 2 \gamma_{p} \mu{_{02}} \\
-\frac{d\mu{_{30}}}{dt} =& k_{on} + 3 k_{off} \mu{_{22}} + 2 k_{on} \mu{_{10}} - k_{off} \mu{_{12}} - 3 k_{off} \mu{_{32}} - 3 k_{on} \mu{_{30}} \\
-\frac{d\mu{_{21}}}{dt} =& k_{off} \mu{_{13}} + k_{on} \mu{_{01}} + k_{on} \mu{_{11}} + b k_{p} \mu{_{30}} - 2 k_{off} \mu{_{23}} - 2 k_{on} \mu{_{21}} - \gamma_{p} \mu{_{21}} \\
-\frac{d\mu{_{12}}}{dt} =& k_{on} \mu{_{02}} + \gamma_{p} \mu{_{11}} + b k_{p} \mu{_{20}} + 2 b k_{p} \mu{_{21}} + 2 k_{p} \mu{_{20}} b^{2} - k_{off} \mu{_{14}} - k_{on} \mu{_{12}} - 2 \gamma_{p} \mu{_{12}} \\
-\frac{d\mu{_{03}}}{dt} =& b k_{p} \mu{_{10}} + 3 \gamma_{p} \mu{_{02}} + 3 b k_{p} \mu{_{11}} + 3 b k_{p} \mu{_{12}} + 6 k_{p} \mu{_{10}} b^{2} + 6 k_{p} \mu{_{10}} b^{3} + 6 k_{p} \mu{_{11}} b^{2} - \gamma_{p} \mu{_{01}} - 3 \gamma_{p} \mu{_{03}}
-\end{align*}
-```
-The fractions appeared in our equations as we defined the success probability $p$ of the geometric distribution as $p = \frac{1}{1+b}$. This could have been avoided by leaving $p$ in the symbolic expressions and substituting its numerical value expressed in terms of the mean $b$ later on. We proceed to do that and redefine the reaction system accordingly, making the moment equations easier to handle:
-```julia
-@parameters p
-m = rand(Distributions.Geometric(p))
-
-rn = @reaction_network begin
-      k_on*(1-g), 0 --> g
-      k_off*P^2, g --> 0*
-      k_p, g --> g + $m*P
-      γ_p, P --> 0
-end k_on k_off k_p γ_p
-
-eqs = generate_raw_moment_eqs(rn, 3)
-latexify(eqs)
-```
-```math
-\begin{align*}
-\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{on} \mu_{1 0} - k_{off} \mu_{1 2} \\
-\frac{d\mu_{0 1}}{dt} =& k_{p} p^{-1} \mu_{1 0} - k_{p} \mu_{1 0} - \gamma_{p} \mu_{0 1} \\
-\frac{d\mu_{2 0}}{dt} =& k_{on} + k_{on} \mu_{1 0} + k_{off} \mu_{1 2} - 2 k_{on} \mu_{2 0} - 2 k_{off} \mu_{2 2} \\
-\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + k_{p} p^{-1} \mu_{2 0} - k_{off} \mu_{1 3} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} - k_{p} \mu_{2 0} \\
-\frac{d\mu_{0 2}}{dt} =& k_{p} \mu_{1 0} + \gamma_{p} \mu_{0 1} + 2 k_{p} p^{-2} \mu_{1 0} + 2 k_{p} p^{-1} \mu_{1 1} - 2 k_{p} \mu_{1 1} - 2 \gamma_{p} \mu_{0 2} - 3 k_{p} p^{-1} \mu_{1 0} \\
-\frac{d\mu_{3 0}}{dt} =& k_{on} + 2 k_{on} \mu_{1 0} + 3 k_{off} \mu_{2 2} - k_{off} \mu_{1 2} - 3 k_{on} \mu_{3 0} - 3 k_{off} \mu_{3 2} \\
-\frac{d\mu_{2 1}}{dt} =& k_{off} \mu_{1 3} + k_{on} \mu_{0 1} + k_{on} \mu_{1 1} + k_{p} p^{-1} \mu_{3 0} - 2 k_{off} \mu_{2 3} - \gamma_{p} \mu_{2 1} - k_{p} \mu_{3 0} - 2 k_{on} \mu_{2 1} \\
-\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + \gamma_{p} \mu_{1 1} + k_{p} \mu_{2 0} + 2 k_{p} p^{-1} \mu_{2 1} + 2 k_{p} p^{-2} \mu_{2 0} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} - 2 k_{p} \mu_{2 1} - 3 k_{p} p^{-1} \mu_{2 0} \\
-\frac{d\mu_{0 3}}{dt} =& 3 k_{p} \mu_{1 1} + 3 \gamma_{p} \mu_{0 2} + 7 k_{p} p^{-1} \mu_{1 0} + 3 k_{p} p^{-1} \mu_{1 2} + 6 k_{p} p^{-3} \mu_{1 0} + 6 k_{p} p^{-2} \mu_{1 1} - \gamma_{p} \mu_{0 1} - k_{p} \mu_{1 0} - 3 k_{p} \mu_{1 2} - 3 \gamma_{p} \mu_{0 3} - 9 k_{p} p^{-1} \mu_{1 1} - 12 k_{p} p^{-2} \mu_{1 0}
-\end{align*}
-```
-
 A lot of information in this system of ODEs is redundant as the gene state is a Bernoulli variable that (in our case) has the following properties:
 ```math
 \begin{align*}
@@ -113,12 +70,12 @@ latexify(clean_eqs)
 ```
 ```math
 \begin{align*}
-\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{on} \mu_{1 0} - k_{off} \mu_{1 2} \\
-\frac{d\mu_{0 1}}{dt} =& k_{p} p^{-1} \mu_{1 0} - \gamma_{p} \mu_{0 1} - k_{p} \mu_{1 0} \\
-\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + k_{p} p^{-1} \mu_{1 0} - k_{off} \mu_{1 3} - k_{p} \mu_{1 0} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} \\
-\frac{d\mu_{0 2}}{dt} =& \gamma_{p} \mu_{0 1} + k_{p} \mu_{1 0} + 2 k_{p} p^{-2} \mu_{1 0} + 2 k_{p} p^{-1} \mu_{1 1} - 2 k_{p} \mu_{1 1} - 2 \gamma_{p} \mu_{0 2} - 3 k_{p} p^{-1} \mu_{1 0} \\
-\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + k_{p} \mu_{1 0} + \gamma_{p} \mu_{1 1} + 2 k_{p} p^{-2} \mu_{1 0} + 2 k_{p} p^{-1} \mu_{1 1} - 2 k_{p} \mu_{1 1} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} - 3 k_{p} p^{-1} \mu_{1 0} \\
-\frac{d\mu_{0 3}}{dt} =& 3 k_{p} \mu_{1 1} + 3 \gamma_{p} \mu_{0 2} + 7 k_{p} p^{-1} \mu_{1 0} + 3 k_{p} p^{-1} \mu_{1 2} + 6 k_{p} p^{-3} \mu_{1 0} + 6 k_{p} p^{-2} \mu_{1 1} - \gamma_{p} \mu_{0 1} - k_{p} \mu_{1 0} - 3 k_{p} \mu_{1 2} - 3 \gamma_{p} \mu_{0 3} - 9 k_{p} p^{-1} \mu_{1 1} - 12 k_{p} p^{-2} \mu_{1 0}
+\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{off} \mu_{1 2} - k_{on} \mu_{1 0} \\
+\frac{d\mu_{0 1}}{dt} =& b k_{p} \mu_{1 0} - \gamma_{p} \mu_{0 1} \\
+\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + b k_{p} \mu_{1 0} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} - k_{off} \mu_{1 3} \\
+\frac{d\mu_{0 2}}{dt} =& \gamma_{p} \mu_{0 1} + b k_{p} \mu_{1 0} + 2 b k_{p} \mu_{1 1} + 2 k_{p} b^{2} \mu_{1 0} - 2 \gamma_{p} \mu_{0 2} \\
+\frac{d\mu_{1 2}}{dt} =& k_{on} \mu_{0 2} + \gamma_{p} \mu_{1 1} + b k_{p} \mu_{1 0} + 2 b k_{p} \mu_{1 1} + 2 k_{p} b^{2} \mu_{1 0} - k_{off} \mu_{1 4} - k_{on} \mu_{1 2} - 2 \gamma_{p} \mu_{1 2} \\
+\frac{d\mu_{0 3}}{dt} =& b k_{p} \mu_{1 0} + 3 \gamma_{p} \mu_{0 2} + 3 b k_{p} \mu_{1 1} + 3 b k_{p} \mu_{1 2} + 6 k_{p} b^{2} \mu_{1 0} + 6 k_{p} b^{3} \mu_{1 0} + 6 k_{p} b^{2} \mu_{1 1} - \gamma_{p} \mu_{0 1} - 3 \gamma_{p} \mu_{0 3}
 \end{align*}
 ```
 The system of ODEs is now much simpler and we can see that there are two higher-order moments we need to truncate: $\mu_{13}$ and $μ_{14}$. We consider normal, derivative matching, conditional gaussian and conditional derivative matching closures to see how well they compare. First we apply different closures and print out the corresponding higher-order moment expressions in order to check that our results are consistent with those published in [1].
@@ -143,8 +100,8 @@ latexify(dm_eqs, :closure)
 ```
 ```math
 \begin{align*}
-\mu{_{13}} =& \mu{_{03}} \mu{_{10}} \mu{_{01}}^{3} \mu{_{02}}^{-3} \mu{_{11}}^{-3} \mu{_{12}}^{3} \\
-\mu{_{14}} =& \mu{_{04}} \mu{_{01}}^{-4} \mu{_{02}}^{6} \mu{_{03}}^{-4} \mu{_{10}}^{-1} \mu{_{11}}^{4} \mu{_{12}}^{-6} \mu{_{13}}^{4}
+\mu_{1 3} =& \frac{\mu_{0 1}^{3} \mu_{1 2}^{3} \mu_{0 3} \mu_{1 0}}{\mu_{0 2}^{3} \mu_{1 1}^{3}} \\
+\mu_{1 4} =& \frac{\mu_{0 2}^{6} \mu_{1 1}^{4} \mu_{1 3}^{4} \mu_{0 4}}{\mu_{0 1}^{4} \mu_{0 3}^{4} \mu_{1 2}^{6} \mu_{1 0}}
 \end{align*}
 ```
 For conditional gaussian closure:
@@ -154,8 +111,8 @@ latexify(cond_gaussian_eqs, :closure)
 ```
 ```math
 \begin{align*}
-\mu{_{13}} =& 3 \mu{_{11}} \mu{_{12}} \mu{_{10}}^{-1} - 2 \mu{_{10}}^{-2} \mu{_{11}}^{3} \\
-\mu{_{14}} =& 3 \mu{_{10}}^{-1} \mu{_{12}}^{2} + 6 \mu{_{10}}^{-3} \mu{_{11}}^{4} + 4 \mu{_{11}} \mu{_{13}} \mu{_{10}}^{-1} - 12 \mu{_{12}} \mu{_{10}}^{-2} \mu{_{11}}^{2}
+\mu_{1 3} =& \frac{-2 \mu_{1 1}^{3}}{\mu_{1 0}^{2}} + \frac{3 \mu_{1 1} \mu_{1 2}}{\mu_{1 0}} \\
+\mu_{1 4} =& \frac{3 \mu_{1 2}^{2}}{\mu_{1 0}} + \frac{6 \mu_{1 1}^{4}}{\mu_{1 0}^{3}} + \frac{-12 \mu_{1 1}^{2} \mu_{1 2}}{\mu_{1 0}^{2}} + \frac{4 \mu_{1 1} \mu_{1 3}}{\mu_{1 0}}
 \end{align*}
 ```
 And, finally, for conditional derivative matching:
@@ -165,15 +122,14 @@ latexify(cond_dm_eqs, :closure)
 ```
 ```math
 \begin{align*}
-\mu{_{13}} =& \mu{_{10}} \mu{_{11}}^{-3} \mu{_{12}}^{3} \\
-\mu{_{14}} =& \mu{_{10}}^{-1} \mu{_{11}}^{4} \mu{_{12}}^{-6} \mu{_{13}}^{4}
+\mu_{1 3} =& \frac{\mu_{0 1}^{3} \mu_{1 2}^{3} \mu_{0 3} \mu_{1 0}}{\mu_{0 2}^{3} \mu_{1 1}^{3}} \\
+\mu_{1 4} =& \frac{\mu_{0 2}^{6} \mu_{1 1}^{4} \mu_{1 3}^{4} \mu_{0 4}}{\mu_{0 1}^{4} \mu_{0 3}^{4} \mu_{1 2}^{6} \mu_{1 0}}
 \end{align*}
 ```
 All these results are consistent with [1], reassuring that the model and closures are implemented as intended. Finally, we can proceed to solve the resulting ODEs and compare the resulting means and standard deviations to the SSA. Following Soltani et al. [1], we define all model parameters as:
 ```julia
 mean_p = 200
 mean_b = 70
-p_val = 1/(1+mean_b) # note we use p = 1/(1+b)
 γ_p_val = 1
 k_off_val = 0.001
 k_on_val = 0.05
@@ -184,7 +140,7 @@ symmap = [:k_on => k_on_val,
           :k_off => k_off_val,
           :k_p => k_p_val,
           :γ_p => γ_p_val,
-          :p => p_val]
+          :b => mean_b]
 pmap = symmap_to_varmap(rn, symmap)
 
 # initial gene state and protein number, order [g, p]
@@ -234,7 +190,7 @@ for closure in ["normal", "derivative matching",
 
     # μ₀₁ is 2nd and μ₀₂ is 4th element in sol
     # can check the order with `closed_eqs.odes.states`
-    plt_m = plot!(plt_m, sol, vars=(0, 2), label=closure)
+    plt_m = plot!(plt_m, sol, idxs=[2], label=closure)
     plt_std = plot!(plt_std, sol.t, sqrt.(sol[4, :] .- sol[2, :].^2), label=closure)
 
 end
@@ -267,6 +223,7 @@ l = rand(Distributions.Geometric(1/(1+b_y)))
 # g_y - gene state of Y protein producing gene
 # x, y - proteins X and Y
 rn = @reaction_network begin
+      @parameters kx_on kx_off ky_on ky_off k_x γ_x k_y γ_y
       kx_on*(1-g_x)*y, 0 --> g_x  # 0   -> g_x
       kx_off,          g_x --> 0  # g_x -> 0
       ky_on*(1-g_y),   0 --> g_y  # 0 -> g_y
@@ -275,7 +232,7 @@ rn = @reaction_network begin
       γ_x,             x --> 0    # x -> 0
       k_y*g_y,         0 --> $l*y # 0 -> ly, l ~ Geometric(mean_b_y)
       γ_y,             y --> 0    # y -> 0
-end kx_on kx_off ky_on ky_off k_x γ_x k_y γ_y
+end
 
 # both g_x and g_y are Bernoulli random variables
 binary_vars = [1, 2]
@@ -351,7 +308,7 @@ for closure in ["derivative matching", "conditional derivative matching"]
     sol = solve(oprob, Tsit5(), saveat=0.1)
 
     # μ₀₀₀₁ is the 4th and μ₀₀₀₂ is the 12th element in sol (can check with closed_eqs.odes.states)
-    plt_m = plot!(plt_m, sol, vars=(0, 4), label=closure)
+    plt_m = plot!(plt_m, sol, idxs=[4], label=closure)
     plt_std = plot!(plt_std, sol.t, sqrt.(sol[12, :] .- sol[4, :].^2), label=closure)
 end
 

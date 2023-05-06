@@ -183,7 +183,7 @@ function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
             end
             suma += term
         end
-        raw_to_central[i] = simplify(suma)
+        raw_to_central[i] = simplify(suma, simplify_fractions=false)
     end
 
     raw_to_central
@@ -217,7 +217,7 @@ function central_to_raw_moments(N::Int, order::Int)
             end
             suma += term
         end
-        central_to_raw[i] = simplify(suma)
+        central_to_raw[i] = simplify(suma, simplify_fractions=false)
     end
 
     central_to_raw

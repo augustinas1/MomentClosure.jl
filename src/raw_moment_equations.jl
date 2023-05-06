@@ -1,6 +1,6 @@
 """
     generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
-                            langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
+                            langevin::Bool=false, combinatoric_ratelaws::Bool=true, smap=speciesmap(rn))
 
 Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
 return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
@@ -13,7 +13,7 @@ Notes:
 - if `langevin=true`, instead of the Chemical Master Equation the Chemical Langevin
   Equation (diffusion approximation) is considered, and the moment equations are 
   constructed from the corresponding SDE formulation.
-- `combinatoric_ratelaw=true` uses binomials in calculating the propensity functions
+- `combinatoric_ratelaws=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
   (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
   *Note* that this field is irrelevant using `ReactionSystemMod` as then the
@@ -23,13 +23,12 @@ Notes:
   accessible with [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap).
 """
 function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
-                                 langevin::Bool=false, combinatoric_ratelaw::Bool=true, smap=speciesmap(rn))
+                                 langevin::Bool=false, combinatoric_ratelaws::Bool=true, smap=speciesmap(rn))
     
     iv = get_iv(rn)
     N = numspecies(rn)
     S = get_stoichiometry(rn, smap)
-    a = propensities(rn; combinatoric_ratelaw)
-    a = div_to_pow.(a) # NOTE: more stable at the moment than dealing with symbolic fractions
+    a = propensities(rn; combinatoric_ratelaws)
 
     if langevin
         drift = S*a
@@ -72,7 +71,7 @@ function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
                 dμ[i] += factor_j * suma
             end
         end
-        dμ[i] = expand(dμ[i])
+        dμ[i] = expand_expr(dμ[i])
     end
 
     D = Differential(iv)

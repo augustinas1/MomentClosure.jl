@@ -7,11 +7,12 @@ using SciMLBase, SciMLBase.EnsembleAnalysis
 using Random
 using Distributions: Geometric
 
-using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, gradient, setmetadata, scalarize
+using Symbolics: value, var_from_nested_derivative, map_subscripts, hessian, 
+				 gradient, setmetadata, scalarize
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
-using SymbolicUtils: Symbolic, Term, Real, expand, simplify, operation,
-					 arguments, @rule, @acrule, isnotflat, flatten_term,
-					 istree, FnType, Mul, Add, Pow, Div
+using SymbolicUtils: BasicSymbolic, Real, Term, FnType, expand, simplify, 
+					 operation, arguments, @rule, @acrule, isnotflat, flatten_term,
+					 istree, isterm, ismul, isadd, ispow, isdiv
 
 using DataStructures: OrderedDict
 using TupleTools: sort
