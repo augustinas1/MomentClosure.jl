@@ -5,7 +5,7 @@ function multi_binomial(a, b)
     if length(a) != length(b)
         throw(ErrorException("vector lengths are different for some reason"))
     else
-        C = prod([binomial(a[i], b[i]) for i in 1:length(a)])
+        C = prod([binomial(a[i], b[i]) for i in eachindex(a)])
         return C
     end
 end

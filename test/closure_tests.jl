@@ -1,6 +1,7 @@
 using MomentClosure
 using MomentClosure: define_M, define_μ
 using Symbolics: value, expand
+using SymbolicUtils: Fixpoint
 using Test
 using Catalyst
 
@@ -37,7 +38,7 @@ closed_eqs= moment_closure(sys, "log-normal")
 expr1 = closed_eqs.closure[M[1,2]]
 expr2 = μ[1,0]*μ[0,1]^2*(1.0+M[0,2]*μ[0,1]^-2)*(1.0 + M[1,1]*(μ[0,1]^-1)*(μ[1,0]^-1))^2 -
         M[0,2]*μ[1,0] - μ[1,0]*μ[0,1]^2 - 2*M[1,1]*μ[0,1]
-@test isequal(expr1, simplify(expand(expr2)))
+@test isequal(Fixpoint(simplify)(expr1), Fixpoint(simplify)(expr2))
 
 closed_eqs = moment_closure(sys, "poisson")
 @test isequal(closed_eqs.closure[M[3,0]], μ[1,0])
@@ -52,7 +53,7 @@ closed_eqs = moment_closure(sys, "derivative matching")
 expr1 = closed_eqs.closure[sys.M[0,4]]
 expr2 = μ[0,1]^4*(M[0,2]+μ[0,1]^2)^-6*(M[0,3]+μ[0,1]^3+3*M[0,2]*μ[0,1])^4 - μ[0,1]^4 -
     6*M[0,2]*μ[0,1]^2 - 4*M[0,3]*μ[0,1]
-@test isequal(expand(expr1), expand(simplify(expr2)))
+@test isequal(simplify(expr1), simplify(expr2))
 
 # --- Test closures on raw moment equations ---
 

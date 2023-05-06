@@ -70,8 +70,8 @@ expr1 = expand(closed_eqs.closure[M[0,5]])
 expr2 = 10*M[0,2]*M[0,3] + 5*M[0,4]*μ[0,1] - 15*μ[0,1]*M[0,2]^2
 @test isequal(expr1, expr2)
 
-closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
+@time closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
 expr1 = closed_eqs.closure[M[1,3]]
 expr2 = μ[1,0]*(M[1,1]+μ[0,1]*μ[1,0])^-3*(M[1,2]+M[0,2]*μ[1,0]+μ[1,0]*μ[0,1]^2+2*M[1,1]*μ[0,1])^3 -
     M[0,3]*μ[1,0] - 3*M[1,1]*μ[0,1]^2 - 3*M[1,2]*μ[0,1] - μ[1,0]*μ[0,1]^3- 3*M[0,2]*μ[0,1]*μ[1,0]
-@test isequal(expr1, simplify(expr2))
+@test isequal(simplify(expr1), simplify(expr2))

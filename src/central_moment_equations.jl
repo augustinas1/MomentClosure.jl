@@ -116,9 +116,7 @@ function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::
         suma = 0
         for j in iter_all
             suma = suma + Da[r][j]*M[j]*1//fact(j)
-            #suma = simplify(suma)
             # here // gives fractions (otherwise it's a float number)
-            # only issue is that it does not latexify properly
         end
 
         for i in 1:N
@@ -127,7 +125,7 @@ function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::
             else
                 du[i] = S[i, r]*suma + du[i]
             end
-            du[i] = simplify(du[i])
+            du[i] = expand_expr(du[i])
         end
     end
 
@@ -157,7 +155,7 @@ function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::
                 dM[i] -= i[j]*du[j]*M[i.-iter_1[j]]
             end
         end
-        dM[i] = simplify(dM[i])
+        dM[i] = expand_expr(dM[i])
     end
 
     D = Differential(iv)

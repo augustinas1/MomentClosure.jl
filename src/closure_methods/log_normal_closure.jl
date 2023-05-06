@@ -1,7 +1,7 @@
 function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
 
     closure = OrderedDict()
-    closure_exp = OrderedDict() # here it does not play a role
+    closure_exp = OrderedDict()
     N = sys.N
 
     if isempty(binary_vars)
@@ -76,9 +76,9 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[
         central_to_raw = central_to_raw_moments(N, sys.q_order)
         closure_M = OrderedDict()
         for i in sys.iter_q
-            closure_exp[M[i]] = raw_to_central[i]
+            closure_exp[M[i]] = expand_mod(raw_to_central[i])
             closure_M[M[i]] = closure[μ_symbolic[i]]-(central_to_raw[i]-M[i])
-            closure_M[M[i]] = simplify(closure_M[M[i]])
+            closure_M[M[i]] = expand_mod(closure_M[M[i]])
         end
         closure = closure_M
     else

@@ -19,13 +19,11 @@ end
 # Trim a string of form "(a, b, c, d, ...)" to "abcd..."
 trim_key(expr) = filter(x -> !(isspace(x) || x == ')' || x== '(' || x==','), string(expr))
 
-# Expand a symbolic expression (no binomial expansion)
-expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys)) # apply distribution law
-expand_mod = Fixpoint(Prewalk(PassThrough(expansion_rule_mod))) # distributes terms until no longer possible
-flatten_rule_mod = @rule(~x::isnotflat(+) => flatten_term(+, ~x)) #
-flatten_mod = Fixpoint(PassThrough(flatten_rule_mod)) #
-expand_expr = Fixpoint(PassThrough(Chain([expand_mod, flatten_mod]))) # apply flatten and distribution until no longer possible
-expand_div = PassThrough(@acrule( +(~~xs) / ~a => sum(map(x -> x / ~a, ~~xs))))
+# Symbolic rules to expand expressions avoiding binomial expansion and fraction simplification
+expansion_rule_mod = @acrule ~x * +(~~ys) => sum(map(y-> ~x * y, ~~ys))
+expand_expr = Fixpoint(Prewalk(PassThrough(expansion_rule_mod)))
+expand_div = Fixpoint(Prewalk(PassThrough(@rule( +(~~xs) / ~a => sum(map(x -> x / ~a, ~~xs) )))))
+expand_mod = Fixpoint(Chain([expand_div, expand_expr]))
 
 function define_μ(iter::AbstractVector, iv::BasicSymbolic)
 

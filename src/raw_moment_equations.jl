@@ -71,7 +71,7 @@ function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
                 dμ[i] += factor_j * suma
             end
         end
-        dμ[i] = simplify(dμ[i])
+        dμ[i] = expand_expr(dμ[i])
     end
 
     D = Differential(iv)

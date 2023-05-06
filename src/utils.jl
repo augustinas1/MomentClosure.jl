@@ -307,7 +307,7 @@ function format_moment_eqs(eqs::MomentEquations)
     for i in 1:size(odes)[1]
         key = vars[i]
         eq = odes[i].rhs
-        eq = expand_div(eq)
+        eq = expand_mod(eq)
         expr = "d"*string(key)*"/dt = "*string(eq)
         expr = replace(expr, "(t)"=>"")
         expr = replace(expr, ".0"=>"")
@@ -342,7 +342,7 @@ function format_closure(eqs::ClosedMomentEquations; format_all::Bool=false)
 
     for i in iter
         eq = closure[i]
-        eq = expand_div(eq)
+        eq = expand_mod(eq)
         expr = string(i)*" = "*string(eq)
         expr = replace(expr, "(t)"=>"")
         expr = replace(expr, ".0"=>"")

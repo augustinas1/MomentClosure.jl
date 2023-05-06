@@ -185,12 +185,12 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         for i in sys.iter_q
             closure_exp[sys.μ[i]] = substitute(μ[i], M_to_μ)
             expr = substitute(closure[sys.μ[i]], M_to_μ)
-            closure[sys.μ[i]] = simplify(expr)
+            closure[sys.μ[i]] = simplify(expr, simplify_fractions=false)
         end
     end
 
     if isempty(binary_vars)
-        return close_eqs(sys, closure_exp, closure, true)
+        return close_eqs(sys, closure_exp, closure, false)
     else
         # have to perform the bernoulli simplify in the end for gamma closure
         # as otherwise some symbolic terms do not cancel out and break it
@@ -204,7 +204,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
                 closed_rhs = substitute(eq.rhs, closure_exp)
                 closed_rhs = expand(closed_rhs)
                 closed_rhs = substitute(closed_rhs, iter_sub)
-                closed_rhs = simplify(closed_rhs)
+                closed_rhs = simplify(closed_rhs, simplify_fractions=false)
 
                 push!(closed_eqs, Equation(eq.lhs, closed_rhs))
 
