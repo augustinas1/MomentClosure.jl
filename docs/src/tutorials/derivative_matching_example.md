@@ -12,9 +12,10 @@ The reaction network and its parameters can be defined as follows:
 using Catalyst
 
 rn = @reaction_network begin
+    @parameters c₁ c₂
     (c₁), x₁ → 2x₁+x₂
     (c₂), x₁+x₂ → x₂
-end c₁ c₂
+end
 
 # parameter values
 p = [1.0, 1.0]
@@ -133,7 +134,7 @@ true
 ```
 The last ingredient we need for a proper comparison between the second and third order moment expansions is a reference value predicted by the SSA. We can simulate $10^5$ SSA trajectories as follows:
 ```julia
-using DiffEqJump
+using JumpProcesses
 
 dprob = DiscreteProblem(rn, u0, tspan, p)
 jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))

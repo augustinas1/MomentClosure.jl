@@ -19,10 +19,11 @@ The terminology and the notation used throughout is consistent with the **Theory
 using Catalyst
 rn = @reaction_network begin
   # including system-size parameter Ω
+  @parameters c₁ c₂ c₃ c₄ Ω
   (c₁/Ω^2), 2X + Y → 3X
   (c₂), X → Y
   (c₃*Ω, c₄), 0 ↔ X
-end c₁ c₂ c₃ c₄ Ω
+end
 ```
 The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using [`Catalyst.netstoichmat`](https://catalyst.sciml.ai/dev/api/catalyst_api/#Catalyst.netstoichmat) and MomentClosure function [`propensities`](@ref) respectively.
 
@@ -37,7 +38,7 @@ We can now obtain the moment equations. The system follows the law of mass actio
 Let's start with the raw moment equations which we choose to generate up to second order ($m=2$):
 ```julia
 using MomentClosure
-raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 ```
 Note that we have set `combinatoric_ratelaw=false` in order to ignore the factorial scaling factors which [Catalyst adds to mass-action reactions](https://catalyst.sciml.ai/stable/tutorials/models/#Reaction-rate-laws-used-in-simulations). The function [`generate_raw_moment_eqs`](@ref) returns an instance of [`RawMomentEquations`](@ref MomentClosure.RawMomentEquations) that contains a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) composed of all the moment equations (accessed by `raw_eqs.odes`).
 
@@ -75,7 +76,7 @@ Coming back to the generated moment equations, we observe that they depend on hi
 
 The corresponding central moment equations can also be easily generated:
 ```julia
-central_eqs = generate_central_moment_eqs(rn, 2, combinatoric_ratelaw=false)
+central_eqs = generate_central_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 ```
 Note that in case of non-polynomial propensity functions the [Taylor expansion order $q$](@ref central_moment_eqs) must also be specified, see the [P53 system example](P53_system_example.md) for more details. Luckily, the Brusselator contains only mass-action reactions and hence $q$ is automatically determined by the highest order (polynomial) propensity. The function [`generate_central_moment_eqs`](@ref) returns an instance of [`CentralMomentEquations`](@ref MomentClosure.CentralMomentEquations). As before, we can visualise the central moment equations:
 ```julia
@@ -189,7 +190,7 @@ using OrdinaryDiffEq
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 using Plots
-plot(sol, vars=(0, [1,2]), lw=2)
+plot(sol, idxs=[1,2], lw=2)
 ```
 ![Brusselator means 1](../assets/brusselator_means_1.svg)
 
@@ -213,7 +214,7 @@ dprob = DiscreteProblem(jsys, u₀, tspan, p) # same parameters as defined earli
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 
 # define an EnsembleProblem to simulate multiple trajectories
-ensembleprob  = EnsembleProblem(jprob)
+ensembleprob = EnsembleProblem(jprob)
 
 # simulate 10000 SSA trajectories
 @time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.1, trajectories=10000)
