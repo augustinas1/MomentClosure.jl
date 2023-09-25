@@ -21,34 +21,21 @@ clean_eqs = bernoulli_moment_eqs(raw_eqs, binary_vars)
 closed_raw_eqs = moment_closure(raw_eqs, "conditional gaussian", binary_vars)
 
 # latexify output is very sensitive to Julia version and latexify + Symbolics updates...
-# NOTE: implementing a lazy test to avoid that
-#=
-expr = replace(raw"\begin{align*}
-\frac{d\mu_{1 0}}{dt} =& k_{on} - k_{on} \mu_{1 0} - k_{off} \mu_{1 2} \\
-\frac{d\mu_{0 1}}{dt} =& k_{p} p^{-1} \mu_{1 0} - \gamma_{p} \mu_{0 1} - k_{p} \mu_{1 0} \\
-\frac{d\mu_{1 1}}{dt} =& k_{on} \mu_{0 1} + k_{p} p^{-1} \mu_{1 0} - k_{p} \mu_{1 0} - k_{off} \mu_{1 3} - k_{on} \mu_{1 1} - \gamma_{p} \mu_{1 1} \\
-\frac{d\mu_{0 2}}{dt} =& \gamma_{p} \mu_{0 1} + k_{p} \mu_{1 0} + 2 k_{p} p^{-2} \mu_{1 0} + 2 k_{p} p^{-1} \mu_{1 1} - 2 k_{p} \mu_{1 1} - 2 \gamma_{p} \mu_{0 2} - 3 k_{p} p^{-1} \mu_{1 0}
-\end{align*}
-", "\r\n"=>"\n")
-exprl = latexify(clean_eqs)
-@test exprl == expr1 || exprl == expr2
-=#
 expr = replace(raw"\begin{align*}
 \frac{d\mu_{1 0}}{dt} =& k_{on}", "\r\n"=>"\n")
 @test latexify(clean_eqs)[1:46] == expr
 
-#=
-expr = replace(raw"\begin{align*}
-\mu_{1 2} =& \mu_{1 0}^{-1} \mu_{1 1}^{2} \\
-\mu_{1 3} =& 3 \mu_{1 0}^{-1} \mu_{1 1} \mu_{1 2} - 2 \mu_{1 0}^{-2} \mu_{1 1}^{3}
+expr1 = replace(raw"\begin{align*}
+\mu_{1 2} =& \frac{\mu_{1 1}^{2}}{\mu_{1 0}} \\
+\mu_{1 3} =& \frac{3 \mu_{1 2} \mu_{1 1}}{\mu_{1 0}} + \frac{-2 \mu_{1 1}^{3}}{\mu_{1 0}^{2}}
 \end{align*}
 ", "\r\n"=>"\n")
-=#
-expr = replace(raw"\begin{align*}
+expr2 = replace(raw"\begin{align*}
 \mu_{1 2} =& \frac{\mu_{1 1}^{2}}{\mu_{1 0}} \\
 \mu_{1 3} =& \frac{-2 \mu_{1 1}^{3}}{\mu_{1 0}^{2}} + \frac{3 \mu_{1 1} \mu_{1 2}}{\mu_{1 0}}
 \end{align*}
 ", "\r\n"=>"\n")
-@test latexify(closed_raw_eqs, :closure) == expr
+exprl = latexify(closed_raw_eqs, :closure)
+@test (exprl == expr1) || (exprl == expr2)
 
 @test_throws MethodError latexify(raw_eqs, :closure)
