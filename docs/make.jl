@@ -7,8 +7,9 @@ makedocs(;
     repo="https://github.com/augustinas1/MomentClosure.jl/blob/{commit}{path}#L{line}",
     sitename="MomentClosure.jl",
     doctest=false,
+    warnonly = [:docs_block, :missing_docs, :cross_references],
     format=Documenter.HTML(;
-        mathengine=Documenter.Writers.HTMLWriter.MathJax2(),
+        mathengine=Documenter.Writers.HTMLWriter.MathJax3(),
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://augustinas1.github.io/MomentClosure.jl",
         assets=String[],
