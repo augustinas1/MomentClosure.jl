@@ -29,7 +29,7 @@ Latexify = "0.15.14, 0.16"
 ModelingToolkit = "8"
 SciMLBase = "1.8.3, 2"
 SymbolicUtils = "1"
-Symbolics = "5"
+Symbolics = "5, 6"
 TupleTools = "1.2.0"
 julia = "1.6"
 
