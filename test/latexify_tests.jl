@@ -36,6 +36,8 @@ expr2 = replace(raw"\begin{align*}
 \end{align*}
 ", "\r\n"=>"\n")
 exprl = latexify(closed_raw_eqs, :closure)
+@show expr1
+@show exprl
 @test (exprl == expr1) || (exprl == expr2)
 
 @test_throws MethodError latexify(raw_eqs, :closure)

@@ -121,7 +121,7 @@ isvar(x, vars) = any(isequal(x), vars)
     is the independent variable
 """
 
-isconstant(expr, vars, iv) = !istree(expr) || (!isvar(expr, vars) && all(arg -> isconstant(arg, vars, iv), arguments(expr)))
+isconstant(expr, vars, iv) = !iscall(expr) || (!isvar(expr, vars) && all(arg -> isconstant(arg, vars, iv), arguments(expr)))
 
 function split_factor_pow(expr, iv, vars)
     base, exp = arguments(expr)
@@ -213,7 +213,7 @@ function polynomial_propensities(arr::AbstractArray, iv::BasicSymbolic, smap::Ab
     all_powers = Array{Vector{Vector{Int}}}(undef, size(arr))
 
     for (rind, expr) in enumerate(arr)
-        expr = expand(expr)
+        @show expr = expand(expr)
         all_factors[rind], all_powers[rind] = polynomial_propensity(expr, iv, vars)
     end
 

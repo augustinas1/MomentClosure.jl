@@ -2,8 +2,7 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
                    closure::OrderedDict, polynorm::Bool)
 
     closed_eqs = Equation[]
-    for eq in sys.odes.eqs
-
+    for eq in get_eqs(sys.odes)
         closed_rhs = substitute(eq.rhs, closure_exp)
         # apply binomial expansion on the expressions
         if polynorm # depending on the functional form
@@ -17,7 +16,7 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
     iv = get_iv(sys.odes)
     ps = get_ps(sys.odes)
     
-    vars = states(sys.odes)[1:(length(sys.iter_1)+length(sys.iter_m))]
+    vars = unknowns(sys.odes)[1:(length(sys.iter_1)+length(sys.iter_m))]
 
     odename = Symbol(nameof(sys), "_closed")
     odes = ODESystem(closed_eqs, iv, vars, ps; name=odename)

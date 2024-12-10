@@ -1,7 +1,7 @@
 module MomentClosure
 
 using ModelingToolkit
-using ModelingToolkit: get_noiseeqs, states, get_eqs, get_iv, get_ps
+using ModelingToolkit: get_noiseeqs, unknowns, get_eqs, get_iv, get_ps
 using Catalyst
 using SciMLBase, SciMLBase.EnsembleAnalysis
 using Random

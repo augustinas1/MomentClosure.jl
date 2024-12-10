@@ -35,7 +35,7 @@ function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
         diff = Num[S[i,k] * a[k]^(1//2) for i in 1:N, k in eachindex(a)]
         
         return generate_raw_moment_eqs(Equation[Differential(iv)(s) ~ d for (s, d) in zip(species(rn), drift)], 
-                                       diff, m_order, states(rn), nameof(rn), parameters(rn), iv)
+                                       diff, m_order, unknowns(rn), nameof(rn), parameters(rn), iv)
     
     end
         

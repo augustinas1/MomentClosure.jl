@@ -84,7 +84,7 @@ function bernoulli_moment_eqs(sys::MomentEquations, binary_vars::Array{Int,1})
 
     # construct the cleaned moment equations
     clean_eqs = Equation[]
-    for (i, eq) in enumerate(sys.odes.eqs)
+    for (i, eq) in enumerate(get_eqs(sys.odes))
         if !(i in redundant_eqs)
             clean_rhs = substitute(eq.rhs, iter_sub)
             clean_rhs = expand(clean_rhs)

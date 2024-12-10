@@ -19,6 +19,9 @@ smap = Dict([x => 1, y => 2])
 
 expr = x*y + y^2
 fcs, pwrs, mpwr = polynomial_propensities([expr], t, smap)
+@show fcs[1]
+@show pwrs
+@show mpwr
 @test fcs[1] == [1., 1.] && pwrs[1] == [[1, 1], [0, 2]] && mpwr == 2
 
 expr = x*(x^2+y) / (c+2)
