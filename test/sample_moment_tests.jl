@@ -15,7 +15,7 @@ u₀    = [9, 1, 0]
 tspan = (0.0, 50.0)
 dprob = DiscreteProblem(u₀, tspan, p)
 jprob = JumpProblem(dprob, Direct(), maj, save_positions=(false, false))
-@time sol   = solve(EnsembleProblem(jprob), saveat=25., SSAStepper(), trajectories=100)
+@time sol   = solve(EnsembleProblem(jprob), saveat=25., SSAStepper(), trajectories=200)
 
 μ_1 = get_raw_moments(sol, 2)
 μ_2 = get_raw_moments(sol, 2, naive=false, b=3)
@@ -40,6 +40,5 @@ inds = [ind .* 2 for ind in inds]
 @test isapprox(μ[(1, 1, 0)] .- μ[(0, 1, 0)].*μ[(1,0,0)], M[(1, 1, 0)])
 @test isapprox(μ[(1, 0, 1)] .- μ[(1, 0, 0)].*μ[(0,0,1)], M[(1, 0, 1)])
 
-inds = gen_iter(3, 1)
-@test all(isapprox(μ[i], κ[i]) for i in gen_iter(3,1))
+@test all(isapprox(μ[i], κ[i]) for i in gen_iter(3, 1))
 @test all(isapprox(M[i], κ[i]) for i in gen_iter(3, 2))
