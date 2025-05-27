@@ -46,13 +46,8 @@ function define_μ(iter::AbstractVector, iv::BasicSymbolic)
 
 end
 
-define_μ(N::Int, order::Int, iv::BasicSymbolic) = define_μ(construct_iter_all(N, order), iv)
-
-function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order))
-    @parameters t
-    return define_μ(iter, value(t))
-end
-
+define_μ(iter::AbstractVector, iv::Num=default_t()) = define_μ(iter, value(iv))
+define_μ(N::Int, order::Int, iv=default_t()) = define_μ(construct_iter_all(N, order), iv)
 
 function define_M(iter::AbstractVector, iv::BasicSymbolic)
 
@@ -77,12 +72,8 @@ function define_M(iter::AbstractVector, iv::BasicSymbolic)
 
 end
 
-define_M(N::Int, order::Int, iv::BasicSymbolic) = define_M(construct_iter_all(N, order), iv)
-
-function define_M(N::Int, order::Int, iter = construct_iter_all(N, order))
-    @parameters t
-    return define_M(iter, value(t))
-end
+define_M(iter::AbstractVector, iv::Num=default_t()) = define_M(iter, value(iv))
+define_M(N::Int, order::Int, iv=default_t()) = define_M(construct_iter_all(N, order), iv)
 
 function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
 
@@ -213,7 +204,7 @@ function polynomial_propensities(arr::AbstractArray, iv::BasicSymbolic, smap::Ab
     all_powers = Array{Vector{Vector{Int}}}(undef, size(arr))
 
     for (rind, expr) in enumerate(arr)
-        @show expr = expand(expr)
+        expr = expand(expr)
         all_factors[rind], all_powers[rind] = polynomial_propensity(expr, iv, vars)
     end
 

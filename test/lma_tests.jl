@@ -4,8 +4,9 @@ using Symbolics: value
 using Catalyst
 using Test
 
-@parameters t, σ_b, σ_u, ρ_b, ρ_u, σ_b_LMA
-@variables g(t)
+t = default_t()
+@parameters σ_b, σ_u, ρ_b, ρ_u, σ_b_LMA
+@species g(t)
 
 # simple feedback loop
 rn_nonlinear = @reaction_network begin

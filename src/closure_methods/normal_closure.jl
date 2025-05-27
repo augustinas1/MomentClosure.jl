@@ -3,6 +3,7 @@ function normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     closure = OrderedDict()
     closure_exp = OrderedDict()
     N = sys.N
+    iv = get_iv(sys.odes)
 
     if !isempty(binary_vars)
         sys = bernoulli_moment_eqs(sys, binary_vars)
@@ -11,10 +12,10 @@ function normal_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     # build symbolic expressions of cumulants up to q_order in terms of central/raw moments
     if sys isa CentralMomentEquations
         moments = sys.M
-        K = cumulants_to_central_moments(N, sys.q_order)
+        K = cumulants_to_central_moments(N, sys.q_order; iv)
     else
         moments = sys.μ
-        K = cumulants_to_raw_moments(N, sys.q_order)
+        K = cumulants_to_raw_moments(N, sys.q_order; iv)
     end
 
     #unique_iter_q = unique(sort(i) for i in sys.iter_q)

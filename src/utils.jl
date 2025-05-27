@@ -103,7 +103,7 @@ function get_central_moments(sol::EnsembleSolution, order::Int; naive::Bool=true
                 μ[iter] = data[keys[iter]...]
             end
         end
-        M_temp = raw_to_central_moments(N, order, μ)
+        M_temp = raw_to_central_moments(N, order; μ)
         for iter in iter_M
             M[iter][t_pt] = M_temp[iter]
         end
@@ -221,9 +221,9 @@ function get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
             end
 
             if moment_type == "central"
-                moment_temp = MomentClosure.raw_to_central_moments(N, order, μ)
+                moment_temp = MomentClosure.raw_to_central_moments(N, order; μ)
             else
-                moment_temp = MomentClosure.cumulants_to_raw_moments(N, order, μ)
+                moment_temp = MomentClosure.cumulants_to_raw_moments(N, order; μ)
             end
 
             for iter in iter_moments
