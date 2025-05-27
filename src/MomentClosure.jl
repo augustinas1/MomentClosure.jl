@@ -25,7 +25,8 @@ using DocStringExtensions
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
        propensities, get_stoichiometry, moment_closure, deterministic_IC,
 	   get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
-	   linear_mapping_approximation
+	   linear_mapping_approximation,
+       get_odes, get_closure, get_iv, get_eqs, unknowns, get_ps
 
 include("reaction_systems.jl")
 include("moment_equations.jl")

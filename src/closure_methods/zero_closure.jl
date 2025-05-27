@@ -14,7 +14,7 @@ function zero_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         end
     else
         μ = copy(sys.μ)
-        #μ_symbolic = copy(sys.μ)
+        #μ_symbolic = copy(get_μ(sys))
         raw_to_central = raw_to_central_moments(sys.N, sys.q_order)
 
         unique_iter_q = unique(sort(i) for i in sys.iter_q)

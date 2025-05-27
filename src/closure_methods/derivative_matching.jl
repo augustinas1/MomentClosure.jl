@@ -16,7 +16,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
     closure = OrderedDict() # additional dict to hold not expanded symbolic expressions
 
     N = sys.N
-    iv = get_iv(sys.odes)
+    iv = get_iv(sys)
 
     if isempty(binary_vars)
         isbernoulli = false
@@ -34,7 +34,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int,1}=Int
         μ = sys.μ
         closed_μ = copy(μ)
     end
-    μ_symbolic = define_μ(sys.N, sys.q_order, iv)
+    μ_symbolic = define_μ(N, sys.q_order, iv)
 
     # note that derivative matching is originally constructed by truncating at order of m_order+1
     # so if q_order > m_order + 1, we have to consider m_order+1, m_order+2, and so on in sequence

@@ -198,7 +198,7 @@ function get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
     N = length(state_space)
     no_t_pts = length(sol.u)
 
-    iter_moments = MomentClosure.construct_iter_all(N, order)[2:end]
+    iter_moments = construct_iter_all(N, order)[2:end]
     moments = Dict([iter => Array{Float64}(undef, no_t_pts) for iter in iter_moments])
 
     iter_state = Iterators.product((0:i-1 for i in state_space)...)
@@ -221,9 +221,9 @@ function get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
             end
 
             if moment_type == "central"
-                moment_temp = MomentClosure.raw_to_central_moments(N, order; μ)
+                moment_temp = raw_to_central_moments(N, order; μ)
             else
-                moment_temp = MomentClosure.cumulants_to_raw_moments(N, order; μ)
+                moment_temp = cumulants_to_raw_moments(N, order; μ)
             end
 
             for iter in iter_moments
@@ -264,7 +264,6 @@ function deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
         sys = eqs
     end
 
-    odes = eqs.odes
     N = sys.N
     if N != length(u₀)
         error("length of the passed IC vector and the number of species in the system are inconsistent")
@@ -272,7 +271,7 @@ function deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
 
     μ_map = [sys.μ[iter] => u₀[i] for (i, iter) in enumerate(sys.iter_1)]
 
-    vars = unknowns(odes)
+    vars = unknowns(eqs)
     no_states = length(vars)
     if typeof(sys) == CentralMomentEquations
         moment_map = [vars[i] => 0.0 for i in N+1:no_states]
@@ -299,9 +298,8 @@ variables implicit (removes all `(t)`) and removes all trailing zeros (`2.0` →
 """
 function format_moment_eqs(eqs::MomentEquations)
 
-    sys = eqs.odes
-    odes = get_eqs(sys)
-    vars = unknowns(sys)
+    odes = get_eqs(eqs)
+    vars = unknowns(eqs)
     exprs  = []
 
     for i in 1:size(odes)[1]
@@ -331,13 +329,13 @@ be visualised using [Latexify](https://github.com/korsbo/Latexify.jl).
   the default option) will be returned.
 """
 function format_closure(eqs::ClosedMomentEquations; format_all::Bool=false)
-    closure = eqs.closure
+    closure = get_closure(eqs)
     exprs = []
 
     if format_all
         iter = keys(closure)
     else
-        iter = setdiff(unknowns(eqs.open_eqs.odes), unknowns(eqs.odes))
+        iter = setdiff(unknowns(eqs.open_eqs), unknowns(eqs))
     end
 
     for i in iter
@@ -357,7 +355,7 @@ end
     env --> :align
     starred --> true
     mult_symbol --> ""
-    
+
     if type == :equations
         return format_moment_eqs(eqs)
     elseif type == :closure

@@ -28,7 +28,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     closure_exp = OrderedDict() # expanding out all higher order terms fully
 
     N = sys.N
-    iv = get_iv(sys.odes)
+    iv = get_iv(sys)
 
     if sys isa CentralMomentEquations
         M = copy(sys.M)
@@ -200,7 +200,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         redundant_iter, redundant_eqs, iter_sub = bernoulli_reduce(sys, binary_vars)
 
         closed_eqs = Equation[]
-        for (i, eq) in enumerate(get_eqs(sys.odes))
+        for (i, eq) in enumerate(get_eqs(sys))
             if !(i in redundant_eqs)
 
                 closed_rhs = substitute(eq.rhs, closure_exp)
@@ -232,7 +232,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         end
 
         odename = Symbol(nameof(sys), "_gamma_closure")
-        odes = ODESystem(closed_eqs, get_iv(sys.odes), vars, get_ps(sys.odes); name=odename)
+        odes = ODESystem(closed_eqs, get_iv(sys), vars, get_ps(sys); name=odename)
 
         return ClosedMomentEquations(odes, closure, sys)
 

@@ -1,7 +1,5 @@
 abstract type MomentEquations end
 
-# TODO: implement getters
-
 """
 $(TYPEDEF)
 
@@ -88,9 +86,17 @@ end
 
 # a basic wrapper
 function SciMLBase.ODEProblem(eqs::MomentEquations, args...; kwargs...)
-    ODEProblem(complete(eqs.odes), args...; kwargs...)
+    ODEProblem(complete(get_odes(eqs)), args...; kwargs...)
 end
 
 function Base.nameof(eqs::MomentEquations)
-    nameof(eqs.odes)
+    nameof(get_odes(eqs))
 end
+
+# Basic `MomentEquations`-specific accessors
+get_odes(sys::MomentEquations) = getfield(sys, :odes)
+get_closure(sys::ClosedMomentEquations) = getfield(sys, :closure)
+ModelingToolkit.get_iv(sys::MomentEquations) = get_iv(get_odes(sys))
+ModelingToolkit.get_eqs(sys::MomentEquations) = get_eqs(get_odes(sys))
+ModelingToolkit.unknowns(sys::MomentEquations) = unknowns(get_odes(sys))
+ModelingToolkit.get_ps(sys::MomentEquations) = get_ps(get_odes(sys))

@@ -13,10 +13,10 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
         push!(closed_eqs, Equation(eq.lhs, closed_rhs))
     end
 
-    iv = get_iv(sys.odes)
-    ps = get_ps(sys.odes)
+    iv = get_iv(sys)
+    ps = get_ps(sys)
     
-    vars = unknowns(sys.odes)[1:(length(sys.iter_1)+length(sys.iter_m))]
+    vars = unknowns(sys)[1:(length(sys.iter_1)+length(sys.iter_m))]
 
     odename = Symbol(nameof(sys), "_closed")
     odes = ODESystem(closed_eqs, iv, vars, ps; name=odename)

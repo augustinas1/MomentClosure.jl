@@ -158,7 +158,7 @@ function raw_to_central_moments(N::Int, order::Int; μ=nothing, bernoulli=false,
 
     iter_all = construct_iter_all(N, order)
     iter_μ = filter(x -> sum(x) == 1, iter_all)
-    M = define_M(iter_all)
+    M = define_M(iter_all, iv)
     if isnothing(μ)
         μ = define_μ(iter_all, iv)
     elseif !(μ isa Dict) || length(μ) != length(iter_all)

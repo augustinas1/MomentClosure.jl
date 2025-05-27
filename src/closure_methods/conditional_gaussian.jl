@@ -5,7 +5,7 @@ function conditional_gaussian_closure(sys::MomentEquations,
       error("conditional closure does not work if there are no binary species")
     end
     N = sys.N
-    iv = get_iv(sys.odes)
+    iv = get_iv(sys)
 
     sys = bernoulli_moment_eqs(sys, binary_vars)
     # define symbolic raw moment expressions

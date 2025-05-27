@@ -3,7 +3,7 @@ function poisson_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     closure = OrderedDict()
     closure_exp = OrderedDict()
     N = sys.N
-    iv = get_iv(sys.odes)
+    iv = get_iv(sys)
 
     if !isempty(binary_vars)
         sys = bernoulli_moment_eqs(sys, binary_vars)

@@ -15,7 +15,7 @@ u₀    = [9, 1, 0]
 tspan = (0.0, 50.0)
 dprob = DiscreteProblem(u₀, tspan, p)
 jprob = JumpProblem(dprob, Direct(), maj, save_positions=(false, false))
-@time sol   = solve(EnsembleProblem(jprob), saveat=25., SSAStepper(), trajectories=200)
+sol   = solve(EnsembleProblem(jprob), saveat=25., SSAStepper(), trajectories=200)
 
 μ_1 = get_raw_moments(sol, 2)
 μ_2 = get_raw_moments(sol, 2, naive=false, b=3)

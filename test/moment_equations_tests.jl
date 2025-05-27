@@ -4,6 +4,7 @@ using Symbolics: value, simplify, expand
 using Distributions: Geometric
 using Catalyst
 using Test
+using ModelingToolkit: t_nounits as t, D_nounits as D
 
 # --- check that expected values of stoichiometric coefficients are computed correctly ---
 
@@ -24,7 +25,7 @@ m = rand(Geometric(p))
 
 # --- check that moment equations are generated correctly ---
 
-@parameters t, c₁, c₂, c₃, c₄, Ω
+@parameters c₁, c₂, c₃, c₄, Ω
 
 rn = @reaction_network begin
     (c₁*Ω^-2), 2X + Y → 3X
@@ -33,8 +34,8 @@ rn = @reaction_network begin
 end
 
 sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaws=false)
-expr1 = sys.odes.eqs[2].rhs
-@test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
+expr1 = get_eqs(sys)[2].rhs
+@test isequal(D(sys.μ[1,0]), get_eqs(sys)[1].lhs)
 μ = sys.μ
 M = sys.M
 # simplify(value()) is needed due to diffs between ModelingToolkit Num type and SymbolicUtils types
@@ -45,13 +46,13 @@ expr2 = simplify(value.(expr2))
 
 
 sys = generate_central_moment_eqs(rn, 2, combinatoric_ratelaws=false)
-expr1 = sys.odes.eqs[2].rhs
-@test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), sys.odes.eqs[1].lhs)
+expr1 = get_eqs(sys)[2].rhs
+@test isequal(MomentClosure.Differential(t)(sys.μ[1,0]), get_eqs(sys)[1].lhs)
 @test isequal(simplify(expr1), expr2)
 
 sys = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 μ = sys.μ
-expr1 = sys.odes.eqs[4].rhs
+expr1 = get_eqs(sys)[4].rhs
 expr2 = c₂*μ[2,0] + c₁*μ[1,1]*Ω^-2 - c₁*μ[3,1]*Ω^-2 -c₂*(μ[1,0] + μ[1,1]) +
         c₃*μ[0,1]*Ω - c₄*μ[1,1] - c₁*μ[1,2]*Ω^-2 + c₁*μ[2,2]*Ω^-2
 expr2 = simplify(value.(expr2))
@@ -63,7 +64,7 @@ rn = @reaction_network begin
 end
 sys = generate_raw_moment_eqs(rn, 2)
 μ = sys.μ
-@test isequal(MomentClosure.Differential(t)(μ[(1,)]) ~ -μ[(1,)], sys.odes.eqs[1])
+@test isequal(D(μ[(1,)]) ~ -μ[(1,)], get_eqs(sys)[1])
 
 # time-dependent propensity tests
 
