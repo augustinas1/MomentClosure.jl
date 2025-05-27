@@ -88,7 +88,7 @@ end
 
 # a basic wrapper
 function SciMLBase.ODEProblem(eqs::MomentEquations, args...; kwargs...)
-    ODEProblem(eqs.odes, args...; kwargs...)
+    ODEProblem(complete(eqs.odes), args...; kwargs...)
 end
 
 function Base.nameof(eqs::MomentEquations)
