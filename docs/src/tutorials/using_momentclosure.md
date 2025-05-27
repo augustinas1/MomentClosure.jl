@@ -14,7 +14,7 @@ The terminology and the notation used throughout is consistent with the **Theory
 
 ## Model Initialisation
 
-[Catalyst.jl](https://github.com/SciML/Catalyst.jl) provides a comprehensive interface to modelling chemical reaction networks in Julia and can be used to construct models fully-compatible with MomentClosure. For more details on how to do so we recommend reading [Catalyst's tutorial](https://catalyst.sciml.ai/stable/tutorials/using_catalyst/). This way, the Brusselator can be defined as:
+[Catalyst.jl](https://github.com/SciML/Catalyst.jl) provides a comprehensive interface to modelling chemical reaction networks in Julia and can be used to construct models fully compatible with MomentClosure. For more details on how to do so we recommend reading [Catalyst's tutorial](https://docs.sciml.ai/Catalyst/stable/introduction_to_catalyst/introduction_to_catalyst/). This way, the Brusselator can be defined as:
 ```julia
 using Catalyst
 rn = @reaction_network begin
@@ -25,9 +25,9 @@ rn = @reaction_network begin
   (c₃*Ω, c₄), 0 ↔ X
 end
 ```
-The returned `rn` is an instance of [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using [`Catalyst.netstoichmat`](https://catalyst.sciml.ai/dev/api/catalyst_api/#Catalyst.netstoichmat) and MomentClosure function [`propensities`](@ref) respectively.
+The returned `rn` is an instance of [`Catalyst.ReactionSystem`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.ReactionSystem). The net stoichiometry matrix and an array of the corresponding propensities, if needed, can be extracted directly from the model using [`Catalyst.netstoichmat`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.netstoichmat) and MomentClosure function [`propensities`](@ref) respectively.
 
-Note that MomentClosure also supports systems containing geometrically distributed reaction products that can be defined [using Catalyst](https://catalyst.sciml.ai/dev/tutorials/symbolic_stoich/)—see [this tutorial](@ref geometric-and-conditional) for more details.
+Note that MomentClosure also supports systems containing geometrically distributed reaction products that can be defined [using Catalyst](https://docs.sciml.ai/Catalyst/stable/model_creation/parametric_stoichiometry/)—see [this tutorial](@ref geometric-and-conditional) for more details.
 
 ## Generating Moment Equations
 
@@ -40,7 +40,7 @@ Let's start with the raw moment equations which we choose to generate up to seco
 using MomentClosure
 raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)
 ```
-Note that we have set `combinatoric_ratelaw=false` in order to ignore the factorial scaling factors which [Catalyst adds to mass-action reactions](https://catalyst.sciml.ai/stable/tutorials/models/#Reaction-rate-laws-used-in-simulations). The function [`generate_raw_moment_eqs`](@ref) returns an instance of [`RawMomentEquations`](@ref MomentClosure.RawMomentEquations) that contains a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) composed of all the moment equations (accessed by `raw_eqs.odes`).
+Note that we have set `combinatoric_ratelaws=false` in order to ignore the factorial scaling factors which [Catalyst adds to mass-action reactions](https://docs.sciml.ai/Catalyst/stable/introduction_to_catalyst/introduction_to_catalyst/#introduction_to_catalyst_ratelaws). The function [`generate_raw_moment_eqs`](@ref) returns an instance of [`RawMomentEquations`](@ref MomentClosure.RawMomentEquations) that contains a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) composed of all the moment equations (accessed by `raw_eqs.odes`).
 
 We can use [Latexify](https://github.com/korsbo/Latexify.jl) to look at the generated moment equations:
 ```julia
@@ -60,7 +60,7 @@ The raw moments are defined as
 ```math
 \mu_{ij}(t) = \langle X(t)^i Y(t)^j \rangle
 ```
-where $\langle \rangle$ denote the expectation value and we have explicitly included the time-dependence for completeness (made implicit in the formatted moment equations). Note that the ordering of species ($X$ first and $Y$ second) is consistent with the order these variables appear within the [`Catalyst.@reaction_network`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.@reaction_network) macro. The ordering can also be checked using [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap) function:
+where $\langle \rangle$ denote the expectation value and we have explicitly included the time-dependence for completeness (made implicit in the formatted moment equations). Note that the ordering of species ($X$ first and $Y$ second) is consistent with the order these variables appear within the [`Catalyst.@reaction_network`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.@reaction_network) macro. The ordering can also be checked using [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap) function:
 ```julia
 speciesmap(rn)
 ```
@@ -150,24 +150,11 @@ Higher order central moments under normal closure take a rather simple form comp
 
 ## Solving Moment Equations
 
-The closed moment equations can be solved numerically using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl/) that provides a variety of highly-efficient solvers and analysis tools. In order to do so, first we need to specify the values of all system parameters, the initial condition and the timespan to solve over. Then the [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) corresponding to the moment equations can be [directly converted](https://mtk.sciml.ai/stable/#Compatible-Numerical-Solvers-1) into an `ODEProblem` which can finally be solved. Let's go through the procedure step-by-step for the closed raw moment equations (`closed_raw_eqs`). Most of what is covered below is closely based on [this Catalyst tutorial](https://catalyst.sciml.ai/stable/tutorials/using_catalyst/#Mass-Action-ODE-Models).
+The closed moment equations can be solved numerically using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl/) that provides a variety of highly-efficient solvers and analysis tools. In order to do so, first we need to specify the values of all system parameters, the initial condition and the timespan to solve over. Then the [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) corresponding to the moment equations can be [directly converted](https://mtk.sciml.ai/stable/#Compatible-Numerical-Solvers-1) into an `ODEProblem` which can finally be solved. Let's go through the procedure step-by-step for the closed raw moment equations (`closed_raw_eqs`). Most of what is covered below is based on [on Catalyst's introductory tutorial](https://docs.sciml.ai/Catalyst/stable/introduction_to_catalyst/introduction_to_catalyst/#Stochastic-simulation-algorithms-(SSAs)-for-stochastic-chemical-kinetics).
 
-We start with the parameters. Note that they are ordered as they appear after the `end` statement in the `@reaction_network` macro and this ordering can also be checked using the `paramsmap` function:
+We start with the parameters. Note that the internal parameter ordering [can vary](https://docs.sciml.ai/ModelingToolkit/stable/basics/FAQ/#Why-are-my-parameters-some-obscure-object?), and we need to build a mapping from the symbolic parameters to their respective numerical values. This can be done as:
 ```julia
-paramsmap(rn)
-```
-```julia
-Dict{Sym{ModelingToolkit.Parameter{Real}},Int64} with 5 entries:
-  c₃ => 3
-  Ω  => 5
-  c₄ => 4
-  c₂ => 2
-  c₁ => 1
-```
-We can now create a vector of parameter values as:
-```julia
-# parameters [c₁, c₂, c₃, c₄, Ω]
-p = [0.9, 2, 1, 1, 100]
+pmap = [:c₁ => 0.9, :c₂ => 2, :c₃ => 1, :c₄ => 1, :Ω => 100]
 ```
 Next, we can specify the initial condition. Usually when working with moment equations we consider *deterministic* initial conditions so that the molecule numbers at initial time take the specified integer values with probability one. We can define the initial molecule numbers as $X(t=0) = X_0$ and $Y(t=0) = Y_0$. Probability one implies that initially the means will be equal to the molecule numbers, i.e., $μ_{10}(t=0) = X_0$ and $μ_{01}(t=0) = Y_0$, whereas all higher order raw moments will be products of the corresponding powers of the means, e.g., $μ_{21} = X_0^2 Y_0$. Note that all central moments would be set to zero in this case. To make life easier we use [`deterministic_IC`](@ref) function which, given the initial molecule numbers, automatically constructs the variable mapping under deterministic initial conditions:
 ```julia
@@ -181,12 +168,12 @@ tspan = (0., 100.)
 ```
 Now we are able to create the corresponding `ODEProblem`:
 ```julia
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, pmap)
 ```
-Finally, we have everything we need to solve the raw moment equations which can be done using any ODE solver [implemented within DifferentialEquations.jl](https://diffeq.sciml.ai/dev/solvers/ode_solve/). We use the default `Tsit5()` solver and then [plot](https://diffeq.sciml.ai/stable/basics/plot/#plot) the obtained mean molecule numbers:
+Finally, we have everything we need to solve the raw moment equations which can be done using any ODE solver [implemented within DifferentialEquations.jl](https://docs.sciml.ai/Catalyst/stable/model_simulation/simulation_introduction/#simulation_intro_solver_options). We choose the commonly used `Tsit5()` solver and then [plot](https://diffeq.sciml.ai/stable/basics/plot/#plot) the obtained mean molecule numbers:
 ```julia
-# using only ODE solvers from DifferentialEquations (faster to load)
-using OrdinaryDiffEq
+# loading only the solver-specific library (faster)
+using OrdinaryDiffEqTsit5
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 using Plots
@@ -198,15 +185,16 @@ The obtained moment dynamics show damped oscillations which is the expected aver
 
 ## Stochastic Simulation
 
-To run the SSA for a given reaction network, we build a [JumpProcesses](https://github.com/SciML/JumpProcesses.jl) (formerly known as [DiffEqJump](https://github.com/SciML/DiffEqJump.jl)) [`JumpProblem`](https://diffeq.sciml.ai/latest/types/jump_types/) using Gillespie's `Direct` method. Note that other SSA variants are also available, see the [documentation](https://diffeq.sciml.ai/dev/types/jump_types/#Constant-Rate-Jump-Aggregators). Moreover, in order to run many realisations of the jump process, we define a corresponding [`EnsembleProblem`](https://diffeq.sciml.ai/stable/features/ensemble/#ensemble). All of this can be done as follows:
+To run the SSA for a given reaction network, we build a [JumpProcesses](https://github.com/SciML/JumpProcesses.jl)  [`JumpProblem`](https://docs.sciml.ai/JumpProcesses/stable/jump_types/#defining_jump_problem) using Gillespie's `Direct` method. Note that other SSA variants are also available, see the [documentation](https://diffeq.sciml.ai/dev/types/jump_types/#Constant-Rate-Jump-Aggregators). Moreover, in order to run many realisations of the jump process, we define a corresponding [`EnsembleProblem`](https://diffeq.sciml.ai/stable/features/ensemble/#ensemble). All of this can be done as follows:
 ```julia
 using JumpProcesses
 
 # convert ReactionSystem into JumpSystem
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
+jsys = complete(jsys) 
 
 # create a DiscreteProblem encoding that the molecule numbers are integer-valued
-dprob = DiscreteProblem(jsys, u₀, tspan, p) # same parameters as defined earlier
+dprob = DiscreteProblem(jsys, u₀, tspan, pmap) # same parameters as defined earlier
 
 # create a JumpProblem: specify Gillespie's Direct Method as the solver
 # and SET save_positions to (false, false) as otherwise time of each
@@ -224,7 +212,7 @@ Now we use the DifferentialEquations [ensemble statistics tools](https://diffeq.
 using DiffEqBase.EnsembleAnalysis
 
 means_SSA = timeseries_steps_mean(sol_SSA)
-plot!(means_SSA, lw=2, labels=["SSA μ₁₀(t)" "SSA μ₀₁(t)"], linestyle=:dash,
+plot!(means_SSA, lw=2, labels=["SSA μ₁₀" "SSA μ₀₁"], linestyle=:dash,
       linecolor=[1 2], background_color_legend=nothing, legend=:bottomright)
 ```
 ![Brusselator SSA 1](../assets/brusselator_ssa_1.svg)

@@ -12,7 +12,7 @@ helper parameters (used internally).
 $(FIELDS)
 """
 struct RawMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of raw moments."""
     odes::ODESystem
     """Symbolic variables defining the raw moments."""
@@ -44,7 +44,7 @@ helper parameters (used internally).
 $(FIELDS)
 """
 struct CentralMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of central moments."""
     odes::ODESystem
     """Symbolic variables defining the means."""
@@ -77,7 +77,7 @@ Closed moment equations and the corresponding closure functions.
 $(FIELDS)
 """
 struct ClosedMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of *closed* moments."""
     odes::ODESystem
     """Dictionary of moment closure functions for each higher order moment."""

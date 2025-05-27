@@ -30,7 +30,7 @@ end
 
 rn_linear = @reaction_network begin
       @parameters σ_b_LMA σ_u ρ_b ρ_u
-      σ_b_LMA, g → 0      # typing ̄σ_b is not allowed it seems
+      σ_b_LMA, g → 0
       σ_u*(1-g), 0 ⇒ g
       ρ_u, g → g+p
       (ρ_b*(1-g)), 0 ⇒ p
@@ -43,8 +43,8 @@ using MomentClosure
 
 # NOTE: we have to provide the indices of binary variables in the system as they are ordered in the *nonlinear* GRN.
 # The distinction here between linear and nonlinear GRNs is important as in some cases the internal ordering of variables of the two Catalyst models can differ
-@parameters t
-@variables g(t)
+t = default_t()
+@species g(t)
 binary_vars = [speciesmap(rn_nonlinear)[g]]
 
 LMA_eqs, effective_params = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaws=false)
@@ -71,14 +71,14 @@ Note that the results agree with Eqs. (1) and (2) (after a corresponding substit
 ```julia
 using OrdinaryDiffEq, Sundials, Plots
 
-# [g, p] as in `species(rn_nonlinear)`
+# [g, p] ordered as in `speciesmap(rn_nonlinear)`
 u₀ = [1.0, 0.001]
-p = [0.004, 0.25, 25.0, 60.0]
+p = Dict(:σ_b => 0.004, :σ_u => 0.25, :ρ_b => 25.0, :ρ_u => 60.0)
 tspan = (0., 15.)
 dt = 0.1
 
 u₀map = deterministic_IC(u₀, LMA_eqs)
-oprob_LMA = ODEProblem(LMA_eqs, u₀map, tspan, p)
+oprob_LMA = ODEProblem(LMA_eqs, u₀map, tspan, pmap)
 sol_LMA = solve(oprob_LMA, CVODE_BDF(), saveat=dt)
 
 plot(sol_LMA, idxs=[2], label="LMA", ylabel="⟨p⟩", xlabel="time", fmt="svg")
@@ -102,7 +102,7 @@ u0 = zeros(state_space...)
 u0[2, 1] = 1.0
 
 # construct an ODE problem from the FSPSystem and solve it
-fsp_prob = ODEProblem(fsp_sys, u0, tspan, p)
+fsp_prob = ODEProblem(fsp_sys, u0, tspan, pmap)
 sol_FSP = solve(fsp_prob, CVODE_BDF(), saveat=dt)
 
 # extract the 1st order raw moments from the FSP solution
@@ -169,13 +169,17 @@ We can now move on with the LMA procedure to obtain the probability distribution
 T = 4.0
 tspan = (0., T)
 dt = 0.001
-oprob_LMA = remake(oprob_LMA, tspan=tspan)
+oprob_LMA = remake(oprob_LMA; tspan)
 sol_LMA = solve(oprob_LMA, CVODE_BDF(), saveat=dt)
 
 # rebuild the symbolic expression for the effective parameter as a function of raw moments
-μ_sym = [LMA_eqs.odes.states...]
-p_sub = Dict.(Pair.(LMA_eqs.odes.ps, p)...)
-avg_σ_b_sym = collect(values(effective_params))[1]
+using ModelingToolkit: get_ps, getname
+ps = get_ps(rn_nonlinear)
+symbol_to_symbolic = Dict(Pair.(getname.(ps), ps))
+p_sub = [symbol_to_symbolic[p[1]] => p[2] for p in pmap]
+μ_sym = unknowns(LMA_eqs.odes)
+
+avg_σ_b_sym = first(values(effective_params))
 fn = build_function(substitute(avg_σ_b_sym, p_sub), μ_sym)
 avg_σ_b = eval(fn)
 # evaluate the time-averaged value of the effective parameter
@@ -188,7 +192,7 @@ We proceed with the very last steps of the LMA to obtain the probability distrib
 using DoubleFloats
 
 # define the numerical values of the parameters
-σ_u = p[2]; ρ_b = p[3]; ρ_u = p[4]
+σ_u = pmap[:σ_u]; ρ_b = pmap[:ρ_b]; ρ_u = pmap[:ρ_u]
 Σ = 1 + σ_b_avg + σ_u
 ρ_Δ = ρ_b - ρ_u
 

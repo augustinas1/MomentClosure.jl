@@ -7,14 +7,14 @@
 MomentClosure.jl is a tool to automatically obtain time-evolution equations of moments up to an arbitrary order for virtually any chemical reaction network or system of stochastic differential equations (SDEs), implementing a wide array of moment closure approximations commonly used in stochastic biochemical kinetics [[1]](#1). MomentClosure is (attempted to be) fairly well-integrated within the broader Julia ecosystem utilising a number of familiar packages:
 - MomentClosure can be immediately applied to reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl) and SDE systems built with [ModelingToolkit](https://github.com/SciML/ModelingToolkit.jl).
 - Moment equations are generated as a [ModelingToolkit](https://github.com/SciML/ModelingToolkit.jl) [`ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) (with some extra help from [Symbolics](https://github.com/JuliaSymbolics/Symbolics.jl) and [SymbolicUtils](https://github.com/JuliaSymbolics/SymbolicUtils.jl)).
-- The resulting `ODESystem` can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solvers, enabling further study of the system using [parameter estimation](https://diffeq.sciml.ai/stable/analysis/parameter_estimation/), [sensitivity analysis](https://diffeq.sciml.ai/stable/analysis/sensitivity/) and [bifurcation analysis](https://diffeq.sciml.ai/stable/analysis/bifurcation/) tools.
+- The resulting `ODESystem` can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solvers, enabling further study of the system using [parameter estimation](https://docs.sciml.ai/Overview/stable/highlevels/inverse_problems/), [sensitivity analysis](https://docs.sciml.ai/SciMLSensitivity/stable/) and [bifurcation analysis](https://docs.sciml.ai/Overview/stable/highlevels/parameter_analysis/#BifurcationKit.jl) tools.
 
 ## Tutorials and documentation
 
 Please [see the documentation](https://augustinas1.github.io/MomentClosure.jl/dev/) for information on using the package, theory behind it and in-depth examples.
 
 ## Features
-- Chemical reaction networks containing any number of molecular species and reactions with any type of *smooth* propensity functions are supported. Models can be defined using [Catalyst](https://github.com/SciML/Catalyst.jl/issues/22) as [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/dev/api/catalyst_api/#ModelingToolkit.ReactionSystem). Alternatively, built-in functionality (heavily based on Catalyst) can be used for model initialisation.
+- Chemical reaction networks containing any number of molecular species and reactions with any type of *smooth* propensity functions are supported. Models can be defined using [Catalyst](https://github.com/SciML/Catalyst.jl/issues/22) as [`Catalyst.ReactionSystem`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.ReactionSystem). Alternatively, built-in functionality (heavily based on Catalyst) can be used for model initialisation.
 - Added support for reaction networks involving reaction products that are geometrically distributed random variables. An example of such network is an autoregulatory gene network with bursty protein production where the burst size follows a geometric distribution.
 - Equations describing the time evolution of means and central moments of the number of molecules of each species in the system can be generated up to arbitrary order [[2, 3]](#2). Note that non-polynomial propensity functions are Taylor expanded to a specified order. Raw moment equations can also be generated for mass-action systems (where all propensity functions are polynomials).
 * SDE systems defined as [`ModelingToolkit.SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingToolkit.SDESystem) are supported (big thanks to @FHoltorf). Similarly to reaction networks with non-polynomial propensities, non-polynomial drift and diffusion coefficients are Taylor expanded.
@@ -28,12 +28,12 @@ Please [see the documentation](https://augustinas1.github.io/MomentClosure.jl/de
 	- conditional gaussian closure [[7]](#7)
 	- conditional derivative matching [[7]](#7)
 	- linear mapping approximation [[8]](#8)
-- Moment equations are constructed as a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) that can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solver. Moreover, [parameter estimation](https://diffeq.sciml.ai/stable/analysis/parameter_estimation/), [sensitivity analysis](https://diffeq.sciml.ai/stable/analysis/sensitivity/) and [bifurcation analysis](https://diffeq.sciml.ai/stable/analysis/bifurcation/) tools can be applied to further study the resulting system of equations.
+- Moment equations are constructed as a [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) that can be solved using any [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl/) ODE solver. Moreover, [parameter estimation](https://docs.sciml.ai/Overview/stable/highlevels/inverse_problems/), [sensitivity analysis](https://docs.sciml.ai/SciMLSensitivity/stable/) and [bifurcation analysis](https://docs.sciml.ai/Overview/stable/highlevels/parameter_analysis/#BifurcationKit.jl) tools can be applied to further study the resulting system of equations.
 - [Latexify](https://github.com/korsbo/Latexify.jl) can be used to generate LaTeX expressions of the corresponding moment equations.
 
 ## Citation
 
-If you use MomentClosure in your work, please cite [our paper](https://arxiv.org/abs/2105.05475):
+If you use MomentClosure in your work, please cite [our paper](https://academic.oup.com/bioinformatics/article/38/1/289/6309452):
 ```
 @article{MomentClosure2021,
     author = {Sukys, Augustinas and Grima, Ramon},

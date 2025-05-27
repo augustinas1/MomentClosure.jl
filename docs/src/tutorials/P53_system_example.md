@@ -41,7 +41,8 @@ with parameters
 We begin by loading all the packages we will need
 ```julia
 using Catalyst, MomentClosure, OrdinaryDiffEq, JumpProcesses,
-      DiffEqBase.EnsembleAnalysis, Plots, Plots.PlotMeasures
+      DiffEqBase.EnsembleAnalysis, Plots
+using Plots.Measures: mm
 ```
 and then build the model using Catalyst and set its parameters as follows:
 ```julia
@@ -57,8 +58,8 @@ rn = @reaction_network begin
     (k₆), y → 0
 end
 
-# parameters [k₁, k₂, k₃, k₄, k₅, k₆, k₇]
-p = [90, 0.002, 1.7, 1.1, 0.93, 0.96, 0.01]
+# parameters
+p = [:k₁ => 90, :k₂ => 0.002, :k₃ => 1.7, :k₄ => 1.1, :k₅ => 0.93, :k₆ => 0.96, :k₇ => 0.01]
 
 # initial molecule numbers [x, y₀, y]
 u₀ = [70, 30, 60]
@@ -71,6 +72,7 @@ tspan = (0., 200.)
 
 # constructing the discrete jump problem using DifferentialEquations
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
+jsys = complete(jsys)
 dprob = DiscreteProblem(jsys, u₀, tspan, p)
 
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
@@ -79,12 +81,9 @@ ensembleprob  = EnsembleProblem(jprob)
 # @time is only a rough estimate and not a proper benchmark
 @time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.2, trajectories=50000)
 ```
-```julia
-1332.443829 seconds (2.90 G allocations: 69.838 GiB, 42.81% gc time)
-```
 Single SSA trajectories show sustained oscillations in molecule numbers:
 ```julia
-plot(sol_SSA[666], labels=["p53" "pre-Mdm2" "Mdm2"], lw=2, tspan=(0., 100.),
+plot(sol_SSA[666], labels=["p53" "pre-Mdm2" "Mdm2"], lw=2, tspan=(0, 100),
      linecolor=[1 3 2], xlabel="Time [h]", ylabel="Number of molecules", size=(700, 400))
 ```
 ![P53-Mdm2 SSA one trajectory](../assets/p53-Mdm2_single_SSA.svg)
@@ -107,7 +106,7 @@ h2 = histogram(data[2], normalize=true, xlabel="y₀", ylabel="P(y₀)")
 h3 = histogram(data[3], normalize=true, xlabel="y", ylabel="P(y)")
 using Plots.PlotMeasures
 plot(h1, h2, h3, legend=false, layout=(1,3), size = (1050, 250),
-     left_margin = 5PlotMeasures.mm, bottom_margin = 7PlotMeasures.mm, guidefontsize=10)
+     left_margin = 5mm, bottom_margin = 7mm, guidefontsize=10)
 ```
 ![P53-Mdm2 distribution](../assets/p53-Mdm2_distribution.svg)
 
@@ -140,13 +139,13 @@ end
 ```
 Normal closure:
 ```julia
-plot(plts[1], size=(750, 450), leftmargin=2PlotMeasures.mm)
+plot(plts[1], size=(750, 450), leftmargin=2mm)
 ```
 ![P53-Mdm2 normal means 2nd order expansion](../assets/p53-Mdm2_normal_2nd_order.svg)
 
 Log-normal closure:
 ```julia
-plot(plts[2], size=(750, 450), leftmargin=2PlotMeasures.mm)
+plot(plts[2], size=(750, 450), leftmargin=2mm)
 ```
 ![P53-Mdm2 log-normal means 2nd order expansion](../assets/p53-Mdm2_log-normal_2nd_order.svg)
 
@@ -158,7 +157,7 @@ plot(plts[2], xlims=(0., 50.), lw=3)
 
 Gamma closure:
 ```julia
-plot(plts[3], size=(750, 450), leftmargin=2PlotMeasures.mm)
+plot(plts[3], size=(750, 450), leftmargin=2mm)
 ```
 ![P53-Mdm2 gamma means 2nd order expansion](../assets/p53-Mdm2_gamma_2nd_order.svg)
 
@@ -287,7 +286,7 @@ end
 
 plt = plot!(plt, xlabel = "Time [h]", ylabel = "Mean p53 molecule number")
 plt = plot!(plt, means_SSA.t, means_SSA[1, :], linestyle=:dash, label = "SSA", color="gray")
-plot(plt, size=(750, 450), lw=2)
+plot(plt, size=(750, 450), lw=2, xlims=tspan)
 ```
 ![P53-Mdm2 5th order expansion](../assets/p53-Mdm2_5th_order_expansion.svg)
 

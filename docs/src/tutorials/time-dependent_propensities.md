@@ -44,8 +44,8 @@ using OrdinaryDiffEq, Plots
 
 closed_raw_eqs = moment_closure(raw_eqs, "normal")
 
-# parameter values [c₁, c₂, c₃, c₄, Ω, ω, τ]
-p = [0.9, 2., 1., 1., 5., 1., 40.]
+# parameter values
+p = [:c₁ => 0.9, :c₂ => 2., :c₃ => 1., :c₄ => 1., :Ω => 5., :ω => 1., :τ => 40.]
 
 # initial molecule numbers of species [X, Y]
 u₀ = [1., 1.]
@@ -65,21 +65,15 @@ plot(sol, idxs=[1,2], lw=2)
 ```
 ![Time-dependent Brusselator normal](../assets/Brusselator_time-dependent_normal.svg)
 
-It would be great to compare our results to the true dynamics. Using DifferentialEquations, we can run a modified SSA taking into account the time-dependent propensity functions ([VariableRateJumps](https://diffeq.sciml.ai/stable/tutorials/discrete_stochastic_example/#Adding-a-VariableRateJump)). This requires some care and is done by combining an `ODEProblem` with a `JumpProblem`:
+It would be great to compare our results to the true dynamics. Using DifferentialEquations, we can run a modified SSA taking into account the time-dependent propensity functions ([`VariableRateJump`s](https://docs.sciml.ai/JumpProcesses/stable/api/#JumpProcesses.VariableRateJump)). Following the [Catalyst tutorials](https://docs.sciml.ai/Catalyst/stable/model_simulation/simulation_introduction/#simulation_intro_jumps_variableratejumps), we create a `JumpProblem` as follows:
 ```julia
 using JumpProcesses
 
-# convert ReactionSystem into JumpSystem
-jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
-
-# Define an ODEProblem to integrate between reaction events
-# note that u₀ elements must be Floats (otherwise throws an error)
-f(du,u,p,t) = du .= 0
-oprob = ODEProblem(f, u₀, tspan, p)
-
-# Create a modified SSA problem that now correctly incorporates VariableRateJumps
-jprob = JumpProblem(jsys, oprob, Direct())
+jinputs = JumpInputs(rn, u₀, tspan, p, combinatoric_ratelaws=false)
+jprob = JumpProblem(jinputs, Direct())
 ```
+Note that now we have to provide an ODE solver to `solve` in order to integrate over the time-dependent propensities. 
+
 Finally, we can define a corresponding `EnsembleProblem` to simulate multiple SSA trajectories. However, the `saveat` argument does not work with VariableRateJumps ([a known bug](https://github.com/SciML/DifferentialEquations.jl/issues/733)): without it, the solution is saved at each reaction event, in turn generating large data arrays that can get extremely memory-intensive when many trajectories are considered. Our workaround is to simply [modify the `output_func` in `EnsembleProblem`](https://diffeq.sciml.ai/stable/features/ensemble/#Building-a-Problem) so that each SSA trajectory is saved to the output array only at the specified timepoints (albeit a lot of garbage collection must be done):
 ```julia
 # timestep at which the solution data is saved
@@ -93,15 +87,12 @@ ensembleprob  = EnsembleProblem(jprob, output_func=fout)
 # simulate 10000 SSA trajectories (can get very slow...)
 @time sol_SSA = solve(ensembleprob, Tsit5(), trajectories=10000)
 ```
-```julia
-2975.249760 seconds (1.07 G allocations: 105.883 GiB, 81.30% gc time, 0.02% compilation time)
-```
 Finally, we can compute the mean SSA trajectories and compare to the moment closure estimates:
 ```julia
 using SciMLBase.EnsembleAnalysis
 
 means_SSA = timeseries_steps_mean(sol_SSA)
-plot!(means_SSA.t, [means_SSA[1,:], means_SSA[2,:]], lw=1.5, labels=["SSA μ₁₀(t)" "SSA μ₀₁(t)"], linestyle=:dash,
+plot!(means_SSA.t, [means_SSA[1,:], means_SSA[2,:]], lw=1.5, labels=["SSA μ₁₀" "SSA μ₀₁"], linestyle=:dash,
       linecolor=[1 2], background_color_legend=nothing, legend=:bottomright)
 ```
 ![Time-dependent Brusselator SSA](../assets/Brusselator_time-dependent_SSA.svg)

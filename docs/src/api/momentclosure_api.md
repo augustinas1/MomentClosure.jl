@@ -5,7 +5,7 @@ CurrentModule = MomentClosure
 
 ## Model definition
 
-MomentClosure is fully compatible with reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl) and stored as a [`ModelingToolkit.ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem). Note that previously we had implemented our own `ReactionSystemMod`, that allowed us to consider systems containing reactions which products are independent geometrically distributed random variables. However, this is now deprecated as Catalyst has added support for such parameteric stoichiometries offering a much more complete and efficient feature set.
+MomentClosure is fully compatible with reaction network models defined using [Catalyst](https://github.com/SciML/Catalyst.jl) and stored as a [`Catalyst.ReactionSystem`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.ReactionSystem). Note that previously we had implemented our own `ReactionSystemMod`, that allowed us to consider systems containing reactions which products are independent geometrically distributed random variables. However, this is now deprecated as Catalyst has added support for such parameteric stoichiometries offering a much more complete and efficient feature set.
 
 ## [Basic model properties](@id api-basic-network-properties)
 

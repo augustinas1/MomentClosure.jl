@@ -18,7 +18,7 @@ rn = @reaction_network begin
 end
 
 # parameter values
-p = [1.0, 1.0]
+p = [:c₁ => 1.0, :c₂ => 1.0]
 # initial conditions
 u0 = [20, 10]
 # time interval to solve on
@@ -44,7 +44,7 @@ latexify(dm2_eqs, :closure, print_all=true)
 ```
 Note that all closure functions are consistent with the ones shown in Table II of [1]. We can then move on to solving the generated system of moment ODEs:
 ```julia
-using OrdinaryDiffEq
+using OrdinaryDiffEqTsit5
 
 u0map = deterministic_IC(u0, dm2_eqs) # assuming deterministic initial conditions
 oprob = ODEProblem(dm2_eqs, u0map, tspan, p)
@@ -58,7 +58,7 @@ Now the question is how can we extract the time evolution of the cumulant $\kapp
 ```
 As we were solving for moments up to second order, we do not have any direct information on the third order moment $\mu_{03}$. Nevertheless, we can manually approximate it using the corresponding closure function given above, i.e., $\mu_{03} = \mu_{01}^{-3} \mu_{02}^{3}$. The time trajectories of $\mu_{01}$ and $\mu_{02}$ can be extracted from `dm2_sol` and their order in the array can be checked with:
 ```julia
-dm2_eqs.odes.states
+unknowns(dm2_eqs.odes)
 ```
 ```julia
 5-element Array{Term{Real,Nothing},1}:
@@ -92,7 +92,7 @@ latexify(dm3_eqs, :closure, print_all=true)
 ```
 As expected, the closure functions agree with those given in Table III of [1]. We again check the order of variables
 ```julia
-dm3_eqs.odes.states
+unknowns(dm3_eqs.odes)
 ```
 ```julia
 9-element Array{Term{Real,Nothing},1}:
@@ -140,10 +140,7 @@ dprob = DiscreteProblem(rn, u0, tspan, p)
 jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))
 
 ensembleprob  = EnsembleProblem(jprob)
-@time sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.01, trajectories=100000)
-```
-```julia
-3.874558 seconds (7.45 M allocations: 714.845 MiB, 46.60% gc time)
+sol_SSA = solve(ensembleprob, SSAStepper(), saveat=0.01, trajectories=100000)
 ```
 The time evolution of $\kappa_{03}$ can be extracted from SSA data using the [`get_cumulants`](@ref) function:
 ```julia

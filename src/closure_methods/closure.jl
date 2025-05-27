@@ -43,11 +43,11 @@ The supported `closure` options are:
 
 # Notes
 - `binary_vars` *must* be specified for conditional closures as an array of indices of all species
-  (as in [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap)) 
-  which molecule number is a Bernoulli variable. Although not necessary
-  for other closures, specifying `binary_vars` is recommended as the properties of Bernoulli variables
-  will be used to remove the redundant moment equations and simplify the expressions, which can
-  significantly improve numerical stability.
+  (as in [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap)) 
+  whose molecule number is a Bernoulli variable. This way, the properties of Bernoulli variables
+  will be used to remove the redundant moment equations and simplify the symbolic expressions. Note that
+  `binary vars` can also be specified for other closures, although the resulting closure will be conceptually
+  different from the original (but not necessarily worse).
 """
 function moment_closure(sys::MomentEquations, closure::String, binary_vars::Array{Int,1}=Int[])
 
