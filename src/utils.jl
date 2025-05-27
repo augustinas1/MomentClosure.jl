@@ -356,8 +356,8 @@ end
 
     env --> :align
     starred --> true
-    cdot --> false
-
+    mult_symbol --> ""
+    
     if type == :equations
         return format_moment_eqs(eqs)
     elseif type == :closure
