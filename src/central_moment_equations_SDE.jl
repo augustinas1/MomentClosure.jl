@@ -106,7 +106,7 @@ Given an [`SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingTo
 return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
 """
 generate_central_moment_eqs(sys::SDESystem, m_order::Int, q_order::Int=0) = generate_central_moment_eqs(equations(sys), get_noiseeqs(sys), m_order, q_order, 
-                                                                                                        states(sys), nameof(sys), parameters(sys), get_iv(sys))
+                                                                                                        unknowns(sys), nameof(sys), parameters(sys), get_iv(sys))
 
 #=
 function generate_central_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, 

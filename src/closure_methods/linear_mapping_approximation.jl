@@ -2,7 +2,7 @@
       linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars::Array{Int,1}=Int[], m_order::Int=0;
                                    combinatoric_ratelaws = true) where T <: ReactionSystem
 
-Given a *nonlinear* [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
+Given a *nonlinear* [`ReactionSystem`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.ReactionSystem)
 and an equivalent *linear* `ReactionSystem`, perform the Linear Mapping Approximation (LMA)
 and return the corresponding linear [`RawMomentEquations`](@ref) of the system as well as
 a Dictionary of reaction parameter substitutions obtained using LMA that are used to generate
@@ -14,7 +14,7 @@ Notes:
   updated accordingly. Although this requires a lot of manual input, automating the linearisation further is
   difficult due to arbitrary choices that may be mane in constructing the reaction networks.
 - `binary_vars` *must* be specified for conditional closures as an array of indices of all species
-  (as in [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap)) 
+  (as in [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap)) 
   which molecule number is a Bernoulli variable. Note that `rn_nonlinear`
   and `rn_linear` may internally order the species differently: `binary_vars` must be consistent with
   the ordering in the *nonlinear* network.
@@ -22,8 +22,8 @@ Notes:
   of the nonlinear system's reactions. However, if higher order moment information is required, the optional
   `m_order` argument may be provided to increase the expansion order manually.
 - `combinatoric_ratelaws=true` uses binomials in calculating the propensity functions
-  of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
-  (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
+  of a `ReactionSystem`, see the notes for [`Catalyst.jumpratelaw`]
+  (https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.jumpratelaw).
 """
 function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars::Array{Int,1}=Int[], m_order::Int=0;
                                       combinatoric_ratelaws = true) where T <: ReactionSystem
@@ -68,7 +68,7 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
       end
 
       LMA_eqs = Equation[]
-      for eq in get_eqs(sys.odes)
+      for eq in get_eqs(sys)
             rhs = substitute(eq.rhs, sub_params)
             rhs = expand(rhs)
             push!(LMA_eqs, Equation(eq.lhs, rhs))
@@ -76,9 +76,9 @@ function linear_mapping_approximation(rn_nonlinear::T, rn_linear::T, binary_vars
 
       field_values = [getfield(sys, field) for field in fieldnames(typeof(sys))]
 
-      iv = get_iv(sys.odes)
-      ps = reactionparams(rn_nonlinear)
-      vars = states(sys.odes)
+      iv = get_iv(sys)
+      ps = parameters(rn_nonlinear)
+      vars = unknowns(sys)
       odename = Symbol(nameof(sys), "_LMA")
       odes = ODESystem(LMA_eqs, iv, vars, ps; name=odename)
       new_system = typeof(sys)(odes, field_values[2:end]...)

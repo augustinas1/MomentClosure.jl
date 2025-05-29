@@ -13,7 +13,7 @@ P &\stackrel{\gamma_p}{\rightarrow} ∅.
 ```
 A gene in the network switches between ON ($G$) and OFF ($G^{\\*}$) states: proteins are produced in the transcriptionally active ON state but the gene can be turned OFF by two protein molecules binding to the promoter region and thus blocking transcription (proteins decay at a constant rate irrespective of the gene state). Note that the gene state can be interpreted as a distinct species that have either zero or one copy number per cell. In other words, it is a Bernoulli random variable: $0$ in the OFF state and $1$ in the ON state.
 
-The transcription (mRNA) dynamics are not modelled explicitly in this gene circuit. Instead, under the assumption of fast mRNA decay, proteins are taken to be produced in bursts of size $m$, where $m$ is a random variable sampled from the geometric distribution $\phi(m) = b^m/(1+b)^{m+1}$ (with $b$ denoting the mean burst size) [2]. Chemical reaction networks that include reactions which products are independent geometrically distributed random variables (or other symbolic variables) can be defined using [Catalyst](https://github.com/SciML/Catalyst.jl) as demonstrated [in this tutorial](https://catalyst.sciml.ai/stable/tutorials/symbolic_stoich/). Note that the referenced tutorial refers back to this tutorial because in the ancient times Catalyst did not provided such functionality and the previous iteration of MomentClosure implemented a `ReactionSystemMod` type that offered limited support for such systems (now deprecated as Catalyst does it better in a unified API).
+The transcription (mRNA) dynamics are not modelled explicitly in this gene circuit. Instead, under the assumption of fast mRNA decay, proteins are taken to be produced in bursts of size $m$, where $m$ is a random variable sampled from the geometric distribution $\phi(m) = b^m/(1+b)^{m+1}$ (with $b$ denoting the mean burst size) [2]. Chemical reaction networks that include reactions which products are independent geometrically distributed random variables (or other symbolic variables) can be defined using [Catalyst](https://github.com/SciML/Catalyst.jl) as demonstrated [in this tutorial](https://docs.sciml.ai/Catalyst/stable/model_creation/parametric_stoichiometry/#Gene-expression-with-randomly-produced-amounts-of-protein). Note that the referenced tutorial refers back to this tutorial because in the ancient times Catalyst did not provided such functionality and the previous iteration of MomentClosure implemented a `ReactionSystemMod` type that offered limited support for such systems (now deprecated as Catalyst does it better in a unified API).
 
 Using `Catalyst`, our gene network model can be constructed as follows:
 ```julia
@@ -136,12 +136,11 @@ k_on_val = 0.05
 
 k_p_val = mean_p * γ_p_val * (k_off_val * mean_p^2 + k_on_val) / (k_on_val * mean_b)
 
-symmap = [:k_on => k_on_val,
+pmap = [:k_on => k_on_val,
           :k_off => k_off_val,
           :k_p => k_p_val,
           :γ_p => γ_p_val,
           :b => mean_b]
-pmap = symmap_to_varmap(rn, symmap)
 
 # initial gene state and protein number, order [g, p]
 u₀ = [1, 1]
@@ -153,6 +152,7 @@ The reaction network with geometric bursts can be simulated using the SSA as usu
 ```julia
 # convert the reaction network into a system of jump processes
 jsys = convert(JumpSystem, rn; combinatoric_ratelaws=false)
+jsys = complete(jsys)
 
 # create a discrete problem setting the simulation parameters
 dprob = DiscreteProblem(u₀, tspan, pmap)
@@ -261,7 +261,7 @@ k_x_val *= 0.00003
 k_y_val *= 0.01
 
 # parameter mapping
-symmap = [:kx_on => kx_on_val,
+pmap = [:kx_on => kx_on_val,
           :kx_off => kx_off_val,
           :ky_on => ky_on_val,
           :ky_off => ky_off_val,
@@ -271,7 +271,6 @@ symmap = [:kx_on => kx_on_val,
           :γ_y => γ_y_val,
           :b_x => mean_b_x,
           :b_y => mean_b_y]
-pmap = symmap_to_varmap(rn, symmap)
 
 # initial gene state and protein number, order [g_x, g_y, x, y]
 u₀ = [1, 1, 1, 1]
@@ -284,6 +283,7 @@ Note that here we use a different parameter set from the one considered in [1] a
 We can run SSA as follows:
 ```julia
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
+jsys = complete(jsys)
 dprob = DiscreteProblem(jsys, u₀, tspan, pmap)
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 

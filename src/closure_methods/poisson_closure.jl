@@ -3,6 +3,7 @@ function poisson_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     closure = OrderedDict()
     closure_exp = OrderedDict()
     N = sys.N
+    iv = get_iv(sys)
 
     if !isempty(binary_vars)
         sys = bernoulli_moment_eqs(sys, binary_vars)
@@ -11,10 +12,10 @@ function poisson_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     # build symbolic expressions of cumulants up to q_order in terms of central/raw moments
     if sys isa CentralMomentEquations
         moments = copy(sys.M)
-        K = cumulants_to_central_moments(N, sys.q_order)
+        K = cumulants_to_central_moments(N, sys.q_order; iv)
     else
         moments = copy(sys.μ)
-        K = cumulants_to_raw_moments(N, sys.q_order)
+        K = cumulants_to_raw_moments(N, sys.q_order; iv)
     end
 
     iter_qs = sys.iter_m

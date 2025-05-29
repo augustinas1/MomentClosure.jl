@@ -2,8 +2,7 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
                    closure::OrderedDict, polynorm::Bool)
 
     closed_eqs = Equation[]
-    for eq in sys.odes.eqs
-
+    for eq in get_eqs(sys.odes)
         closed_rhs = substitute(eq.rhs, closure_exp)
         # apply binomial expansion on the expressions
         if polynorm # depending on the functional form
@@ -14,10 +13,10 @@ function close_eqs(sys::MomentEquations, closure_exp::OrderedDict,
         push!(closed_eqs, Equation(eq.lhs, closed_rhs))
     end
 
-    iv = get_iv(sys.odes)
-    ps = get_ps(sys.odes)
+    iv = get_iv(sys)
+    ps = get_ps(sys)
     
-    vars = states(sys.odes)[1:(length(sys.iter_1)+length(sys.iter_m))]
+    vars = unknowns(sys)[1:(length(sys.iter_1)+length(sys.iter_m))]
 
     odename = Symbol(nameof(sys), "_closed")
     odes = ODESystem(closed_eqs, iv, vars, ps; name=odename)
@@ -44,11 +43,11 @@ The supported `closure` options are:
 
 # Notes
 - `binary_vars` *must* be specified for conditional closures as an array of indices of all species
-  (as in [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap)) 
-  which molecule number is a Bernoulli variable. Although not necessary
-  for other closures, specifying `binary_vars` is recommended as the properties of Bernoulli variables
-  will be used to remove the redundant moment equations and simplify the expressions, which can
-  significantly improve numerical stability.
+  (as in [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap)) 
+  whose molecule number is a Bernoulli variable. This way, the properties of Bernoulli variables
+  will be used to remove the redundant moment equations and simplify the symbolic expressions. Note that
+  `binary vars` can also be specified for other closures, although the resulting closure will be conceptually
+  different from the original (but not necessarily worse).
 """
 function moment_closure(sys::MomentEquations, closure::String, binary_vars::Array{Int,1}=Int[])
 

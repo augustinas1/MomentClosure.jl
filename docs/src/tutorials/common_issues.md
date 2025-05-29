@@ -13,7 +13,7 @@ rn = @reaction_network begin
   (c₃*Ω, c₄), 0 ↔ X
 end
 
-p = [0.9, 2, 1, 1, 100]
+p = [:c₁ => 0.9, :c₂ => 2, :c₃ => 1, :c₄ => 1, :Ω => 100]
 u₀ = [1, 1]
 tspan = (0., 100.)
 
@@ -116,7 +116,7 @@ plot(sol, idxs=[1,2], lw=2)
 ```
 ![Brusselator issue 7](../assets/brusselator_issue_7.svg)
 
-Note that the solver throws a warning being unable to evaluate the trajectories for the entire time course (other solvers perform similarly in this case). This usually implies that the moment ODE system is too stiff and cannot be solved: the time derivatives grow unboundedly and the solver timestep is being constantly reduced, requiring an ever-increasing number of the solver iterations (hence the [`maxiters`](https://diffeq.sciml.ai/stable/basics/common_solver_opts/#Miscellaneous) warning).
+Note that the solver throws a warning being unable to evaluate the trajectories for the entire time course (other solvers perform similarly in this case). This usually implies that the moment ODE system is too stiff and cannot be solved: the time derivatives grow unboundedly and the solver timestep is being constantly reduced, requiring an ever-increasing number of the solver iterations (hence the [`maxiters`](https://docs.sciml.ai/DiffEqDocs/stable/basics/faq/#A-larger-maxiters-seems-to-be-needed,-but-it's-already-high?) warning).
 
 ## References
 

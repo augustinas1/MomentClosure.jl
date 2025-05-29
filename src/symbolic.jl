@@ -46,13 +46,8 @@ function define_μ(iter::AbstractVector, iv::BasicSymbolic)
 
 end
 
-define_μ(N::Int, order::Int, iv::BasicSymbolic) = define_μ(construct_iter_all(N, order), iv)
-
-function define_μ(N::Int, order::Int, iter = construct_iter_all(N, order))
-    @parameters t
-    return define_μ(iter, value(t))
-end
-
+define_μ(iter::AbstractVector, iv::Num=default_t()) = define_μ(iter, value(iv))
+define_μ(N::Int, order::Int, iv=default_t()) = define_μ(construct_iter_all(N, order), iv)
 
 function define_M(iter::AbstractVector, iv::BasicSymbolic)
 
@@ -77,12 +72,8 @@ function define_M(iter::AbstractVector, iv::BasicSymbolic)
 
 end
 
-define_M(N::Int, order::Int, iv::BasicSymbolic) = define_M(construct_iter_all(N, order), iv)
-
-function define_M(N::Int, order::Int, iter = construct_iter_all(N, order))
-    @parameters t
-    return define_M(iter, value(t))
-end
+define_M(iter::AbstractVector, iv::Num=default_t()) = define_M(iter, value(iv))
+define_M(N::Int, order::Int, iv=default_t()) = define_M(construct_iter_all(N, order), iv)
 
 function extract_variables(eqs::Array{Equation, 1}, μ, M=[])
 
@@ -121,7 +112,7 @@ isvar(x, vars) = any(isequal(x), vars)
     is the independent variable
 """
 
-isconstant(expr, vars, iv) = !istree(expr) || (!isvar(expr, vars) && all(arg -> isconstant(arg, vars, iv), arguments(expr)))
+isconstant(expr, vars, iv) = !iscall(expr) || (!isvar(expr, vars) && all(arg -> isconstant(arg, vars, iv), arguments(expr)))
 
 function split_factor_pow(expr, iv, vars)
     base, exp = arguments(expr)

@@ -1,11 +1,12 @@
 using MomentClosure
-using MomentClosure: define_μ
+using MomentClosure: define_μ, get_eqs
 using Symbolics: value
 using Catalyst
 using Test
 
-@parameters t, σ_b, σ_u, ρ_b, ρ_u, σ_b_LMA
-@variables g(t)
+t = default_t()
+@parameters σ_b, σ_u, ρ_b, ρ_u, σ_b_LMA
+@species g(t)
 
 # simple feedback loop
 rn_nonlinear = @reaction_network begin
@@ -28,13 +29,13 @@ binary_vars = [speciesmap(rn_nonlinear)[g]]
 LMA_eqs, _ = linear_mapping_approximation(rn_nonlinear, rn_linear, binary_vars, combinatoric_ratelaws=false)
 
 μ = define_μ(2,3)
-expr1 = LMA_eqs.odes.eqs[1].rhs
+expr1 = get_eqs(LMA_eqs)[1].rhs
 expr2 = σ_u - σ_b*μ[1,1] - σ_u*μ[1,0]
 @test isequal(expr1, value.(expr2))
-expr1 = LMA_eqs.odes.eqs[2].rhs
+expr1 = get_eqs(LMA_eqs)[2].rhs
 expr2 = ρ_b + ρ_u*μ[1,0] - ρ_b*μ[1,0] - μ[0,1]
 @test isequal(expr1, value.(expr2))
-expr1 = LMA_eqs.odes.eqs[3].rhs
+expr1 = get_eqs(LMA_eqs)[3].rhs
 expr2 = ρ_u*μ[1,0] + σ_u*μ[0,1] - μ[1,1] - σ_u*μ[1,1] - σ_b*μ[1,1]^2*μ[1,0]^-1
 @test isequal(simplify(expr1), simplify(expr2))
 

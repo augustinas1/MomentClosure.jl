@@ -28,14 +28,16 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     closure_exp = OrderedDict() # expanding out all higher order terms fully
 
     N = sys.N
+    iv = get_iv(sys)
+
     if sys isa CentralMomentEquations
         M = copy(sys.M)
-        μ = central_to_raw_moments(N, sys.m_order)
-        μ_symbolic = define_μ(N, sys.q_order)
+        μ = central_to_raw_moments(N, sys.m_order; iv)
+        μ_symbolic = define_μ(N, sys.q_order, iv)
     else
         # consider covariances explicitly as M (without converting to raw moments)
         # and converting at the end leads to much more tractable expressions
-        M = define_M(N, 2)
+        M = define_M(N, 2, iv)
         μ = copy(sys.μ)
         μ_symbolic = copy(μ)
     end
@@ -164,8 +166,8 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
     # construct the corresponding truncated expressions of higher order
     # central moments from the obtained gamma raw moment expressions
     if sys isa CentralMomentEquations
-        raw_to_central = raw_to_central_moments(N, sys.q_order, μ)
-        central_to_raw = central_to_raw_moments(N, sys.q_order)
+        raw_to_central = raw_to_central_moments(N, sys.q_order; μ, iv)
+        central_to_raw = central_to_raw_moments(N, sys.q_order; iv)
         closure_M = OrderedDict()
         for i in sys.iter_q
             closure_exp[M[i]] = raw_to_central[i]
@@ -173,7 +175,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         end
         closure = closure_M
     else
-        raw_to_central = raw_to_central_moments(N, 2)
+        raw_to_central = raw_to_central_moments(N, 2; iv)
         M_to_μ = [M[i] => raw_to_central[i] for i in filter(x -> sum(x)==2, sys.iter_all)]
 
         # variance of bernoulli variable is expressed in terms of its mean
@@ -198,7 +200,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         redundant_iter, redundant_eqs, iter_sub = bernoulli_reduce(sys, binary_vars)
 
         closed_eqs = Equation[]
-        for (i, eq) in enumerate(get_eqs(sys.odes))
+        for (i, eq) in enumerate(get_eqs(sys))
             if !(i in redundant_eqs)
 
                 closed_rhs = substitute(eq.rhs, closure_exp)
@@ -230,7 +232,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int,1}=Int[])
         end
 
         odename = Symbol(nameof(sys), "_gamma_closure")
-        odes = ODESystem(closed_eqs, get_iv(sys.odes), vars, get_ps(sys.odes); name=odename)
+        odes = ODESystem(closed_eqs, get_iv(sys), vars, get_ps(sys); name=odename)
 
         return ClosedMomentEquations(odes, closure, sys)
 

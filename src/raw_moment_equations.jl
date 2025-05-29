@@ -2,7 +2,7 @@
     generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
                             langevin::Bool=false, combinatoric_ratelaws::Bool=true, smap=speciesmap(rn))
 
-Given a [`ReactionSystem`](https://catalyst.sciml.ai/stable/api/catalyst_api/#ModelingToolkit.ReactionSystem)
+Given a [`ReactionSystem`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.ReactionSystem)
 return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
 
 Notes:
@@ -14,13 +14,11 @@ Notes:
   Equation (diffusion approximation) is considered, and the moment equations are 
   constructed from the corresponding SDE formulation.
 - `combinatoric_ratelaws=true` uses binomials in calculating the propensity functions
-  of a `ReactionSystem`, see the notes for [`ModelingToolkit.jumpratelaw`]
-  (https://mtk.sciml.ai/stable/systems/ReactionSystem/#ModelingToolkit.jumpratelaw).
-  *Note* that this field is irrelevant using `ReactionSystemMod` as then the
-  propensities are defined directly by the user.
+  of a `ReactionSystem`, see the notes for [`Catalyst.jumpratelaw`]
+  (https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.jumpratelaw).
 - `smap` sets the variable ordering in the moment equations (which index corresponds to which species
   in the reaction network). By default, this is consistent with the internal system ordering
-  accessible with [`Catalyst.speciesmap`](https://catalyst.sciml.ai/stable/api/catalyst_api/#Catalyst.speciesmap).
+  accessible with [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap).
 """
 function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
                                  langevin::Bool=false, combinatoric_ratelaws::Bool=true, smap=speciesmap(rn))
@@ -35,7 +33,7 @@ function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
         diff = Num[S[i,k] * a[k]^(1//2) for i in 1:N, k in eachindex(a)]
         
         return generate_raw_moment_eqs(Equation[Differential(iv)(s) ~ d for (s, d) in zip(species(rn), drift)], 
-                                       diff, m_order, states(rn), nameof(rn), parameters(rn), iv)
+                                       diff, m_order, unknowns(rn), nameof(rn), parameters(rn), iv)
     
     end
         

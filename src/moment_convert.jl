@@ -1,5 +1,5 @@
 """
-    cumulants_to_raw_moments(N::Int, max_order::Int)
+    cumulants_to_raw_moments(N::Int, max_order::Int; μ=nothing, iv=default_t())
 
 Express all `N`-variate cumulants ``κ`` up to order given by `max_order`
 in terms of raw moments ``μ``. Return a Dictionary mapping from
@@ -19,7 +19,7 @@ Dict{Any,Any} with 5 entries:
   (1, 1) => μ₁₁(t) - ((μ₀₁(t))*(μ₁₀(t)))
 ```
 """
-function cumulants_to_raw_moments(N::Int, max_order::Int, μ=nothing)
+function cumulants_to_raw_moments(N::Int, max_order::Int; μ=nothing, iv=default_t())
 
     # following Smith (1995)
 
@@ -27,7 +27,7 @@ function cumulants_to_raw_moments(N::Int, max_order::Int, μ=nothing)
     iter_1 = filter(x -> sum(x) == 1, iter_all)
 
     if isnothing(μ)
-        μ = define_μ(N, max_order, iter_all)
+        μ = define_μ(iter_all, iv)
     else
         @assert (μ isa Dict) && length(μ) == length(iter_all) "passed arguments are inconsistent (μ vs N & order)"
     end
@@ -79,14 +79,14 @@ function cumulants_to_raw_moments(N::Int, max_order::Int, μ=nothing)
 end
 
 """
-    cumulants_to_central_moments(N::Int, max_order::Int)
+    cumulants_to_central_moments(N::Int, max_order::Int; iv=default_t())
 
 Express all `N`-variate cumulants ``κ`` up to order given by `max_order`
 in terms of raw moments ``M``. Return a Dictionary mapping from
 vector ``\\mathbf{i}`` (that indicates the cumulant ``κ_{\\mathbf{i}}``)
 to the corresponding central moment expressions.
 """
-function cumulants_to_central_moments(N::Int, max_order::Int)
+function cumulants_to_central_moments(N::Int, max_order::Int; iv=default_t())
 
     # obtain cumulants up to (m_order)^th order in terms of
     # central moments using formula from Balakrishan et al. (1998)
@@ -96,9 +96,9 @@ function cumulants_to_central_moments(N::Int, max_order::Int)
 
     iter_all = construct_iter_all(N, max_order)
     iter_1 = filter(x -> sum(x) == 1, iter_all)
-    μ = define_μ(N, 1, iter_1)
-    M = define_M(N, max_order, iter_all)
-
+    μ = define_μ(iter_1, iv)
+    M = define_M(iter_all, iv)
+    
     M_star[Tuple(zeros(N))] = 1.0
     for i in 1:N
         eᵢ = iter_1[i]
@@ -147,7 +147,7 @@ function cumulants_to_central_moments(N::Int, max_order::Int)
 end
 
 
-function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
+function raw_to_central_moments(N::Int, order::Int; μ=nothing, bernoulli=false, iv=default_t())
 
     # Return a dictionary of central moments expressed in terms of raw moments
     # example use:
@@ -158,9 +158,9 @@ function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
 
     iter_all = construct_iter_all(N, order)
     iter_μ = filter(x -> sum(x) == 1, iter_all)
-    M = define_M(N, order, iter_all)
+    M = define_M(iter_all, iv)
     if isnothing(μ)
-        μ = define_μ(N, order, iter_all)
+        μ = define_μ(iter_all, iv)
     elseif !(μ isa Dict) || length(μ) != length(iter_all)
         if bernoulli
             iter_all = keys(μ)
@@ -190,7 +190,7 @@ function raw_to_central_moments(N::Int, order::Int, μ=nothing; bernoulli=false)
 
 end
 
-function central_to_raw_moments(N::Int, order::Int)
+function central_to_raw_moments(N::Int, order::Int; iv=default_t())
 
     # Return a dictionary of raw moments expressed in terms of central moments
     # example use:
@@ -200,8 +200,8 @@ function central_to_raw_moments(N::Int, order::Int)
     iter_all = construct_iter_all(N, order)
     iter_μ = filter(x -> sum(x) == 1, iter_all)
 
-    M = define_M(N, order, iter_all)
-    μ = define_μ(N, order, iter_μ)
+    M = define_M(iter_all, iv)
+    μ = define_μ(iter_μ, iv)
 
     central_to_raw = Dict()
 

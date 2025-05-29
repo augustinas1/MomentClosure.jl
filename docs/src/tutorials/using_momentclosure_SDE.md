@@ -17,15 +17,17 @@ where $\epsilon$ is the bifurcation parameter, $\omega_n$ the natural frequency,
     dx_2 &= \left( \epsilon(1-x_1^2) x_2 - \omega_n^2 x_1 \right)dt + A\cos(\omega_g t)dt + A dw_t.
 \end{align*}
 ```
-In Julia, systems of SDEs can be conveniently described using [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl) that provides an [`SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingToolkit.SDESystem) type. Defining such models is straightforward ([as in this example](https://mtk.sciml.ai/stable/tutorials/stochastic_diffeq/)) and in our case is done as follows:
+In Julia, systems of SDEs can be conveniently described using [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl) that provides an [`SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingToolkit.SDESystem) type. Defining such models can be done as follows:
 ```julia
 using ModelingToolkit
+# using MTK default t as the independent variable and D as its derivative
+using ModelingToolkit: t_nounits as t, D_nounits as D
 
-@variables t, x₁(t), x₂(t)
+@variables x₁(t), x₂(t)
 @parameters ϵ, ω_n, ω_g, A
 
-drift_eqs = [Differential(t)(x₁) ~ x₂;
-             Differential(t)(x₂) ~ ϵ*(1-x₁^2)*x₂ - ω_n^2*x₁ + A*cos(ω_g*t)]
+drift_eqs = [D(x₁) ~ x₂;
+             D(x₂) ~ ϵ*(1-x₁^2)*x₂ - ω_n^2*x₁ + A*cos(ω_g*t)]
 diff_eqs = [0; A]
 
 vdp_model = SDESystem(drift_eqs, diff_eqs, t, [x₁, x₂], [ϵ, ω_n, ω_g, A], name = :VdP)
@@ -54,7 +56,7 @@ The obtained moment equations are equivalent to the published ones (except for a
 
 Note that the moment equations are not *closed* as there are two fourth order moments involved, $\mu_{31}$ and $\mu_{22}$, and hence we need to resort to MAs. We proceed to apply the [derivative matching approximation](@ref derivative_matching) and solve the system of ODEs as follows:
 ```julia
-using DifferentialEquations
+using OrdinaryDiffEqTsit5
 
 closed_eqs = moment_closure(moment_eqs, "derivative matching")
 
@@ -65,9 +67,10 @@ sol_MA = solve(oprob, Tsit5(), saveat=0.0001)
 ```
 Finally, we can also use [`DifferentialEquations`](https://github.com/SciML/DifferentialEquations.jl) to [solve the SDEs](https://diffeq.sciml.ai/stable/tutorials/sde_example/) for many trajectories and compare the ensemble statistics to the derivative matching approximation (getting a great match):
 ```julia
+using StochasticDiffEq
 using DifferentialEquations.EnsembleAnalysis, Plots
 
-prob_SDE = SDEProblem(vdp_model, u0, tspan, ps)
+prob_SDE = SDEProblem(complete(vdp_model), u0, tspan, ps)
 @time sol_SDE = solve(EnsembleProblem(prob_SDE), SRIW1(), saveat=0.0001, trajectories=100)
 means_SDE = timeseries_steps_mean(sol_SDE)
 
@@ -94,11 +97,11 @@ where $\theta$ is the angular displacement, $m$ the mass of the pendulum, $g$ th
 ```
 Using ModelingToolkit again we can define the model as
 ```julia
-@variables t, x₁(t), x₂(t)
+@variables x₁(t), x₂(t)
 @parameters k, l, m, g
 
-drift_eqs = [Differential(t)(x₁) ~ x₂;
-             Differential(t)(x₂) ~ -k/m*x₂ - g/l*sin(x₁)]
+drift_eqs = [D(x₁) ~ x₂;
+             D(x₂) ~ -k/m*x₂ - g/l*sin(x₁)]
 diff_eqs = [0; 1/m]
 
 pendulum_model = SDESystem(drift_eqs, diff_eqs, t, [x₁, x₂], [k, l, m, g], name = :pendulum)
@@ -128,7 +131,7 @@ u0map = deterministic_IC(u0, closed_eqs)
 oprob = ODEProblem(closed_eqs, u0map, tspan, ps)
 sol_MA = solve(oprob, Tsit5(), saveat=0.01)
 
-prob_SDE = SDEProblem(pendulum_model, u0, tspan, ps)
+prob_SDE = SDEProblem(complete(pendulum_model), u0, tspan, ps)
 sol_SDE = solve(EnsembleProblem(prob_SDE), SRIW1(), saveat=0.01, trajectories=100)
 means_SDE = timeseries_steps_mean(sol_SDE)
 

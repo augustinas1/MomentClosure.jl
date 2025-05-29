@@ -22,17 +22,17 @@ closed_raw_eqs = moment_closure(raw_eqs, "conditional gaussian", binary_vars)
 
 # latexify output is very sensitive to Julia version and latexify + Symbolics updates...
 expr = replace(raw"\begin{align*}
-\frac{d\mu_{1 0}}{dt} =& k_{on}", "\r\n"=>"\n")
+\frac{d\mu_{1 0}}{dt} &= k_{on}", "\r\n"=>"\n")
 @test latexify(clean_eqs)[1:46] == expr
 
 expr1 = replace(raw"\begin{align*}
-\mu_{1 2} =& \frac{\mu_{1 1}^{2}}{\mu_{1 0}} \\
-\mu_{1 3} =& \frac{3 \mu_{1 2} \mu_{1 1}}{\mu_{1 0}} + \frac{-2 \mu_{1 1}^{3}}{\mu_{1 0}^{2}}
+\mu_{1 2} &= \frac{\mu_{1 1}^{2}}{\mu_{1 0}} \\
+\mu_{1 3} &= \frac{3 \mu_{1 2} \mu_{1 1}}{\mu_{1 0}} + \frac{-2 \mu_{1 1}^{3}}{\mu_{1 0}^{2}}
 \end{align*}
 ", "\r\n"=>"\n")
 expr2 = replace(raw"\begin{align*}
-\mu_{1 2} =& \frac{\mu_{1 1}^{2}}{\mu_{1 0}} \\
-\mu_{1 3} =& \frac{-2 \mu_{1 1}^{3}}{\mu_{1 0}^{2}} + \frac{3 \mu_{1 1} \mu_{1 2}}{\mu_{1 0}}
+\mu_{1 2} &= \frac{\mu_{1 1}^{2}}{\mu_{1 0}} \\
+\mu_{1 3} &= \frac{-2 \mu_{1 1}^{3}}{\mu_{1 0}^{2}} + \frac{3 \mu_{1 1} \mu_{1 2}}{\mu_{1 0}}
 \end{align*}
 ", "\r\n"=>"\n")
 exprl = latexify(closed_raw_eqs, :closure)

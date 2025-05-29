@@ -1,7 +1,5 @@
 abstract type MomentEquations end
 
-# TODO: implement getters
-
 """
 $(TYPEDEF)
 
@@ -12,7 +10,7 @@ helper parameters (used internally).
 $(FIELDS)
 """
 struct RawMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of raw moments."""
     odes::ODESystem
     """Symbolic variables defining the raw moments."""
@@ -44,7 +42,7 @@ helper parameters (used internally).
 $(FIELDS)
 """
 struct CentralMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of central moments."""
     odes::ODESystem
     """Symbolic variables defining the means."""
@@ -77,7 +75,7 @@ Closed moment equations and the corresponding closure functions.
 $(FIELDS)
 """
 struct ClosedMomentEquations <: MomentEquations
-    """[`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/)
+    """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of *closed* moments."""
     odes::ODESystem
     """Dictionary of moment closure functions for each higher order moment."""
@@ -88,9 +86,17 @@ end
 
 # a basic wrapper
 function SciMLBase.ODEProblem(eqs::MomentEquations, args...; kwargs...)
-    ODEProblem(eqs.odes, args...; kwargs...)
+    ODEProblem(complete(get_odes(eqs)), args...; kwargs...)
 end
 
 function Base.nameof(eqs::MomentEquations)
-    nameof(eqs.odes)
+    nameof(get_odes(eqs))
 end
+
+# Basic `MomentEquations`-specific accessors
+get_odes(sys::MomentEquations) = getfield(sys, :odes)
+get_closure(sys::ClosedMomentEquations) = getfield(sys, :closure)
+ModelingToolkit.get_iv(sys::MomentEquations) = get_iv(get_odes(sys))
+ModelingToolkit.get_eqs(sys::MomentEquations) = get_eqs(get_odes(sys))
+ModelingToolkit.unknowns(sys::MomentEquations) = unknowns(get_odes(sys))
+ModelingToolkit.get_ps(sys::MomentEquations) = get_ps(get_odes(sys))

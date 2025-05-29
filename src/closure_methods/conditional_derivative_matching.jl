@@ -5,10 +5,11 @@ function conditional_derivative_matching(sys::MomentEquations,
         error("conditional closure does not work if there are no binary species")
     end
     N = sys.N
+    iv = get_iv(sys)
     sys = bernoulli_moment_eqs(sys, binary_vars)
 
     # define symbolic raw moment expressions
-    μ = sys isa CentralMomentEquations ? define_μ(N, sys.q_order) : copy(sys.μ)
+    μ = sys isa CentralMomentEquations ? define_μ(N, sys.q_order, iv) : copy(sys.μ)
 
     # closure of higher order raw moments without explicit form of truncated moments
     # e.g. μ₁₄ would still be a function of μ₁₃ even though μ₁₃ is also truncated
@@ -136,13 +137,13 @@ function conditional_derivative_matching(sys::MomentEquations,
 
     if sys isa CentralMomentEquations
 
-        central_to_raw = central_to_raw_moments(N, sys.q_order)
+        central_to_raw = central_to_raw_moments(N, sys.q_order; iv)
         μ_central = Dict()
         for iter in vcat(sys.iter_m, sys.iter_q)
             μ_central[μ[iter]] = central_to_raw[iter]
         end
 
-        μ_M_exp = define_μ(N, 1)
+        μ_M_exp = define_μ(N, 1, iv)
         for i in sys.iter_m
             μ_M_exp[i] = μ_central[μ[i]]
         end
@@ -160,8 +161,8 @@ function conditional_derivative_matching(sys::MomentEquations,
         closure_exp = OrderedDict()
         # construct the corresponding truncated expressions of higher order
         # central moments from the obtained raw moment expressions
-        raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ_M_exp, bernoulli=true)
-        raw_to_central = raw_to_central_moments(N, sys.q_order, μ_M, bernoulli=true)
+        raw_to_central_exp = raw_to_central_moments(N, sys.q_order, μ=μ_M_exp, bernoulli=true, iv=iv)
+        raw_to_central = raw_to_central_moments(N, sys.q_order, μ=μ_M, bernoulli=true, iv=iv)
         for i in sys.iter_q
             closure_exp[sys.M[i]] = expand_mod(raw_to_central_exp[i])
             closure[sys.M[i]] = expand_mod(raw_to_central[i])

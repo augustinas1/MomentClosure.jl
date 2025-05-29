@@ -1,7 +1,7 @@
 module MomentClosure
 
 using ModelingToolkit
-using ModelingToolkit: get_noiseeqs, states, get_eqs, get_iv, get_ps
+using ModelingToolkit: get_noiseeqs, unknowns, get_eqs, get_iv, get_ps
 using Catalyst
 using SciMLBase, SciMLBase.EnsembleAnalysis
 using Random
@@ -25,7 +25,8 @@ using DocStringExtensions
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
        propensities, get_stoichiometry, moment_closure, deterministic_IC,
 	   get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
-	   linear_mapping_approximation
+	   linear_mapping_approximation,
+       get_odes, get_closure, get_iv, get_eqs, unknowns, get_ps
 
 include("reaction_systems.jl")
 include("moment_equations.jl")

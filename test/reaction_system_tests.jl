@@ -1,8 +1,9 @@
 using Test
 using MomentClosure
 using Catalyst
+using ModelingToolkit: t_nounits as t
 
-@parameters t, c₁, c₂, c₃, c₄, Ω
+@parameters c₁, c₂, c₃, c₄, Ω
 @species X(t), Y(t)
 
 S_mat = [ 1 -1  1 -1;
