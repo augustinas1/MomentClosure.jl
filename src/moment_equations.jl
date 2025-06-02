@@ -13,6 +13,8 @@ struct RawMomentEquations <: MomentEquations
     """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of raw moments."""
     odes::ODESystem
+    """Dictionary mapping species of the associated `ReactionSystem` to their index in the moment equations."""
+    smap::Dict
     """Symbolic variables defining the raw moments."""
     μ::OrderedDict
     """Number of species within the system."""
@@ -45,6 +47,8 @@ struct CentralMomentEquations <: MomentEquations
     """[`ModelingToolkit.ODESystem`](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#ModelingToolkit.ODESystem)
     consisting of the time-evolution equations of central moments."""
     odes::ODESystem
+    """Dictionary mapping species of the associated `ReactionSystem` to their index in the moment equations."""
+    smap::Dict
     """Symbolic variables defining the means."""
     μ::OrderedDict
     """Symbolic variables defining the central moments."""
@@ -84,9 +88,25 @@ struct ClosedMomentEquations <: MomentEquations
     open_eqs::MomentEquations
 end
 
-# a basic wrapper
-function SciMLBase.ODEProblem(eqs::MomentEquations, args...; kwargs...)
-    ODEProblem(complete(get_odes(eqs)), args...; kwargs...)
+"""
+```julia
+SciMLBase.ODEProblem(sys::MomentEquations, u0, tspan, p=NullParameters(); 
+                     use_deterministic_IC::Bool=true, kwargs...)
+```
+
+Generates a [`SciMLBase.ODEProblem`](https://docs.sciml.ai/DiffEqDocs/stable/types/ode_types/#SciMLBase.ODEProblem) from `MomentEquations`.
+
+Note that the initial condition `u0` can be defined as follows:
+- If `u0` contains the initial molecule numbers (either as a vector or a mapping) and `use_deterministic_IC` is set to `true`, 
+  `u0` will be mapped to the corresponding raw/central moments under the assumption of deterministic 
+  initial conditions (using the function [`deterministic_IC`](@ref)). This is the default use case.
+- To handle a more complicated initial condition, `u0` can be defined with the initial values of each moment directly, 
+  but `use_deterministic_IC` must be set to `false` to ensure correctness.
+"""
+function SciMLBase.ODEProblem(sys::MomentEquations, u0, tspan, p=NullParameters(); 
+                              use_deterministic_IC::Bool=true, kwargs...)
+    u0map = use_deterministic_IC ? deterministic_IC(u0, sys) : u0
+    ODEProblem(complete(get_odes(sys)), u0map, tspan, p; kwargs...)
 end
 
 function Base.nameof(eqs::MomentEquations)
@@ -96,6 +116,8 @@ end
 # Basic `MomentEquations`-specific accessors
 get_odes(sys::MomentEquations) = getfield(sys, :odes)
 get_closure(sys::ClosedMomentEquations) = getfield(sys, :closure)
+Catalyst.speciesmap(sys::MomentEquations) = getfield(sys, :smap)
+Catalyst.speciesmap(sys::ClosedMomentEquations) = speciesmap(getfield(sys, :open_eqs))
 ModelingToolkit.get_iv(sys::MomentEquations) = get_iv(get_odes(sys))
 ModelingToolkit.get_eqs(sys::MomentEquations) = get_eqs(get_odes(sys))
 ModelingToolkit.unknowns(sys::MomentEquations) = unknowns(get_odes(sys))

@@ -4,10 +4,10 @@ function generate_central_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::
     N = length(drift_eqs)
     drift = [e.rhs for e in drift_eqs]
     diff_mat = diff*transpose(diff)
-    
+    smap = Dict(Pair.(vars, 1:length(vars)))
+
     if iszero(q_order)
         try
-            smap = Dict(Pair.(vars, 1:length(vars)))
             _, _, drift_order = polynomial_propensities(drift, iv, smap)
             _, _, diff_order = polynomial_propensities(value.(diff_mat), iv, smap)
             q_order = m_order + max(drift_order - 1, diff_order - 2)
@@ -96,7 +96,7 @@ function generate_central_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::
     odename = Symbol(name, "_central_moment_eqs_m", m_order, "_q", q_order)
     odes = ODESystem(eqs, iv, extract_variables(eqs, μ, M), ps; name=odename)
 
-    CentralMomentEquations(odes, μ, M, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
+    CentralMomentEquations(odes, smap, μ, M, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
 end
 
 """

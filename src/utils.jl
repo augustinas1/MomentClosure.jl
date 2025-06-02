@@ -238,52 +238,67 @@ end
 
 
 """
-    deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
+    deterministic_IC(u0map, sys::MomentEquations)
 
-Given an array of initial molecule numbers and the corresponding moment equations,
+Given the initial molecule numbers and the corresponding moment equations,
 return a mapping of each moment to its initial value under deterministic initial conditions.
 
 # Notes
 - The means are set to initial molecule numbers (as they take the values specified in
-  `u₀` with probability one). The higher order raw moments are products of the corresponding
+  `u0map` with probability one). The higher order raw moments are products of the corresponding
   powers of the means whereas the higher order central moments are simply zero.
-- The ordering of `u₀` elements must be consistent with the ordering of species
-  in the corresponding reaction system (can be checked with the 
-  [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap) 
-  function).
+- Similarly to [Catalyst.jl](https://docs.sciml.ai/Catalyst/stable/introduction_to_catalyst/introduction_to_catalyst/#introduction_to_catalyst_massaction_ode),
+  the initial condition mapping referring to the corresponding chemical species 
+  can be defined using either symbolic variables (from ModelingToolkit) or Julia `Symbol`s .
+- If `u0map` is simply a vector of numerical values, the ordering of its elements must be 
+  consistent with the ordering of species in the corresponding moment equations (can be checked with the 
+  [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap) function).
 - As higher-order moment functions under log-normal, gamma, derivative matching and
   the conditional closures involve moments raised to negative powers, setting initial
   molecule numbers of certain species to *zeros* will result in NaN errors when solving
   the ODEs (the specifics depend on the system at hand).
 """
-function deterministic_IC(u₀::Array{T, 1}, eqs::MomentEquations) where T<:Real
+deterministic_IC(u0map::Union{Dict, Tuple}, sys::MomentEquations) = deterministic_IC(collect(u0map), sys)
 
-    if eqs isa ClosedMomentEquations
-        sys = eqs.open_eqs
-    else
-        sys = eqs
-    end
+function deterministic_IC(u0map::AbstractArray{<:Pair}, sys::MomentEquations)
+    species_u0 = getname.(first.(u0map))
+    inds_u0 = sortperm(species_u0)
+    species_u0 = species_u0[inds_u0]
+    
+    smap = collect(speciesmap(sys))
+    species_sys = getname.(first.(smap))
+    inds_sys = sortperm(species_sys)
+    species_sys = species_sys[inds_sys]
+    
+    @assert isequal(species_u0, species_sys) error("The passed IC vector is inconsistent with the species in the system")
 
+    vals_u0 = last.(u0map)[inds_u0]
+    idx_sys = last.(smap)[inds_sys]
+    u0 = vals_u0[sortperm(idx_sys)]
+
+    deterministic_IC(u0, sys)
+end
+
+function deterministic_IC(u0::AbstractVector{<:Real}, eqs::MomentEquations)
+
+    sys = eqs isa ClosedMomentEquations ? eqs.open_eqs : eqs
     N = sys.N
-    if N != length(u₀)
-        error("length of the passed IC vector and the number of species in the system are inconsistent")
-    end
+    @assert N == length(u0) error("The passed IC vector is inconsistent with the species in the system")
 
-    μ_map = [sys.μ[iter] => u₀[i] for (i, iter) in enumerate(sys.iter_1)]
+    μ_map = [sys.μ[iter] => u0[i] for (i, iter) in enumerate(sys.iter_1)]
 
     vars = unknowns(eqs)
     no_states = length(vars)
-    if typeof(sys) == CentralMomentEquations
+    if sys isa CentralMomentEquations
         moment_map = [vars[i] => 0.0 for i in N+1:no_states]
     else
         reverse_μ = Dict(μ => iter for (iter, μ) in sys.μ)
-        moment_map = [vars[i] => prod(u₀ .^ reverse_μ[vars[i]]) for i in N+1:no_states]
+        moment_map = [vars[i] => prod(u0 .^ reverse_μ[vars[i]]) for i in N+1:no_states]
     end
 
     vcat(μ_map, moment_map)
 
 end
-
 
 """
     format_moment_eqs(eqs::MomentEquations)

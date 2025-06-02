@@ -171,6 +171,7 @@ function generate_central_moment_eqs(rn::ReactionSystem, m_order::Int, q_order::
 
     CentralMomentEquations(
         odes,
+        smap,
         μ,
         M,
         N,
