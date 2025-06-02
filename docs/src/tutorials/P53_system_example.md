@@ -59,10 +59,10 @@ rn = @reaction_network begin
 end
 
 # parameters
-p = [:k₁ => 90, :k₂ => 0.002, :k₃ => 1.7, :k₄ => 1.1, :k₅ => 0.93, :k₆ => 0.96, :k₇ => 0.01]
+pmap = [:k₁ => 90, :k₂ => 0.002, :k₃ => 1.7, :k₄ => 1.1, :k₅ => 0.93, :k₆ => 0.96, :k₇ => 0.01]
 
 # initial molecule numbers [x, y₀, y]
-u₀ = [70, 30, 60]
+u0map = [:x=> 70, :y₀ => 30, :y => 60]
 ```
 
 Let's first simulate the reaction network using SSA in order to have a reference point of the real system dynamics. We choose a relatively long simulation time span in order to clearly see how the molecule numbers converge to their steady-state values and opt for $5 \times 10^4$ SSA realisations:
@@ -73,7 +73,7 @@ tspan = (0., 200.)
 # constructing the discrete jump problem using DifferentialEquations
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
 jsys = complete(jsys)
-dprob = DiscreteProblem(jsys, u₀, tspan, p)
+dprob = DiscreteProblem(jsys, u0map, tspan, pmap)
 
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 ensembleprob  = EnsembleProblem(jprob)
@@ -123,10 +123,7 @@ for q in 3:6
     eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaws=false)
     for (closure, plt) in zip(closures, plts)
         closed_eqs = moment_closure(eqs, closure)
-
-        u₀map = deterministic_IC(u₀, closed_eqs)
-        oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
-
+        oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
         sol = solve(oprob, Tsit5(), saveat=0.1)
         plt = plot!(plt, sol, idxs=[1], lw=3, label  = "q = "*string(q))
     end
@@ -171,12 +168,9 @@ for q in [4,6]
     eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaws=false)
     for closure in closures
         closed_eqs = moment_closure(eqs, closure)
-
-        u₀map = deterministic_IC(u₀, closed_eqs)
-        oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
+        oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
         sol = solve(oprob, Tsit5(), saveat=0.1)
-
-        # index of M₂₀₀ can be checked with `u₀map` or `closed_eqs.odes.states`
+        # index of M₂₀₀ can be checked with `unknowns(closed_eqs)`
         plt = plot!(plt, sol, idxs=[4], lw=3, label  = closure*" q = "*string(q))
     end
 end
@@ -202,11 +196,8 @@ for (q, plt_m, plt_v) in zip(q_vals, plt_means, plt_vars)
 
     eqs = generate_central_moment_eqs(rn, 3, q, combinatoric_ratelaws=false)
     for closure in closures
-
         closed_eqs = moment_closure(eqs, closure)
-
-        u₀map = deterministic_IC(u₀, closed_eqs)
-        oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
+        oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
 
         sol = solve(oprob, Tsit5(), saveat=0.1)
         plt_m = plot!(plt_m, sol, idxs=[1], label = closure)    
@@ -276,9 +267,7 @@ oprobs = Dict()
 
 for closure in closures
     closed_eqs = moment_closure(eqs, closure)
-
-    u₀map = deterministic_IC(u₀, closed_eqs)
-    oprobs[closure] = ODEProblem(closed_eqs, u₀map, tspan, p)
+    oprobs[closure] = ODEProblem(closed_eqs, u0map, tspan, pmap)
     sol = solve(oprobs[closure], Tsit5(), saveat=0.1)
 
     plt = plot!(plt, sol, idxs=[1], label = closure)    

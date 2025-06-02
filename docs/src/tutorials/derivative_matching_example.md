@@ -18,9 +18,9 @@ rn = @reaction_network begin
 end
 
 # parameter values
-p = [:c₁ => 1.0, :c₂ => 1.0]
+pmap = [:c₁ => 1.0, :c₂ => 1.0]
 # initial conditions
-u0 = [20, 10]
+u0map = [:x₁ => 20, :x₂ => 10]
 # time interval to solve on
 tspan = (0., 0.5)
 ```
@@ -46,8 +46,7 @@ Note that all closure functions are consistent with the ones shown in Table II o
 ```julia
 using OrdinaryDiffEqTsit5
 
-u0map = deterministic_IC(u0, dm2_eqs) # assuming deterministic initial conditions
-oprob = ODEProblem(dm2_eqs, u0map, tspan, p)
+oprob = ODEProblem(dm2_eqs, u0map, tspan, pmap)
 dm2_sol = solve(oprob, Tsit5(), saveat=0.01)
 ```
 Now the question is how can we extract the time evolution of the cumulant $\kappa_{03}$. Firstly, note that using the standard moment relationships it can be expressed in terms of raw moments as:
@@ -108,8 +107,7 @@ unknowns(dm3_eqs.odes)
 ```
 and solve the moment equations, computing the required cumulant:
 ```julia
-u0map = deterministic_IC(u0, dm3_eqs)
-oprob = ODEProblem(dm3_eqs, u0map, tspan, p)
+oprob = ODEProblem(dm3_eqs, u0map, tspan, pmap)
 dm3_sol = solve(oprob, Tsit5(), saveat=0.01, abstol=1e-8, reltol=1e-8)
 
 μ₀₁ = dm3_sol[2,:]
@@ -122,8 +120,7 @@ Note that we could have also obtained $\kappa_{03}$ estimate in an easier way by
 central_eqs3 = generate_central_moment_eqs(rn, 3)
 dm3_central_eqs = moment_closure(central_eqs3, "derivative matching")
 
-u0map = deterministic_IC(u0, dm3_central_eqs)
-oprob = ODEProblem(dm3_central_eqs, u0map, tspan, p)
+oprob = ODEProblem(dm3_central_eqs, u0map, tspan, pmap)
 dm3_central_sol = solve(oprob, Tsit5(), saveat=0.01, abstol=1e-8, reltol=1e-8)
 
 # check that the two estimates are equivalent
@@ -136,7 +133,7 @@ The last ingredient we need for a proper comparison between the second and third
 ```julia
 using JumpProcesses
 
-dprob = DiscreteProblem(rn, u0, tspan, p)
+dprob = DiscreteProblem(rn, u0map, tspan, pmap)
 jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))
 
 ensembleprob  = EnsembleProblem(jprob)

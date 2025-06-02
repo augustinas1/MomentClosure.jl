@@ -31,7 +31,13 @@ bernoulli_moment_eqs
 ```@docs
 moment_closure
 ClosedMomentEquations
+```
+
+## Solving Moment Equations
+
+```@docs
 deterministic_IC
+ODEProblem(::MomentEquations, ::Tuple, ::Tuple, ::Tuple)
 ```
 
 ## Basic Accessor Functions
@@ -43,6 +49,7 @@ We also define a few accessor functions that return system information from the 
 * `ModelingToolkit.get_iv(sys::MomentEquations)`: The independent variable used in the system.
 * `ModelingToolkit.get_ps(sys::MomentEquations)`: The parameters of the system.
 * `ModelingToolkit.unknowns(sys::MomentEquations)`: The set of unknowns (moments) in the equations.
+* `Catalyst.speciesmap(sys::MomentEquations)`: The dictionary mapping the chemical species in a `Catalyst.ReactionSystem` to their index within the corresponding moment equations.
 * `MomentClosure.get_closure(sys::ClosedMomentEquations)`: The dictionary of moment closure functions for each higher order moment.
 
 ## [Displaying Equations and Closures](@id visualisation_api)

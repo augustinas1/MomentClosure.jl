@@ -48,16 +48,13 @@ closed_raw_eqs = moment_closure(raw_eqs, "normal")
 p = [:c₁ => 0.9, :c₂ => 2., :c₃ => 1., :c₄ => 1., :Ω => 5., :ω => 1., :τ => 40.]
 
 # initial molecule numbers of species [X, Y]
-u₀ = [1., 1.]
-
-# deterministic initial conditions
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
+u0map = [1., 1.]
 
 # time interval to solve one on
 tspan = (0., 100.)
 
 # convert the closed raw moment equations into a DifferentialEquations ODEProblem
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 
 # solve using Tsit5 solver
 sol = solve(oprob, Tsit5(), saveat=0.2)
@@ -69,7 +66,7 @@ It would be great to compare our results to the true dynamics. Using Differentia
 ```julia
 using JumpProcesses
 
-jinputs = JumpInputs(rn, u₀, tspan, p, combinatoric_ratelaws=false)
+jinputs = JumpInputs(rn, u0map, tspan, pmap, combinatoric_ratelaws=false)
 jprob = JumpProblem(jinputs, Direct())
 ```
 Note that now we have to provide an ODE solver to `solve` in order to integrate over the time-dependent propensities. 

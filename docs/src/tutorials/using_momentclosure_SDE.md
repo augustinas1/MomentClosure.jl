@@ -33,7 +33,7 @@ diff_eqs = [0; A]
 vdp_model = SDESystem(drift_eqs, diff_eqs, t, [x₁, x₂], [ϵ, ω_n, ω_g, A], name = :VdP)
 
 ps = [ϵ => 0.1, ω_n => 120*pi, ω_g => 120*pi, A => 2.5] # parameter values
-u0 = [0.1, 0.1]   # initial conditions
+u0map = [x₁ => 0.1, x₂ => 0.1]   # initial conditions
 tspan = (0., 0.1) # simulation time limit
 ```
 We can now easily extract the raw moment equations up to second order using MomentClosure
@@ -59,10 +59,7 @@ Note that the moment equations are not *closed* as there are two fourth order mo
 using OrdinaryDiffEqTsit5
 
 closed_eqs = moment_closure(moment_eqs, "derivative matching")
-
-u0map = deterministic_IC(u0, closed_eqs)
 oprob = ODEProblem(closed_eqs, u0map, tspan, ps)
-
 sol_MA = solve(oprob, Tsit5(), saveat=0.0001)
 ```
 Finally, we can also use [`DifferentialEquations`](https://github.com/SciML/DifferentialEquations.jl) to [solve the SDEs](https://diffeq.sciml.ai/stable/tutorials/sde_example/) for many trajectories and compare the ensemble statistics to the derivative matching approximation (getting a great match):
@@ -70,7 +67,7 @@ Finally, we can also use [`DifferentialEquations`](https://github.com/SciML/Diff
 using StochasticDiffEq
 using DifferentialEquations.EnsembleAnalysis, Plots
 
-prob_SDE = SDEProblem(complete(vdp_model), u0, tspan, ps)
+prob_SDE = SDEProblem(complete(vdp_model), u0map, tspan, ps)
 @time sol_SDE = solve(EnsembleProblem(prob_SDE), SRIW1(), saveat=0.0001, trajectories=100)
 means_SDE = timeseries_steps_mean(sol_SDE)
 
@@ -106,7 +103,7 @@ diff_eqs = [0; 1/m]
 
 pendulum_model = SDESystem(drift_eqs, diff_eqs, t, [x₁, x₂], [k, l, m, g], name = :pendulum)
 ps = [k => 10, m => 10, l => 10, g => 10]
-u0 = [3, 3]
+u0map = [x₁ => 3, x₂ => 3]
 tspan = (0., 15.)
 ```
 As the drift term is non-polynomial, we can no longer write down the raw moment equations in a straightforward manner. Nevertheless, we can [expand](@ref central_moment_eqs_SDE) the expressions up to a certain [Taylor expansion order $q$](@ref central_moment_eqs) and generate the corresponding time-evolution equations for the means and higher order central moments—this situation is identical to moment expansion for chemical reaction networks with non-polynomial propensities. Hence we can obtain the equations for the means and variances with $q=3$:
@@ -127,11 +124,10 @@ We can now approximate the moment equations using [gamma closure](@ref gamma_clo
 ```julia
 closed_eqs = moment_closure(moment_eqs, "gamma")
 
-u0map = deterministic_IC(u0, closed_eqs)
 oprob = ODEProblem(closed_eqs, u0map, tspan, ps)
 sol_MA = solve(oprob, Tsit5(), saveat=0.01)
 
-prob_SDE = SDEProblem(complete(pendulum_model), u0, tspan, ps)
+prob_SDE = SDEProblem(complete(pendulum_model), u0map, tspan, ps)
 sol_SDE = solve(EnsembleProblem(prob_SDE), SRIW1(), saveat=0.01, trajectories=100)
 means_SDE = timeseries_steps_mean(sol_SDE)
 
