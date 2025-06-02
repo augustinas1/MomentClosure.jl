@@ -1,7 +1,7 @@
 name = "MomentClosure"
 uuid = "01a1b25a-ecf0-48c5-ae58-55bfd5393600"
 authors = ["Augustinas Sukys"]
-version = "0.3.1"
+version = "0.4.0"
 
 [deps]
 Catalyst = "479239e8-5488-4da2-87a7-35f2df7eef83"
