@@ -8,56 +8,49 @@ rn = @reaction_network begin
   (c₃*Ω, c₄), 0 ↔ X
 end
 
-p = [:c₁ =&gt; 0.9, :c₂ =&gt; 2, :c₃ =&gt; 1, :c₄ =&gt; 1, :Ω =&gt; 100]
-u₀ = [1, 1]
+pmap = [:c₁ =&gt; 0.9, :c₂ =&gt; 2, :c₃ =&gt; 1, :c₄ =&gt; 1, :Ω =&gt; 100]
+u0map = [:X =&gt; 1, :Y =&gt; 1]
 tspan = (0., 100.)
 
 raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=false)</code></pre><p>As we have seen earlier, second-order moment expansion using normal closure approximates the true system dynamics sufficiently accurately but it&#39;s interesting to see how other closures compare. Let&#39;s try applying zero closure:</p><pre><code class="language-julia hljs">closed_raw_eqs = moment_closure(raw_eqs, &quot;zero&quot;)
 
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 plot(sol, idxs=[1,2], lw=2)</code></pre><p><img src="../../assets/brusselator_issue_1.svg" alt="Brusselator issue 1"/></p><p>The trajectory of <span>$μ₀₁$</span> becomes negative and so zero closure fails to provide physically meaningful results for this parameter set. Note that is important to correctly choose the ODE solver depending on the stiffness of the system and the accuracy required. We tried a number of <a href="https://diffeq.sciml.ai/stable/solvers/ode_solve/">recommended DifferentialEquations solvers</a> here but none seemed to improve the results.</p><p>Let&#39;s apply log-normal closure next:</p><pre><code class="language-julia hljs">closed_raw_eqs = moment_closure(raw_eqs, &quot;log-normal&quot;)
 
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 plot(sol, idxs=[1,2], lw=2, legend=:bottomright)</code></pre><p><img src="../../assets/brusselator_issue_2.svg" alt="Brusselator issue 2"/></p><p>We observe sustained oscillatory behaviour instead of the expected damped oscillations. This result is unphysical: single SSA trajectories (that may display sustained oscillations) get dephased over time and hence the ensemble average should always show damped or overdamped oscillations [1].</p><p>Normal closure is also quite fragile. This can be seen by simply including the combinatorial scaling of the mass-action propensity functions with <code>combinatoric_ratelaw=true</code> which leads to unphysical sustained oscillatory trajectories:</p><pre><code class="language-julia hljs">raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, &quot;normal&quot;)
 
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 plot(sol, idxs=[1,2], lw=2)</code></pre><p><img src="../../assets/brusselator_issue_3.svg" alt="Brusselator issue 3"/></p><p>Nevertheless, this can be improved upon by increasing the order of moment expansion:</p><pre><code class="language-julia hljs">raw_eqs = generate_raw_moment_eqs(rn, 3, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, &quot;normal&quot;)
 
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 plot(sol, idxs=[1,2], lw=2, legend=:bottomright)</code></pre><p><img src="../../assets/brusselator_issue_4.svg" alt="Brusselator issue 4"/></p><p>Some dampening in the system is now visible. Increasing the expansion order to <code>4</code> finally leads to physically sensible results:</p><pre><code class="language-julia hljs">raw_eqs = generate_raw_moment_eqs(rn, 4, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, &quot;normal&quot;)
 
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 sol = solve(oprob, Tsit5(), saveat=0.1)
 
 plot(sol, idxs=[1,2], lw=2)</code></pre><p><img src="../../assets/brusselator_issue_5.svg" alt="Brusselator issue 5"/></p><p>For dessert, we consider unphysical divergent trajectories—a frequent problem with moment equations [3]. A good example is the second-order moment expansion including the combinatorial scaling of propensities with log-normal closure applied:</p><pre><code class="language-julia hljs">raw_eqs = generate_raw_moment_eqs(rn, 2, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, &quot;log-normal&quot;)
 
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 sol = solve(oprob, Rodas4P(), saveat=0.1)
 
 plot(sol, idxs=[1,2], lw=2)</code></pre><p><img src="../../assets/brusselator_issue_6.svg" alt="Brusselator issue 6"/></p><p>In contrast to normal closure, increasing the expansion order makes the problem worse:</p><pre><code class="language-julia hljs">raw_eqs = generate_raw_moment_eqs(rn, 3, combinatoric_ratelaws=true)
 closed_raw_eqs = moment_closure(raw_eqs, &quot;log-normal&quot;)
 
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, p)
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 sol = solve(oprob, Rodas4P(), saveat=0.1)
 
 plot(sol, idxs=[1,2], lw=2)</code></pre><pre><code class="language-julia hljs">┌ Warning: Interrupted. Larger maxiters is needed.
-└ @ SciMLBase C:\Users\asukys\.julia\packages\SciMLBase\Afx1r\src\integrator_interface.jl:331</code></pre><p><img src="../../assets/brusselator_issue_7.svg" alt="Brusselator issue 7"/></p><p>Note that the solver throws a warning being unable to evaluate the trajectories for the entire time course (other solvers perform similarly in this case). This usually implies that the moment ODE system is too stiff and cannot be solved: the time derivatives grow unboundedly and the solver timestep is being constantly reduced, requiring an ever-increasing number of the solver iterations (hence the <a href="https://docs.sciml.ai/DiffEqDocs/stable/basics/faq/#A-larger-maxiters-seems-to-be-needed,-but-it&#39;s-already-high?"><code>maxiters</code></a> warning).</p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, &quot;Comparison of different moment-closure approximations for stochastic chemical kinetics&quot;, The Journal of Chemical Physics 143, 185101 (2015). <a href="https://doi.org/10.1063/1.4934990">https://doi.org/10.1063/1.4934990</a></p><p>[2]: D. Schnoerr, G. Sanguinetti, and R. Grima, &quot;Validity conditions for moment closure approximations in stochastic chemical kinetics&quot;, The Journal of Chemical Physics 141, 084103 (2014). <a href="https://doi.org/10.1063/1.4892838">https://doi.org/10.1063/1.4892838</a></p><p>[3]: E. Lakatos, A. Ale, P. D. W. Kirk, and M. P. H. Stumpf, &quot;Multivariate moment closure techniques for stochastic kinetic models&quot;, The Journal of Chemical Physics 143, 094107 (2015). <a href="https://doi.org/10.1063/1.4929837">https://doi.org/10.1063/1.4929837</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../using_momentclosure_SDE/">« Moment Equations from SDEs</a><a class="docs-footer-nextpage" href="../time-dependent_propensities/">Time-dependent Propensity Functions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Thursday 29 May 2025 12:27">Thursday 29 May 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+└ @ SciMLBase C:\Users\asukys\.julia\packages\SciMLBase\Afx1r\src\integrator_interface.jl:331</code></pre><p><img src="../../assets/brusselator_issue_7.svg" alt="Brusselator issue 7"/></p><p>Note that the solver throws a warning being unable to evaluate the trajectories for the entire time course (other solvers perform similarly in this case). This usually implies that the moment ODE system is too stiff and cannot be solved: the time derivatives grow unboundedly and the solver timestep is being constantly reduced, requiring an ever-increasing number of the solver iterations (hence the <a href="https://docs.sciml.ai/DiffEqDocs/stable/basics/faq/#A-larger-maxiters-seems-to-be-needed,-but-it&#39;s-already-high?"><code>maxiters</code></a> warning).</p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>[1]: D. Schnoerr, G. Sanguinetti, and R. Grima, &quot;Comparison of different moment-closure approximations for stochastic chemical kinetics&quot;, The Journal of Chemical Physics 143, 185101 (2015). <a href="https://doi.org/10.1063/1.4934990">https://doi.org/10.1063/1.4934990</a></p><p>[2]: D. Schnoerr, G. Sanguinetti, and R. Grima, &quot;Validity conditions for moment closure approximations in stochastic chemical kinetics&quot;, The Journal of Chemical Physics 141, 084103 (2014). <a href="https://doi.org/10.1063/1.4892838">https://doi.org/10.1063/1.4892838</a></p><p>[3]: E. Lakatos, A. Ale, P. D. W. Kirk, and M. P. H. Stumpf, &quot;Multivariate moment closure techniques for stochastic kinetic models&quot;, The Journal of Chemical Physics 143, 094107 (2015). <a href="https://doi.org/10.1063/1.4929837">https://doi.org/10.1063/1.4929837</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../using_momentclosure_SDE/">« Moment Equations from SDEs</a><a class="docs-footer-nextpage" href="../time-dependent_propensities/">Time-dependent Propensity Functions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Monday 2 June 2025 07:59">Monday 2 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

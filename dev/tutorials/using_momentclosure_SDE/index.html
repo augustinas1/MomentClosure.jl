@@ -18,7 +18,7 @@ diff_eqs = [0; A]
 vdp_model = SDESystem(drift_eqs, diff_eqs, t, [x₁, x₂], [ϵ, ω_n, ω_g, A], name = :VdP)
 
 ps = [ϵ =&gt; 0.1, ω_n =&gt; 120*pi, ω_g =&gt; 120*pi, A =&gt; 2.5] # parameter values
-u0 = [0.1, 0.1]   # initial conditions
+u0map = [x₁ =&gt; 0.1, x₂ =&gt; 0.1]   # initial conditions
 tspan = (0., 0.1) # simulation time limit</code></pre><p>We can now easily extract the raw moment equations up to second order using MomentClosure</p><pre><code class="language-julia hljs">using MomentClosure, Latexify
 
 moment_eqs = generate_raw_moment_eqs(vdp_model, 2) 
@@ -31,14 +31,11 @@ latexify(moment_eqs)</code></pre><p class="math-container">\[\begin{align*}
 \end{align*}\]</p><p>The obtained moment equations are equivalent to the published ones (except for a single term in <span>$\mu_{11}$</span> equation as there is a typo in the paper), giving some confidence that everything works as intended!</p><p>Note that the moment equations are not <em>closed</em> as there are two fourth order moments involved, <span>$\mu_{31}$</span> and <span>$\mu_{22}$</span>, and hence we need to resort to MAs. We proceed to apply the <a href="../../theory/moment_closure_approximations/#derivative_matching">derivative matching approximation</a> and solve the system of ODEs as follows:</p><pre><code class="language-julia hljs">using OrdinaryDiffEqTsit5
 
 closed_eqs = moment_closure(moment_eqs, &quot;derivative matching&quot;)
-
-u0map = deterministic_IC(u0, closed_eqs)
 oprob = ODEProblem(closed_eqs, u0map, tspan, ps)
-
 sol_MA = solve(oprob, Tsit5(), saveat=0.0001)</code></pre><p>Finally, we can also use <a href="https://github.com/SciML/DifferentialEquations.jl"><code>DifferentialEquations</code></a> to <a href="https://diffeq.sciml.ai/stable/tutorials/sde_example/">solve the SDEs</a> for many trajectories and compare the ensemble statistics to the derivative matching approximation (getting a great match):</p><pre><code class="language-julia hljs">using StochasticDiffEq
 using DifferentialEquations.EnsembleAnalysis, Plots
 
-prob_SDE = SDEProblem(complete(vdp_model), u0, tspan, ps)
+prob_SDE = SDEProblem(complete(vdp_model), u0map, tspan, ps)
 @time sol_SDE = solve(EnsembleProblem(prob_SDE), SRIW1(), saveat=0.0001, trajectories=100)
 means_SDE = timeseries_steps_mean(sol_SDE)
 
@@ -58,7 +55,7 @@ diff_eqs = [0; 1/m]
 
 pendulum_model = SDESystem(drift_eqs, diff_eqs, t, [x₁, x₂], [k, l, m, g], name = :pendulum)
 ps = [k =&gt; 10, m =&gt; 10, l =&gt; 10, g =&gt; 10]
-u0 = [3, 3]
+u0map = [x₁ =&gt; 3, x₂ =&gt; 3]
 tspan = (0., 15.)</code></pre><p>As the drift term is non-polynomial, we can no longer write down the raw moment equations in a straightforward manner. Nevertheless, we can <a href="../../theory/moment_expansion_SDE/#central_moment_eqs_SDE">expand</a> the expressions up to a certain <a href="../../theory/moment_expansion_CME/#central_moment_eqs">Taylor expansion order <span>$q$</span></a> and generate the corresponding time-evolution equations for the means and higher order central moments—this situation is identical to moment expansion for chemical reaction networks with non-polynomial propensities. Hence we can obtain the equations for the means and variances with <span>$q=3$</span>:</p><pre><code class="language-julia hljs">moment_eqs = generate_central_moment_eqs(pendulum_model, 2, 3) 
 latexify(moment_eqs) # the output here is maybe not the most visually pleasing</code></pre><p class="math-container">\[\begin{align*}
 \frac{d\mu{_{10}}}{dt} =&amp; \mu{_{01}} \\
@@ -68,14 +65,13 @@ latexify(moment_eqs) # the output here is maybe not the most visually pleasing</
 \frac{dM{_{02}}}{dt} =&amp; \frac{\frac{1}{1}}{m^{2}} + \frac{-2 k M{_{02}}}{m} + \frac{g M{_{21}} \sin\left( \mu{_{10}} \right)}{l} + \frac{-2 g M{_{11}} \cos\left( \mu{_{10}} \right)}{l}
 \end{align*}\]</p><p>We can now approximate the moment equations using <a href="../../theory/moment_closure_approximations/#gamma_closure">gamma closure</a>, solve the ODEs numerically and compare the predictions to true SDE solution, finding good agreement:</p><pre><code class="language-julia hljs">closed_eqs = moment_closure(moment_eqs, &quot;gamma&quot;)
 
-u0map = deterministic_IC(u0, closed_eqs)
 oprob = ODEProblem(closed_eqs, u0map, tspan, ps)
 sol_MA = solve(oprob, Tsit5(), saveat=0.01)
 
-prob_SDE = SDEProblem(complete(pendulum_model), u0, tspan, ps)
+prob_SDE = SDEProblem(complete(pendulum_model), u0map, tspan, ps)
 sol_SDE = solve(EnsembleProblem(prob_SDE), SRIW1(), saveat=0.01, trajectories=100)
 means_SDE = timeseries_steps_mean(sol_SDE)
 
 plot(sol_MA.t, sin.(sol_MA[1, :]), lw=2, label=&quot;MA&quot;, ylabel=&quot;sin(⟨x₁⟩)&quot;, xlabel=&quot;time&quot;)
 plot!(sol_MA.t, sin.(means_SDE[1, :]), lw=2, label=&quot;SDE&quot;, linecolor=:red,
-    linestyle=:dash, background_color_legend=nothing, legend=:topright, grid=false)</code></pre><p><img src="../../assets/basic_SDE_model2.svg" alt="Model 2 SDE"/></p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>[1]: K. R. Ghusinga, M. Soltani, A. Lamperski, S. V. Dhople, and A. Singh, &quot;Approximate moment dynamics for polynomial and trigonometric stochastic systems&quot;, IEEE 56th Annual Conference on Decision and Control (2017). <a href="https://doi.org/10.1109/CDC.2017.8263922">https://doi.org/10.1109/CDC.2017.8263922</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../using_momentclosure/">« Using MomentClosure</a><a class="docs-footer-nextpage" href="../common_issues/">Common Issues »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Thursday 29 May 2025 12:27">Thursday 29 May 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    linestyle=:dash, background_color_legend=nothing, legend=:topright, grid=false)</code></pre><p><img src="../../assets/basic_SDE_model2.svg" alt="Model 2 SDE"/></p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>[1]: K. R. Ghusinga, M. Soltani, A. Lamperski, S. V. Dhople, and A. Singh, &quot;Approximate moment dynamics for polynomial and trigonometric stochastic systems&quot;, IEEE 56th Annual Conference on Decision and Control (2017). <a href="https://doi.org/10.1109/CDC.2017.8263922">https://doi.org/10.1109/CDC.2017.8263922</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../using_momentclosure/">« Using MomentClosure</a><a class="docs-footer-nextpage" href="../common_issues/">Common Issues »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Monday 2 June 2025 07:59">Monday 2 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

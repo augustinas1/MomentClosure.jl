@@ -25,16 +25,16 @@ rn = @reaction_network begin
 end
 
 # parameters
-p = [:k₁ =&gt; 90, :k₂ =&gt; 0.002, :k₃ =&gt; 1.7, :k₄ =&gt; 1.1, :k₅ =&gt; 0.93, :k₆ =&gt; 0.96, :k₇ =&gt; 0.01]
+pmap = [:k₁ =&gt; 90, :k₂ =&gt; 0.002, :k₃ =&gt; 1.7, :k₄ =&gt; 1.1, :k₅ =&gt; 0.93, :k₆ =&gt; 0.96, :k₇ =&gt; 0.01]
 
 # initial molecule numbers [x, y₀, y]
-u₀ = [70, 30, 60]</code></pre><p>Let&#39;s first simulate the reaction network using SSA in order to have a reference point of the real system dynamics. We choose a relatively long simulation time span in order to clearly see how the molecule numbers converge to their steady-state values and opt for <span>$5 \times 10^4$</span> SSA realisations:</p><pre><code class="language-julia hljs"># time interval to solve one on
+u0map = [:x=&gt; 70, :y₀ =&gt; 30, :y =&gt; 60]</code></pre><p>Let&#39;s first simulate the reaction network using SSA in order to have a reference point of the real system dynamics. We choose a relatively long simulation time span in order to clearly see how the molecule numbers converge to their steady-state values and opt for <span>$5 \times 10^4$</span> SSA realisations:</p><pre><code class="language-julia hljs"># time interval to solve one on
 tspan = (0., 200.)
 
 # constructing the discrete jump problem using DifferentialEquations
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
 jsys = complete(jsys)
-dprob = DiscreteProblem(jsys, u₀, tspan, p)
+dprob = DiscreteProblem(jsys, u0map, tspan, pmap)
 
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 ensembleprob  = EnsembleProblem(jprob)
@@ -58,10 +58,7 @@ for q in 3:6
     eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaws=false)
     for (closure, plt) in zip(closures, plts)
         closed_eqs = moment_closure(eqs, closure)
-
-        u₀map = deterministic_IC(u₀, closed_eqs)
-        oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
-
+        oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
         sol = solve(oprob, Tsit5(), saveat=0.1)
         plt = plot!(plt, sol, idxs=[1], lw=3, label  = &quot;q = &quot;*string(q))
     end
@@ -76,12 +73,9 @@ for q in [4,6]
     eqs = generate_central_moment_eqs(rn, 2, q, combinatoric_ratelaws=false)
     for closure in closures
         closed_eqs = moment_closure(eqs, closure)
-
-        u₀map = deterministic_IC(u₀, closed_eqs)
-        oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
+        oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
         sol = solve(oprob, Tsit5(), saveat=0.1)
-
-        # index of M₂₀₀ can be checked with `u₀map` or `closed_eqs.odes.states`
+        # index of M₂₀₀ can be checked with `unknowns(closed_eqs)`
         plt = plot!(plt, sol, idxs=[4], lw=3, label  = closure*&quot; q = &quot;*string(q))
     end
 end
@@ -99,11 +93,8 @@ for (q, plt_m, plt_v) in zip(q_vals, plt_means, plt_vars)
 
     eqs = generate_central_moment_eqs(rn, 3, q, combinatoric_ratelaws=false)
     for closure in closures
-
         closed_eqs = moment_closure(eqs, closure)
-
-        u₀map = deterministic_IC(u₀, closed_eqs)
-        oprob = ODEProblem(closed_eqs, u₀map, tspan, p)
+        oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
 
         sol = solve(oprob, Tsit5(), saveat=0.1)
         plt_m = plot!(plt_m, sol, idxs=[1], label = closure)    
@@ -155,9 +146,7 @@ oprobs = Dict()
 
 for closure in closures
     closed_eqs = moment_closure(eqs, closure)
-
-    u₀map = deterministic_IC(u₀, closed_eqs)
-    oprobs[closure] = ODEProblem(closed_eqs, u₀map, tspan, p)
+    oprobs[closure] = ODEProblem(closed_eqs, u0map, tspan, pmap)
     sol = solve(oprobs[closure], Tsit5(), saveat=0.1)
 
     plt = plot!(plt, sol, idxs=[1], label = closure)    
@@ -165,4 +154,4 @@ end
 
 plt = plot!(plt, xlabel = &quot;Time [h]&quot;, ylabel = &quot;Mean p53 molecule number&quot;)
 plt = plot!(plt, means_SSA.t, means_SSA[1, :], linestyle=:dash, label = &quot;SSA&quot;, color=&quot;gray&quot;)
-plot(plt, size=(750, 450), lw=2, xlims=tspan)</code></pre><p><img src="../../assets/p53-Mdm2_5th_order_expansion.svg" alt="P53-Mdm2 5th order expansion"/></p><p>All closures are highly numerically unstable and fail to provide physically meaningful results. Performing similar fifth order moment expansion using the MEANS package we obtain (full code can be found in the example Jupyter notebook):</p><p><img src="../../assets/p53-Mdm2_5th_order_expansion_MEANS.svg" alt="P53-Mdm2 5th order expansion MEANS"/></p><p>Note that normal closure is not included in the plot as it failed to converge using MEANS while log-normal and gamma closures seem to be much more stable in comparison to MomentClosure results (albeit still unphysical). In contrast, normal closure is the only one which succeeded in being evaluated for the entire time course using MomentClosure (full time not shown in the plot) which again is a result of the implementational differences between the two packages.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../geometric_reactions+conditional_closures/">« Geometrically Distributed Reaction Products and Conditional Closures</a><a class="docs-footer-nextpage" href="../derivative_matching_example/">Derivative Matching Example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Thursday 29 May 2025 12:27">Thursday 29 May 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+plot(plt, size=(750, 450), lw=2, xlims=tspan)</code></pre><p><img src="../../assets/p53-Mdm2_5th_order_expansion.svg" alt="P53-Mdm2 5th order expansion"/></p><p>All closures are highly numerically unstable and fail to provide physically meaningful results. Performing similar fifth order moment expansion using the MEANS package we obtain (full code can be found in the example Jupyter notebook):</p><p><img src="../../assets/p53-Mdm2_5th_order_expansion_MEANS.svg" alt="P53-Mdm2 5th order expansion MEANS"/></p><p>Note that normal closure is not included in the plot as it failed to converge using MEANS while log-normal and gamma closures seem to be much more stable in comparison to MomentClosure results (albeit still unphysical). In contrast, normal closure is the only one which succeeded in being evaluated for the entire time course using MomentClosure (full time not shown in the plot) which again is a result of the implementational differences between the two packages.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../geometric_reactions+conditional_closures/">« Geometrically Distributed Reaction Products and Conditional Closures</a><a class="docs-footer-nextpage" href="../derivative_matching_example/">Derivative Matching Example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Monday 2 June 2025 07:59">Monday 2 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -11,9 +11,9 @@ rn = @reaction_network begin
 end
 
 # parameter values
-p = [:c₁ =&gt; 1.0, :c₂ =&gt; 1.0]
+pmap = [:c₁ =&gt; 1.0, :c₂ =&gt; 1.0]
 # initial conditions
-u0 = [20, 10]
+u0map = [:x₁ =&gt; 20, :x₂ =&gt; 10]
 # time interval to solve on
 tspan = (0., 0.5)</code></pre><p>We are interested in extracting the time-evolution of a specific third order cumulant, <span>$κ_{03}$</span>, using second and third order moment expansions with derivative matching, and comparing the obtained estimates to the SSA prediction.</p><p>Let&#39;s start with a second order moment expansion and print out the third-order moment closure functions obtained with derivative matching:</p><pre><code class="language-julia hljs">using MomentClosure, Latexify
 
@@ -26,8 +26,7 @@ latexify(dm2_eqs, :closure, print_all=true)</code></pre><p class="math-container
 \mu{_{03}} =&amp; \mu{_{01}}^{-3} \mu{_{02}}^{3}
 \end{align*}\]</p><p>Note that all closure functions are consistent with the ones shown in Table II of [1]. We can then move on to solving the generated system of moment ODEs:</p><pre><code class="language-julia hljs">using OrdinaryDiffEqTsit5
 
-u0map = deterministic_IC(u0, dm2_eqs) # assuming deterministic initial conditions
-oprob = ODEProblem(dm2_eqs, u0map, tspan, p)
+oprob = ODEProblem(dm2_eqs, u0map, tspan, pmap)
 dm2_sol = solve(oprob, Tsit5(), saveat=0.01)</code></pre><p>Now the question is how can we extract the time evolution of the cumulant <span>$\kappa_{03}$</span>. Firstly, note that using the standard moment relationships it can be expressed in terms of raw moments as:</p><p class="math-container">\[\begin{align*}
 \kappa_{03} = 2 \mu_{01}^3 - 3\mu_{02}\mu_{01} + \mu_{03}
 \end{align*}\]</p><p>As we were solving for moments up to second order, we do not have any direct information on the third order moment <span>$\mu_{03}$</span>. Nevertheless, we can manually approximate it using the corresponding closure function given above, i.e., <span>$\mu_{03} = \mu_{01}^{-3} \mu_{02}^{3}$</span>. The time trajectories of <span>$\mu_{01}$</span> and <span>$\mu_{02}$</span> can be extracted from <code>dm2_sol</code> and their order in the array can be checked with:</p><pre><code class="language-julia hljs">unknowns(dm2_eqs.odes)</code></pre><pre><code class="language-julia hljs">5-element Array{Term{Real,Nothing},1}:
@@ -55,8 +54,7 @@ latexify(dm3_eqs, :closure, print_all=true)</code></pre><p class="math-container
  μ₃₀(t)
  μ₂₁(t)
  μ₁₂(t)
- μ₀₃(t)</code></pre><p>and solve the moment equations, computing the required cumulant:</p><pre><code class="language-julia hljs">u0map = deterministic_IC(u0, dm3_eqs)
-oprob = ODEProblem(dm3_eqs, u0map, tspan, p)
+ μ₀₃(t)</code></pre><p>and solve the moment equations, computing the required cumulant:</p><pre><code class="language-julia hljs">oprob = ODEProblem(dm3_eqs, u0map, tspan, pmap)
 dm3_sol = solve(oprob, Tsit5(), saveat=0.01, abstol=1e-8, reltol=1e-8)
 
 μ₀₁ = dm3_sol[2,:]
@@ -65,14 +63,13 @@ dm3_sol = solve(oprob, Tsit5(), saveat=0.01, abstol=1e-8, reltol=1e-8)
 dm3_κ₀₃ = 2 .* μ₀₁ .^ 3 - 3 .* μ₀₂ .* μ₀₁ .+ μ₀₃</code></pre><p>Note that we could have also obtained <span>$\kappa_{03}$</span> estimate in an easier way by using central moment equations, as third order central moments are equal to the corresponding third order cumulants:</p><pre><code class="language-julia hljs">central_eqs3 = generate_central_moment_eqs(rn, 3)
 dm3_central_eqs = moment_closure(central_eqs3, &quot;derivative matching&quot;)
 
-u0map = deterministic_IC(u0, dm3_central_eqs)
-oprob = ODEProblem(dm3_central_eqs, u0map, tspan, p)
+oprob = ODEProblem(dm3_central_eqs, u0map, tspan, pmap)
 dm3_central_sol = solve(oprob, Tsit5(), saveat=0.01, abstol=1e-8, reltol=1e-8)
 
 # check that the two estimates are equivalent
 dm3_κ₀₃ ≈ dm3_central_sol[9,:]</code></pre><pre><code class="language-julia hljs">true</code></pre><p>The last ingredient we need for a proper comparison between the second and third order moment expansions is a reference value predicted by the SSA. We can simulate <span>$10^5$</span> SSA trajectories as follows:</p><pre><code class="language-julia hljs">using JumpProcesses
 
-dprob = DiscreteProblem(rn, u0, tspan, p)
+dprob = DiscreteProblem(rn, u0map, tspan, pmap)
 jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))
 
 ensembleprob  = EnsembleProblem(jprob)
@@ -105,4 +102,4 @@ latexify(ln3_eqs, :closure, print_all=true)</code></pre><p class="math-container
 \mu{_{22}} =&amp; \mu{_{01}}^{2} \mu{_{02}}^{-1} \mu{_{10}}^{2} \mu{_{11}}^{-4} \mu{_{12}}^{2} \mu{_{20}}^{-1} \mu{_{21}}^{2} \\
 \mu{_{13}} =&amp; \mu{_{03}} \mu{_{10}} \mu{_{01}}^{3} \mu{_{02}}^{-3} \mu{_{11}}^{-3} \mu{_{12}}^{3} \\
 \mu{_{04}} =&amp; \mu{_{01}}^{4} \mu{_{02}}^{-6} \mu{_{03}}^{4}
-\end{align*}\]</p><p>This difference is expected as fourth order moments using log-normal closure are expressed exclusively in terms of first and second order moments, whereas derivative matching additionally incorporates third order moment information. Singh and Hespanha [1, 2] elaborate on this point: as there is no unique way to define higher order moment closure functions for log-normal distribution, both closures are consistent with the assumption that the population is jointly log-normally distributed. We urge the reader to consult the mentioned papers [1, 2] and the references therein for a more complete discussion comparing the two approaches.</p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>[1]: A.  Singh  and  J.  P.  Hespanha,  &quot;Lognormal  Moment  Closures  for  Biochemical  Reactions&quot;, in Proceedings of the 45th IEEE Conference on Decision and Control, ISSN:0191-2216 (Dec. 2006), pp. 2063–2068. <a href="https://doi.org/10.1109/CDC.2006.376994">https://doi.org/10.1109/CDC.2006.376994</a></p><p>[2]: A. Singh and J. P. Hespanha, &quot;Approximate Moment Dynamics for Chemically Reacting Systems&quot;, IEEE Transactions on Automatic Control 56, 414–418 (2011). <a href="https://doi.org/10.1109/TAC.2010.2088631">https://doi.org/10.1109/TAC.2010.2088631</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../P53_system_example/">« P53 System Example</a><a class="docs-footer-nextpage" href="../SIR_example/">SIR Model Example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Thursday 29 May 2025 12:27">Thursday 29 May 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+\end{align*}\]</p><p>This difference is expected as fourth order moments using log-normal closure are expressed exclusively in terms of first and second order moments, whereas derivative matching additionally incorporates third order moment information. Singh and Hespanha [1, 2] elaborate on this point: as there is no unique way to define higher order moment closure functions for log-normal distribution, both closures are consistent with the assumption that the population is jointly log-normally distributed. We urge the reader to consult the mentioned papers [1, 2] and the references therein for a more complete discussion comparing the two approaches.</p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>[1]: A.  Singh  and  J.  P.  Hespanha,  &quot;Lognormal  Moment  Closures  for  Biochemical  Reactions&quot;, in Proceedings of the 45th IEEE Conference on Decision and Control, ISSN:0191-2216 (Dec. 2006), pp. 2063–2068. <a href="https://doi.org/10.1109/CDC.2006.376994">https://doi.org/10.1109/CDC.2006.376994</a></p><p>[2]: A. Singh and J. P. Hespanha, &quot;Approximate Moment Dynamics for Chemically Reacting Systems&quot;, IEEE Transactions on Automatic Control 56, 414–418 (2011). <a href="https://doi.org/10.1109/TAC.2010.2088631">https://doi.org/10.1109/TAC.2010.2088631</a></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../P53_system_example/">« P53 System Example</a><a class="docs-footer-nextpage" href="../SIR_example/">SIR Model Example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Monday 2 June 2025 07:59">Monday 2 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
