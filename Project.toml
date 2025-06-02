@@ -34,6 +34,7 @@ TupleTools = "1.2.0"
 julia = "1.6"
 
 [extras]
+OrdinaryDiffEqTsit5 = "b1df2697-797e-41e3-8120-5422d3b24e4a"
 JumpProcesses = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

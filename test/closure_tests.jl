@@ -20,7 +20,8 @@ M = define_M(2,4)
 sys = generate_central_moment_eqs(rn, 2, 4, combinatoric_ratelaws=false)
 expr1 = get_eqs(sys)[1].rhs
 closed_eqs = moment_closure(sys, "zero")
-@test closed_eqs.closure[M[2,2]] == 0
+@test get_closure(closed_eqs) isa MomentClosure.OrderedDict
+@test get_closure(closed_eqs)[M[2,2]] == 0
 expr1 = get_eqs(closed_eqs)[1].rhs
 expr2 = c₃*Ω + M[1,1]*c₁*μ[1,0]*(Ω^-2) + M[1,1]*c₁*(Ω^-2)*(μ[1,0]- 1) + c₁*M[2,0]*μ[0,1]*(Ω^-2) +
         c₁*μ[0,1]*μ[1,0]*(Ω^-2)*(μ[1,0] - 1) - c₂*μ[1,0] - c₄*μ[1,0]
