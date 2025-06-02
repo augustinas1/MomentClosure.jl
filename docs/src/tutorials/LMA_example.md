@@ -71,14 +71,12 @@ Note that the results agree with Eqs. (1) and (2) (after a corresponding substit
 ```julia
 using OrdinaryDiffEq, Sundials, Plots
 
-# [g, p] ordered as in `speciesmap(rn_nonlinear)`
-u₀ = [1.0, 0.001]
-p = Dict(:σ_b => 0.004, :σ_u => 0.25, :ρ_b => 25.0, :ρ_u => 60.0)
+u0map = [:g => 1.0, :p => 0.001]
+pmap = Dict(:σ_b => 0.004, :σ_u => 0.25, :ρ_b => 25.0, :ρ_u => 60.0)
 tspan = (0., 15.)
 dt = 0.1
 
-u₀map = deterministic_IC(u₀, LMA_eqs)
-oprob_LMA = ODEProblem(LMA_eqs, u₀map, tspan, pmap)
+oprob_LMA = ODEProblem(LMA_eqs, u0map, tspan, pmap)
 sol_LMA = solve(oprob_LMA, CVODE_BDF(), saveat=dt)
 
 plot(sol_LMA, idxs=[2], label="LMA", ylabel="⟨p⟩", xlabel="time", fmt="svg")

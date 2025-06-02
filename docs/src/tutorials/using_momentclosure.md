@@ -62,7 +62,7 @@ The raw moments are defined as
 ```
 where $\langle \rangle$ denote the expectation value and we have explicitly included the time-dependence for completeness (made implicit in the formatted moment equations). Note that the ordering of species ($X$ first and $Y$ second) is consistent with the order these variables appear within the [`Catalyst.@reaction_network`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.@reaction_network) macro. The ordering can also be checked using [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap) function:
 ```julia
-speciesmap(rn)
+speciesmap(raw_eqs)
 ```
 ```julia
 Dict{Term{Real},Int64} with 2 entries:
@@ -150,25 +150,22 @@ Higher order central moments under normal closure take a rather simple form comp
 
 ## Solving Moment Equations
 
-The closed moment equations can be solved numerically using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl/) that provides a variety of highly-efficient solvers and analysis tools. In order to do so, first we need to specify the values of all system parameters, the initial condition and the timespan to solve over. Then the [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) corresponding to the moment equations can be [directly converted](https://mtk.sciml.ai/stable/#Compatible-Numerical-Solvers-1) into an `ODEProblem` which can finally be solved. Let's go through the procedure step-by-step for the closed raw moment equations (`closed_raw_eqs`). Most of what is covered below is based on [on Catalyst's introductory tutorial](https://docs.sciml.ai/Catalyst/stable/introduction_to_catalyst/introduction_to_catalyst/#Stochastic-simulation-algorithms-(SSAs)-for-stochastic-chemical-kinetics).
+The closed moment equations can be solved numerically using [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl/) that provides a variety of highly-efficient solvers and analysis tools. In order to do so, first we need to specify the values of all system parameters, the initial condition and the timespan to solve over. Then the [`ModelingToolkit.ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) corresponding to the moment equations can be [directly converted](https://mtk.sciml.ai/stable/#Compatible-Numerical-Solvers-1) into an [`ODEProblem`](@ref) that can finally be solved. Let's go through the procedure step-by-step for the closed raw moment equations (`closed_raw_eqs`). Most of what is covered below is based on [on Catalyst's introductory tutorial](https://docs.sciml.ai/Catalyst/stable/introduction_to_catalyst/introduction_to_catalyst/#Stochastic-simulation-algorithms-(SSAs)-for-stochastic-chemical-kinetics).
 
 We start with the parameters. Note that the internal parameter ordering [can vary](https://docs.sciml.ai/ModelingToolkit/stable/basics/FAQ/#Why-are-my-parameters-some-obscure-object?), and we need to build a mapping from the symbolic parameters to their respective numerical values. This can be done as:
 ```julia
 pmap = [:c₁ => 0.9, :c₂ => 2, :c₃ => 1, :c₄ => 1, :Ω => 100]
 ```
-Next, we can specify the initial condition. Usually when working with moment equations we consider *deterministic* initial conditions so that the molecule numbers at initial time take the specified integer values with probability one. We can define the initial molecule numbers as $X(t=0) = X_0$ and $Y(t=0) = Y_0$. Probability one implies that initially the means will be equal to the molecule numbers, i.e., $μ_{10}(t=0) = X_0$ and $μ_{01}(t=0) = Y_0$, whereas all higher order raw moments will be products of the corresponding powers of the means, e.g., $μ_{21} = X_0^2 Y_0$. Note that all central moments would be set to zero in this case. To make life easier we use [`deterministic_IC`](@ref) function which, given the initial molecule numbers, automatically constructs the variable mapping under deterministic initial conditions:
-```julia
-# initial molecule numbers [X, Y] (order as in speciesmap(rn))
-u₀ = [1, 1]
-u₀map = deterministic_IC(u₀, closed_raw_eqs)
-```
 The next ingredient, the time interval to solve on, can be specified simply as:
 ```julia
 tspan = (0., 100.)
 ```
-Now we are able to create the corresponding `ODEProblem`:
+Lastly, we can specify the initial condition. Usually, when working with moment equations, we consider *deterministic* initial conditions so that the molecule numbers at initial time take the specified integer values with probability one. We can define the initial molecule numbers as $X(t=0) = X_0$ and $Y(t=0) = Y_0$. Probability one implies that initially the means will be equal to the molecule numbers, i.e., $μ_{10}(t=0) = X_0$ and $μ_{01}(t=0) = Y_0$, whereas all higher order raw moments will be products of the corresponding powers of the means, e.g., $μ_{21} = X_0^2 Y_0$. Such variable mapping under deterministic initial conditions is done automatically by default when the initial molecule numbers are passed to the [`ODEProblem`](@ref) constructor:
 ```julia
-oprob = ODEProblem(closed_raw_eqs, u₀map, tspan, pmap)
+# initial molecule numbers
+u0map = [:X => 1, :Y => 1]
+# create the ODEProblem
+oprob = ODEProblem(closed_raw_eqs, u0map, tspan, pmap)
 ```
 Finally, we have everything we need to solve the raw moment equations which can be done using any ODE solver [implemented within DifferentialEquations.jl](https://docs.sciml.ai/Catalyst/stable/model_simulation/simulation_introduction/#simulation_intro_solver_options). We choose the commonly used `Tsit5()` solver and then [plot](https://diffeq.sciml.ai/stable/basics/plot/#plot) the obtained mean molecule numbers:
 ```julia
@@ -194,7 +191,7 @@ jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
 jsys = complete(jsys) 
 
 # create a DiscreteProblem encoding that the molecule numbers are integer-valued
-dprob = DiscreteProblem(jsys, u₀, tspan, pmap) # same parameters as defined earlier
+dprob = DiscreteProblem(jsys, u0map, tspan, pmap) # same parameters as defined earlier
 
 # create a JumpProblem: specify Gillespie's Direct Method as the solver
 # and SET save_positions to (false, false) as otherwise time of each

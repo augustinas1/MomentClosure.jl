@@ -109,8 +109,7 @@ Now we approach the same model identification problem via MAs in the hope of cut
 using MomentClosure
 
 LV_moments = moment_closure(generate_raw_moment_eqs(LV, 2), "log-normal")
-u0map = deterministic_IC(last.(u0), LV_moments)
-prob_MA = ODEProblem(LV_moments, u0map, (0.0, Tf), zeros(5))
+prob_MA = ODEProblem(LV_moments, u0, (0.0, Tf), zeros(5))
 psetter_MA! = setp(prob_MA, (γ1, γ2, γ3, γ4, γ5))
 
 function obj_MA(p)

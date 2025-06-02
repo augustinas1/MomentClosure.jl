@@ -84,6 +84,7 @@ function generate_raw_moment_eqs(rn::ReactionSystem, m_order::Int;
 
     RawMomentEquations(
         odes,
+        smap,
         μ,
         N,
         m_order,

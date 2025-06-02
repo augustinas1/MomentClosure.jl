@@ -142,8 +142,8 @@ pmap = [:k_on => k_on_val,
           :γ_p => γ_p_val,
           :b => mean_b]
 
-# initial gene state and protein number, order [g, p]
-u₀ = [1, 1]
+# initial gene state and protein number
+u0map = [:g => 1, :P => 1]
 
 # time interval to solve on
 tspan = (0., 6.0)
@@ -155,7 +155,7 @@ jsys = convert(JumpSystem, rn; combinatoric_ratelaws=false)
 jsys = complete(jsys)
 
 # create a discrete problem setting the simulation parameters
-dprob = DiscreteProblem(u₀, tspan, pmap)
+dprob = DiscreteProblem(u0map, tspan, pmap)
 
 # create a JumpProblem compatible with ReactionSystemMod
 jprob = JumpProblem(rn, dprob, Direct(), save_positions=(false, false))
@@ -174,9 +174,6 @@ We continue to solve the moment equations for each closure:
 plt_m = plot()   # plot mean protein number
 plt_std = plot() # plot ssd of protein number
 
-# construct the initial molecule number mapping
-u₀map = deterministic_IC(u₀, dm_eqs)
-
 # solve moment ODEs for each closure and plot the results
 for closure in ["normal", "derivative matching",
                 "conditional gaussian", "conditional derivative matching"]
@@ -185,7 +182,7 @@ for closure in ["normal", "derivative matching",
     closed_eqs = moment_closure(eqs, closure, binary_vars)
 
     # solve the system of moment ODEs
-    oprob = ODEProblem(closed_eqs, u₀map, tspan, pmap)
+    oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
     sol = solve(oprob, AutoTsit5(Rosenbrock23()), saveat=0.01)
 
     # μ₀₁ is 2nd and μ₀₂ is 4th element in sol
@@ -273,7 +270,7 @@ pmap = [:kx_on => kx_on_val,
           :b_y => mean_b_y]
 
 # initial gene state and protein number, order [g_x, g_y, x, y]
-u₀ = [1, 1, 1, 1]
+u0map = [:g_x => 1, :g_y => 1, :x => 1, :y => 1]
 
 # time interval to solve on
 tspan = (0., 12.0)
@@ -284,7 +281,7 @@ We can run SSA as follows:
 ```julia
 jsys = convert(JumpSystem, rn, combinatoric_ratelaws=false)
 jsys = complete(jsys)
-dprob = DiscreteProblem(jsys, u₀, tspan, pmap)
+dprob = DiscreteProblem(jsys, u0map, tspan, pmap)
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 
 ensembleprob  = EnsembleProblem(jprob)
@@ -302,9 +299,7 @@ plt_std = plot() # plot ssd of activator protein number
 for closure in ["derivative matching", "conditional derivative matching"]
 
     closed_eqs = moment_closure(eqs, closure, binary_vars)
-
-    u₀map = deterministic_IC(u₀, closed_eqs)
-    oprob = ODEProblem(closed_eqs, u₀map, tspan, pmap)
+    oprob = ODEProblem(closed_eqs, u0map, tspan, pmap)
     sol = solve(oprob, Tsit5(), saveat=0.1)
 
     # μ₀₀₀₁ is the 4th and μ₀₀₀₂ is the 12th element in sol (can check with closed_eqs.odes.states)

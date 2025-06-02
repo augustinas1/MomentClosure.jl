@@ -4,8 +4,8 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
     N = length(drift_eqs)
     drift = [e.rhs for e in drift_eqs]
     diff_mat = diff*transpose(diff)
-    
     smap = Dict(Pair.(vars, 1:length(vars)))
+    
     drift_factors, drift_powers, drift_order = polynomial_propensities(drift, iv, smap)
     diff_factors, diff_powers, diff_order = polynomial_propensities(value.(diff_mat), iv, smap)
     q_order = m_order + max(drift_order - 1, diff_order - 2)
@@ -51,7 +51,7 @@ function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::Abst
     odename = Symbol(name, "_raw_moment_eqs_m", m_order)
     odes = ODESystem(eqs, iv, extract_variables(eqs, μ), ps; name=odename)
 
-    RawMomentEquations(odes, μ, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
+    RawMomentEquations(odes, smap, μ, N, m_order, q_order, iter_all, iter_m, iter_q, iter_1)
 end
 
 """
