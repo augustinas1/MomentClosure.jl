@@ -12,3 +12,11 @@ updates:
       all-julia-packages:
         patterns:
           - "*"
+  - package-ecosystem: "julia"
+    directory: "/docs"
+    schedule:
+      interval: "daily"
+    groups:
+      all-julia-packages:
+        patterns:
+          - "*"
