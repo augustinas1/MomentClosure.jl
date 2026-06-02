@@ -1,4 +1,4 @@
-name: CI
+name: Downgrade
 on:
   pull_request:
     branches:
@@ -16,9 +16,10 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 jobs:
-  tests:
-    name: "Tests"
-    uses: "SciML/.github/.github/workflows/tests.yml@v1"
+  downgrade:
+    name: "Downgrade"
+    uses: "SciML/.github/.github/workflows/downgrade.yml@v1"
     with:
-      julia-version: '["lts", "1", "pre"]'
+      julia-version: "lts"
+      skip: "Pkg,TOML"
     secrets: "inherit"
