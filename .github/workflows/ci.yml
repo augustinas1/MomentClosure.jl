@@ -17,8 +17,5 @@ concurrency:
 
 jobs:
   tests:
-    name: "Tests"
-    uses: "SciML/.github/.github/workflows/tests.yml@v1"
-    with:
-      julia-version: '["lts", "1", "pre"]'
+    uses: "SciML/.github/.github/workflows/grouped-tests.yml@v1"
     secrets: "inherit"
