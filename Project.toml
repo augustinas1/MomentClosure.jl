@@ -1,7 +1,7 @@
 name = "MomentClosure"
 uuid = "01a1b25a-ecf0-48c5-ae58-55bfd5393600"
-authors = ["Augustinas Sukys"]
 version = "0.4.0"
+authors = ["Augustinas Sukys"]
 
 [deps]
 Catalyst = "479239e8-5488-4da2-87a7-35f2df7eef83"
@@ -29,6 +29,7 @@ JumpProcesses = "9.23"
 Latexify = "0.15.14, 0.16"
 ModelingToolkit = "9, 11.26"
 OrdinaryDiffEqTsit5 = "1, 2"
+Random = "1"
 SafeTestsets = "0.1"
 SciMLBase = "1.8.3, 2, 3"
 SciMLTesting = "1"

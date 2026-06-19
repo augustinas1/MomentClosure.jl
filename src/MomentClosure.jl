@@ -1,7 +1,7 @@
 module MomentClosure
 
 using ModelingToolkit
-using ModelingToolkit: get_noiseeqs, getname, unknowns, get_eqs, get_iv, get_ps
+using ModelingToolkit: get_noise_eqs, getname, unknowns, get_eqs, get_iv, get_ps, System
 using Catalyst
 using Catalyst: speciesmap
 using SciMLBase, SciMLBase.EnsembleAnalysis

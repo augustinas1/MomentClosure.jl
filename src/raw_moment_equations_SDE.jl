@@ -61,13 +61,13 @@ function generate_raw_moment_eqs(
 end
 
 """
-    generate_raw_moment_eqs(sys::SDESystem, m_order::Int)
+    generate_raw_moment_eqs(sys::System, m_order::Int)
 
-Given an [`SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingToolkit.SDESystem), 
+Given an SDE [`System`](https://docs.sciml.ai/ModelingToolkit/stable/systems/System/),
 return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
 """
-generate_raw_moment_eqs(sys::SDESystem, m_order::Int) = generate_raw_moment_eqs(
-    equations(sys), get_noiseeqs(sys), m_order,
+generate_raw_moment_eqs(sys::System, m_order::Int) = generate_raw_moment_eqs(
+    equations(sys), get_noise_eqs(sys), m_order,
     unknowns(sys), nameof(sys), parameters(sys), get_iv(sys)
 )
 
