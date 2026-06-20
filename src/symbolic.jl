@@ -1,4 +1,4 @@
-function gen_iter(n, d)
+function gen_iter(n::Int, d::Int)
     # based on https://twitter.com/evalparse/status/1107964924024635392
     iter = NTuple{n, Int}[]
     for x in partitions(d + n, n)

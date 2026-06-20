@@ -211,8 +211,8 @@ function get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
             end
         end
     else
-        μ = Dict{NTuple{N, Float64}}()
-        μ[Tuple(zeros(N))] = 1.0
+        μ = Dict{NTuple{N, Int}, Float64}()
+        μ[Tuple(zeros(Int, N))] = 1.0
 
         for t_pt in 1:no_t_pts
             tslice = sol.u[t_pt]

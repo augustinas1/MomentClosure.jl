@@ -35,7 +35,7 @@ oprob = ODEProblem(closed_eqs, u0map1, tspan, pmap)
 # Reference is the converged solution (stable to ~10 digits for reltol/abstol ≤ 1e-10);
 # integrate at a tight tolerance so the comparison is independent of solver defaults.
 sol = solve(oprob, Tsit5(), saveat = 10:10:50, reltol = 1.0e-10, abstol = 1.0e-10)
-res = [35.156249675, 60.255177096, 29.237221341, 65.595904620, 24.900095364]
+res = [35.156249675, 60.255177096, 29.237221341, 65.59590462, 24.900095364]
 @test isapprox(sol[1, :], res, atol = 1.0e-6)
 oprob = ODEProblem(closed_eqs, oprob.u0, tspan, pmap, use_deterministic_IC = false)
 sol = solve(oprob, Tsit5(), saveat = 10:10:50, reltol = 1.0e-10, abstol = 1.0e-10)

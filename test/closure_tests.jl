@@ -50,7 +50,7 @@ closed_eqs = moment_closure(sys, "log-normal")
 expr1 = get_closure(closed_eqs)[M[1, 2]]
 expr2 = μ[1, 0] * μ[0, 1]^2 * (1.0 + M[0, 2] * μ[0, 1]^-2) * (1.0 + M[1, 1] * (μ[0, 1]^-1) * (μ[1, 0]^-1))^2 -
     M[0, 2] * μ[1, 0] - μ[1, 0] * μ[0, 1]^2 - 2 * M[1, 1] * μ[0, 1]
-@test isequal(Fixpoint(simplify)(expr1), Fixpoint(simplify)(expr2))
+@test symeq(expr1, expr2)
 
 closed_eqs = moment_closure(sys, "poisson")
 @test isequal(get_closure(closed_eqs)[M[3, 0]], μ[1, 0])

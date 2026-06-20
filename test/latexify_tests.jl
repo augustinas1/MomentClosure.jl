@@ -43,6 +43,12 @@ expr3 = replace(raw"\begin{align*}
 \end{align*}
 ", "\r\n" => "\n")
 exprl = latexify(closed_raw_eqs, :closure)
-@test (exprl == expr1) || (exprl == expr2) || (exprl == expr3)
+# The numerator of the common-denominator form (expr3) is a product of commuting
+# factors whose print order varies across Symbolics / Julia versions (e.g.
+# `μ_{1 0} μ_{1 2} μ_{1 1}` vs `μ_{1 0} μ_{1 1} μ_{1 2}` vs `μ_{1 2} μ_{1 1} μ_{1 0}`).
+# Compare the single-fraction form up to that reordering by sorting whitespace-
+# separated tokens, which still pins the exact set of factors/terms and denominators.
+canon(s) = join(sort(split(s)), " ")
+@test (exprl == expr1) || (exprl == expr2) || (canon(exprl) == canon(expr3))
 
 @test_throws MethodError latexify(raw_eqs, :closure)

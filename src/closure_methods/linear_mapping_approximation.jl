@@ -94,6 +94,6 @@ end
 
 #= TODO: consider adding
   • steady-state stuff
-  • identification of whether a linear system has a time-dependendent or steady-state solution
+  • identification of whether a linear system has a time-dependent or steady-state solution
   • construction of probability distributions if a solution exists
 =#
