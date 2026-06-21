@@ -21,7 +21,10 @@ cir_moments = generate_raw_moment_eqs(cir_model, 2)
 )
 
 cir_central_moments = generate_central_moment_eqs(cir_model, 2)
-@test isequal(get_odes(cir_central_moments), get_odes(generate_central_moment_eqs(cir_model, 2, 2)))
+# Compare the generated equations rather than the whole System: ModelingToolkit tags
+# each freshly constructed System with a unique id, so two semantically identical
+# systems are never `isequal`.
+@test isequal(get_eqs(get_odes(cir_central_moments)), get_eqs(get_odes(generate_central_moment_eqs(cir_model, 2, 2))))
 μ, M = cir_central_moments.μ, cir_central_moments.M
 @test isequal(
     get_eqs(cir_central_moments), [

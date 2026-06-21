@@ -1,9 +1,20 @@
 using MomentClosure
 using MomentClosure: define_M, define_μ
-using Symbolics: value, expand
+using Symbolics: value, expand, substitute, get_variables
 using SymbolicUtils: Fixpoint
 using Test
 using Catalyst
+
+# Recent Symbolics keeps expressions such as `x^-1` and `(1 / x)` in distinct (but
+# mathematically equal) forms, so `isequal`/`simplify` no longer reliably proves two
+# closure expressions equal. Check equality by evaluating the difference at a generic
+# point instead; identically-zero rational functions vanish at any non-singular point.
+function symeq(expr1, expr2; atol = 1.0e-10)
+    diff = expr1 - expr2
+    vars = get_variables(diff)
+    point = Dict(v => 1.0 + i / 17 for (i, v) in enumerate(vars))
+    return isapprox(Float64(value(substitute(diff, point))), 0; atol = atol)
+end
 
 rn = @reaction_network begin
     (c₁ / Ω^2), 2X + Y → 3X
@@ -39,7 +50,7 @@ closed_eqs = moment_closure(sys, "log-normal")
 expr1 = get_closure(closed_eqs)[M[1, 2]]
 expr2 = μ[1, 0] * μ[0, 1]^2 * (1.0 + M[0, 2] * μ[0, 1]^-2) * (1.0 + M[1, 1] * (μ[0, 1]^-1) * (μ[1, 0]^-1))^2 -
     M[0, 2] * μ[1, 0] - μ[1, 0] * μ[0, 1]^2 - 2 * M[1, 1] * μ[0, 1]
-@test isequal(Fixpoint(simplify)(expr1), Fixpoint(simplify)(expr2))
+@test symeq(expr1, expr2)
 
 closed_eqs = moment_closure(sys, "poisson")
 @test isequal(get_closure(closed_eqs)[M[3, 0]], μ[1, 0])
@@ -48,7 +59,7 @@ closed_eqs = moment_closure(sys, "gamma")
 expr1 = get_closure(closed_eqs)[M[2, 1]]
 expr2 = M[2, 0] * μ[0, 1] + μ[0, 1] * μ[1, 0]^2 + 2 * M[1, 1] * μ[1, 0] + 2 * M[1, 1] * M[2, 0] * μ[1, 0]^-1 -
     M[2, 0] * μ[0, 1] - μ[0, 1] * μ[1, 0]^2 - 2 * M[1, 1] * μ[1, 0]
-@test isequal(expr1, expr2)
+@test symeq(expr1, expr2)
 
 closed_eqs = moment_closure(sys, "derivative matching")
 expr1 = get_closure(closed_eqs)[sys.M[0, 4]]
@@ -82,7 +93,7 @@ ic_values = Dict(deterministic_IC([2, 5], closed_eqs))
 closed_eqs = moment_closure(sys, "log-normal")
 expr1 = get_closure(closed_eqs)[μ[1, 3]]
 expr2 = μ[0, 1]^-6 * μ[0, 2]^3 * μ[1, 0]^-2 * μ[1, 1]^3
-@test isequal(expr1, expr2)
+@test symeq(expr1, expr2)
 
 closed_eqs = moment_closure(sys, "poisson")
 expr1 = get_closure(closed_eqs)[μ[4, 0]]
@@ -97,4 +108,4 @@ expr2 = μ[0, 1]^3 + 3 * μ[0, 1] * (μ[0, 2] - μ[0, 1]^2) + 2 * μ[0, 1]^-1 * 
 closed_eqs = moment_closure(sys, "derivative matching")
 expr1 = get_closure(closed_eqs)[sys.μ[0, 3]]
 expr2 = μ[0, 1]^-3 * μ[0, 2]^3
-@test isequal(expr1, expr2)
+@test symeq(expr1, expr2)

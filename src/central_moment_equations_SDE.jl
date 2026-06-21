@@ -62,7 +62,7 @@ function generate_central_moment_eqs(
 
     eqs = Equation[]
     for i in 1:N
-        poly = sum(Df[i][j] * M[j] // fact(j) for j in iter_all)
+        poly = sum(Df[i][j] * M[j] * (1 // fact(j)) for j in iter_all)
         push!(eqs, Differential(iv)(μ[iter_1[i]]) ~ expand(poly))
     end
 
@@ -76,8 +76,8 @@ function generate_central_moment_eqs(
             iszero(iter[i]) ? continue :
                 gradf = iter[i]
             gradh = iter .- iter_1[i]
-            term1 += sum(gradf * Df[i][j] * M[gradh .+ j] // fact(j) for j in iterq1)
-            term1 -= sum(gradf * Df[i][j] * M[gradh] * M[j] // fact(j) for j in iter_all)
+            term1 += sum(gradf * Df[i][j] * M[gradh .+ j] * (1 // fact(j)) for j in iterq1)
+            term1 -= sum(gradf * Df[i][j] * M[gradh] * M[j] * (1 // fact(j)) for j in iter_all)
         end
 
         term2 = 0
@@ -87,7 +87,7 @@ function generate_central_moment_eqs(
                     hji = iter .- (iter_1[i] .+ iter_1[j])
                 hji_factor = i == j ? iter[i] * (iter[i] - 1) : iter[i] * iter[j]
 
-                term2 += hji_factor * sum(Dg[i, j][k] * M[hji .+ k] // fact(k) for k in iterq2)
+                term2 += hji_factor * sum(Dg[i, j][k] * M[hji .+ k] * (1 // fact(k)) for k in iterq2)
             end
         end
 
@@ -102,15 +102,21 @@ function generate_central_moment_eqs(
 end
 
 """
-    generate_central_moment_eqs(sys::SDESystem, m_order::Int, q_order::Int=0)
+    generate_central_moment_eqs(sys::System, m_order::Int, q_order::Int=0)
 
-Given an [`SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingToolkit.SDESystem), 
+Given an SDE [`System`](https://docs.sciml.ai/ModelingToolkit/stable/systems/System/),
 return the [`CentralMomentEquations`](@ref) of the system generated up to `m_order`.
 """
-generate_central_moment_eqs(sys::SDESystem, m_order::Int, q_order::Int = 0) = generate_central_moment_eqs(
-    equations(sys), get_noiseeqs(sys), m_order, q_order,
-    unknowns(sys), nameof(sys), parameters(sys), get_iv(sys)
-)
+function generate_central_moment_eqs(sys::System, m_order::Int, q_order::Int = 0)
+    iv = get_iv(sys)
+    iv === nothing && error("the system has no independent variable")
+    noise_eqs = get_noise_eqs(sys)
+    noise_eqs === nothing && error("the system has no noise equations; expected an SDE System")
+    return generate_central_moment_eqs(
+        equations(sys), noise_eqs, m_order, q_order,
+        unknowns(sys), nameof(sys), parameters(sys), iv
+    )
+end
 
 #=
 function generate_central_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, 

@@ -1,4 +1,4 @@
-function gen_iter(n, d)
+function gen_iter(n::Int, d::Int)
     # based on https://twitter.com/evalparse/status/1107964924024635392
     iter = NTuple{n, Int}[]
     for x in partitions(d + n, n)
@@ -25,6 +25,9 @@ expand_expr = Fixpoint(Prewalk(PassThrough(expansion_rule_mod)))
 expand_div = Fixpoint(Prewalk(PassThrough(@rule(+(~~xs) / ~a => sum(map(x -> x / ~a, ~~xs))))))
 expand_mod = Fixpoint(Chain([expand_div, expand_expr]))
 
+# Build a moment variable `name(iv)` equivalent to `@variables name(iv)`.
+make_moment_var(name::Symbol, iv) = Symbolics.variable(name; T = FnType{Tuple, Real, Nothing})(iv)
+
 function define_μ(iter::AbstractVector, iv::BasicSymbolic)
 
     indices = map(trim_key, iter)
@@ -35,8 +38,7 @@ function define_μ(iter::AbstractVector, iv::BasicSymbolic)
             μs[idx] = 1
         else
             sym_name = Symbol('μ', join(map_subscripts(indices[i])))
-            sym_raw = Sym{FnType{Tuple{Any}, Real}}(sym_name)
-            term_raw = Term{Real}(sym_raw, [iv])
+            term_raw = make_moment_var(sym_name, iv)
             μs[idx] = setmetadata(
                 term_raw, Symbolics.VariableSource,
                 (:momentclosure, sym_name)
@@ -63,8 +65,7 @@ function define_M(iter::AbstractVector, iv::BasicSymbolic)
             Ms[idx] = 0
         else
             sym_name = Symbol('M', join(map_subscripts(indices[i])))
-            sym_raw = Sym{FnType{Tuple{Any}, Real}}(sym_name)
-            term_raw = Term{Real}(sym_raw, [iv])
+            term_raw = make_moment_var(sym_name, iv)
             Ms[idx] = setmetadata(
                 term_raw, Symbolics.VariableSource,
                 (:momentclosure, sym_name)
@@ -120,7 +121,9 @@ isconstant(expr, vars, iv) = !iscall(expr) || (!isvar(expr, vars) && all(arg -> 
 
 function split_factor_pow(expr, iv, vars)
     base, exp = arguments(expr)
-    exp isa Int || error("Unexpected exponent: $expr")
+    # SymbolicUtils wraps integer exponents as symbolic constants, so unwrap before checking.
+    exp = value(exp)
+    exp isa Integer || error("Unexpected exponent: $expr")
 
     factor, powers = split_factor(base, iv, vars)
     return factor^exp, powers .* exp

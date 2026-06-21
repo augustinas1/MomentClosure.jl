@@ -211,8 +211,8 @@ function get_moments_FSP(sol::ODESolution, order::Int, moment_type::String)
             end
         end
     else
-        μ = Dict{NTuple{N, Float64}}()
-        μ[Tuple(zeros(N))] = 1.0
+        μ = Dict{NTuple{N, Int}, Float64}()
+        μ[Tuple(zeros(Int, N))] = 1.0
 
         for t_pt in 1:no_t_pts
             tslice = sol.u[t_pt]
@@ -350,7 +350,15 @@ function format_closure(eqs::ClosedMomentEquations; format_all::Bool = false)
     if format_all
         iter = keys(closure)
     else
-        iter = setdiff(unknowns(eqs.open_eqs), unknowns(eqs))
+        # The closed moments to display are those that actually appear in the open
+        # moment ODEs (i.e. the higher-order moments substituted away by the closure).
+        open_vars = Set{Any}()
+        for eq in get_eqs(eqs.open_eqs)
+            for v in get_variables(eq.rhs)
+                push!(open_vars, v)
+            end
+        end
+        iter = filter(m -> any(isequal(m), open_vars), collect(keys(closure)))
     end
 
     for i in iter

@@ -31,6 +31,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int, 1} = 
         closed_μ = central_to_raw_moments(N, sys.m_order; iv)
         μ = central_to_raw_moments(N, sys.q_order; iv)
     else
+        M = Dict()
         μ = sys.μ
         closed_μ = copy(μ)
     end
