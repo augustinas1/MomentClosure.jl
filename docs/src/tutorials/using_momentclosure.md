@@ -195,7 +195,7 @@ dprob = DiscreteProblem(jsys, u0map, tspan, pmap) # same parameters as defined e
 
 # create a JumpProblem: specify Gillespie's Direct Method as the solver
 # and SET save_positions to (false, false) as otherwise time of each
-# reaction occurence would be saved (complicating moment estimates)
+# reaction occurrence would be saved (complicating moment estimates)
 jprob = JumpProblem(jsys, dprob, Direct(), save_positions=(false, false))
 
 # define an EnsembleProblem to simulate multiple trajectories
