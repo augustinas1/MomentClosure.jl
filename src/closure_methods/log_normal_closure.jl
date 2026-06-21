@@ -17,6 +17,7 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int, 1} = I
         μ = central_to_raw_moments(N, sys.m_order; iv)
         μ_symbolic = define_μ(N, sys.q_order, iv)
     else
+        M = Dict()
         μ = copy(sys.μ)
         μ_symbolic = copy(μ)
     end

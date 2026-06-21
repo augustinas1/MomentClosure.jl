@@ -5,7 +5,11 @@
 # TODO: extend for other univariate discrete distributions
 
 expected_coeff_mul(x) = prod(expected_coeff(a) for a in arguments(x))
-expected_coeff_pow(x) = expected_coeff(arguments(x)...)
+function expected_coeff_pow(x)
+    base, exp = arguments(x)
+    # SymbolicUtils wraps integer exponents as symbolic constants, so unwrap to an Int.
+    return expected_coeff(base, value(exp))
+end
 expected_coeff_term(x) = expected_coeff(x, 1)
 
 function expected_coeff(x)

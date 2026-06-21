@@ -1,9 +1,20 @@
 using MomentClosure
 using MomentClosure: define_M, define_μ
-using Symbolics: value, expand
+using Symbolics: value, expand, substitute, get_variables
 using Distributions
 using Test
 using Catalyst
+
+# Recent Symbolics keeps expressions such as `x^-1` and `(1 / x)` in distinct (but
+# mathematically equal) forms, so `isequal`/`simplify` no longer reliably proves two
+# closure expressions equal. Check equality by evaluating the difference at a generic
+# point instead; identically-zero rational functions vanish at any non-singular point.
+function symeq(expr1, expr2; atol = 1.0e-10)
+    diff = expr1 - expr2
+    vars = get_variables(diff)
+    point = Dict(v => 1.0 + i / 17 for (i, v) in enumerate(vars))
+    return isapprox(Float64(value(substitute(diff, point))), 0; atol = atol)
+end
 
 @parameters p, b
 @register_symbolic Distributions.Geometric(p)
@@ -47,10 +58,10 @@ expr2 = 3 * μ[1, 2] * μ[1, 1] * μ[1, 0]^-1 - 2 * μ[1, 1]^3 * μ[1, 0]^-2
 closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
 expr1 = get_closure(closed_eqs)[μ[1, 4]]
 expr2 = μ[1, 3]^4 * μ[1, 1]^4 * μ[1, 0]^-1 * μ[1, 2]^-6
-@test isequal(expr1, expr2)
+@test symeq(expr1, expr2)
 expr1 = get_closure(closed_eqs)[μ[1, 3]]
 expr2 = μ[1, 2]^3 * μ[1, 0] * μ[1, 1]^-3
-@test isequal(expr1, expr2)
+@test symeq(expr1, expr2)
 
 sys = generate_central_moment_eqs(rn, 3, 5)
 expr1 = get_eqs(sys)[1].rhs
@@ -74,4 +85,4 @@ closed_eqs = moment_closure(sys, "conditional derivative matching", binary_vars)
 expr1 = get_closure(closed_eqs)[M[1, 3]]
 expr2 = μ[1, 0] * (M[1, 1] + μ[0, 1] * μ[1, 0])^-3 * (M[1, 2] + M[0, 2] * μ[1, 0] + μ[1, 0] * μ[0, 1]^2 + 2 * M[1, 1] * μ[0, 1])^3 -
     M[0, 3] * μ[1, 0] - 3 * M[1, 1] * μ[0, 1]^2 - 3 * M[1, 2] * μ[0, 1] - μ[1, 0] * μ[0, 1]^3 - 3 * M[0, 2] * μ[0, 1] * μ[1, 0]
-@test isequal(simplify(expr1), simplify(expr2))
+@test symeq(expr1, expr2)

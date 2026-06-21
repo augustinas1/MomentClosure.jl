@@ -61,15 +61,21 @@ function generate_raw_moment_eqs(
 end
 
 """
-    generate_raw_moment_eqs(sys::SDESystem, m_order::Int)
+    generate_raw_moment_eqs(sys::System, m_order::Int)
 
-Given an [`SDESystem`](https://mtk.sciml.ai/stable/systems/SDESystem/#ModelingToolkit.SDESystem), 
+Given an SDE [`System`](https://docs.sciml.ai/ModelingToolkit/stable/systems/System/),
 return the [`RawMomentEquations`](@ref) of the system generated up to `m_order`.
 """
-generate_raw_moment_eqs(sys::SDESystem, m_order::Int) = generate_raw_moment_eqs(
-    equations(sys), get_noiseeqs(sys), m_order,
-    unknowns(sys), nameof(sys), parameters(sys), get_iv(sys)
-)
+function generate_raw_moment_eqs(sys::System, m_order::Int)
+    iv = get_iv(sys)
+    iv === nothing && error("the system has no independent variable")
+    noise_eqs = get_noise_eqs(sys)
+    noise_eqs === nothing && error("the system has no noise equations; expected an SDE System")
+    return generate_raw_moment_eqs(
+        equations(sys), noise_eqs, m_order,
+        unknowns(sys), nameof(sys), parameters(sys), iv
+    )
+end
 
 #=
 function generate_raw_moment_eqs(drift_eqs::AbstractVector{Equation}, diff::AbstractArray{T}, 
