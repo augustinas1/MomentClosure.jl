@@ -1,4 +1,9 @@
 # Configuration for crate-ci/typos. Only clear false positives are listed here.
+[default]
+# Jupyter notebook cell ids are opaque hex hashes (e.g. "365e5ba2"); their
+# fragments are not words and routinely collide with the dictionary.
+extend-ignore-re = ['"id": "[0-9a-f]+"']
+
 [default.extend-words]
 # "2nd"/"nd" ordinal suffix used throughout (e.g. `iter_2nd_order`, "$2$nd order").
 nd = "nd"
