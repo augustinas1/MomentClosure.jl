@@ -21,17 +21,17 @@ run_qa(
                 :get_eqs, :get_iv, :get_ps,  # owner ModelingToolkitBase, accessed via ModelingToolkit
             ),
         ),
-        # Other packages' still-non-public names that MomentClosure imports.
-        # These remain after the base libs' public-API releases (SymbolicUtils
-        # 4.36, Symbolics 7.28.1, ModelingToolkit 11.29, SciMLBase 3.24): they
-        # are genuine internals not yet `public`-declared in the importing module
-        # (plus `sort` from TupleTools, a non-SciML dep). Re-checked on Julia 1.12.
+        # Genuine non-public internals of non-SciML / not-yet-`public`-declared
+        # deps that MomentClosure explicitly imports. Re-checked on Julia 1.12
+        # against the base-lib public-API releases (SciMLBase 3.27, DiffEqBase
+        # 7.6, SymbolicUtils 4.36, Symbolics 7.29, ModelingToolkit 11.29): none
+        # of these eight became public, so each is still flagged here.
         all_explicit_imports_are_public = (;
             ignore = (
-                :FnType, :isdiv, :ispow, :isterm,        # SymbolicUtils
-                :map_subscripts, :var_from_nested_derivative,  # Symbolics
+                :FnType, :isdiv, :ispow, :isterm,        # SymbolicUtils internals
+                :map_subscripts, :var_from_nested_derivative,  # Symbolics internals
                 :getname,                                # ModelingToolkit (owner SymbolicIndexingInterface)
-                :sort,                                   # TupleTools
+                :sort,                                   # TupleTools (non-SciML dep)
             ),
         ),
         all_qualified_accesses_are_public = (; ignore = ()),
