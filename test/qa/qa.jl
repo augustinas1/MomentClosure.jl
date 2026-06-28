@@ -30,7 +30,6 @@ run_qa(
             ignore = (
                 :FnType, :ispow,                         # SymbolicUtils internals
                 :map_subscripts, :var_from_nested_derivative,  # Symbolics internals
-                :getname,                                # ModelingToolkit (owner SymbolicIndexingInterface)
                 :sort,                                   # TupleTools (non-SciML dep)
             ),
         ),
