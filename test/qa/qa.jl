@@ -22,13 +22,13 @@ run_qa(
             ),
         ),
         # Genuine non-public internals of non-SciML / not-yet-`public`-declared
-        # deps that MomentClosure explicitly imports. Re-checked on Julia 1.12
-        # against the base-lib public-API releases (SciMLBase 3.27, DiffEqBase
-        # 7.6, SymbolicUtils 4.36, Symbolics 7.29, ModelingToolkit 11.29): none
-        # of these eight became public, so each is still flagged here.
+        # deps that MomentClosure explicitly imports. Re-checked empirically on
+        # Julia 1.12 against the registered make-public releases (SymbolicUtils
+        # 4.37, Symbolics 7.29, ModelingToolkit 11.29): each of these is still
+        # flagged as non-public.
         all_explicit_imports_are_public = (;
             ignore = (
-                :FnType, :isdiv, :ispow, :isterm,        # SymbolicUtils internals
+                :FnType, :ispow,                         # SymbolicUtils internals
                 :map_subscripts, :var_from_nested_derivative,  # Symbolics internals
                 :getname,                                # ModelingToolkit (owner SymbolicIndexingInterface)
                 :sort,                                   # TupleTools (non-SciML dep)
