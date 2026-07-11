@@ -1,7 +1,8 @@
 module MomentClosure
 
 using ModelingToolkit
-using ModelingToolkit: get_noise_eqs, unknowns, get_eqs, get_iv, get_ps, System
+import ModelingToolkitBase
+using ModelingToolkitBase: get_noise_eqs, unknowns, get_eqs, get_iv, get_ps, System
 using SymbolicIndexingInterface: getname
 using Catalyst
 using Catalyst: speciesmap
@@ -11,11 +12,11 @@ using Random
 using Distributions: Geometric
 
 using Symbolics: value, var_from_nested_derivative, map_subscripts,
-    setmetadata, scalarize
+    setmetadata
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: BasicSymbolic, FnType, expand, simplify,
     operation, arguments, @rule, @acrule,
-    isterm, ismul, isadd, ispow, isdiv
+    isterm, ismul, isadd, ispow, isdiv, scalarize
 
 using DataStructures: OrderedDict
 using TupleTools: sort

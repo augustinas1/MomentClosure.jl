@@ -44,6 +44,16 @@ ODEProblem(::MomentEquations, ::Tuple, ::Tuple, ::Tuple)
 
 We also define a few accessor functions that return system information from the given `MomentEquations` (most are borrowed from [ModelingToolkit](https://docs.sciml.ai/ModelingToolkit/stable/systems/ODESystem/#Composition-and-Accessor-Functions)):
 
+```@docs
+get_odes
+get_eqs
+get_iv
+get_ps
+unknowns
+speciesmap
+get_closure
+```
+
 * `MomentClosure.get_odes(sys::MomentEquations)`: The [`ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) of moment equations.
 * `ModelingToolkit.get_eqs(sys::MomentEquations)`: The set of all equations in the `ODESystem`.
 * `ModelingToolkit.get_iv(sys::MomentEquations)`: The independent variable used in the system.

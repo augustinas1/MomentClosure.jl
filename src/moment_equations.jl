@@ -116,11 +116,23 @@ function Base.nameof(eqs::MomentEquations)
 end
 
 # Basic `MomentEquations`-specific accessors
+"""
+    get_odes(sys::MomentEquations)
+
+Return the `ModelingToolkit.ODESystem` of moment equations.
+"""
 get_odes(sys::MomentEquations) = getfield(sys, :odes)
+
+"""
+    get_closure(sys::ClosedMomentEquations)
+
+Return the dictionary of moment closure functions for each higher-order moment.
+"""
 get_closure(sys::ClosedMomentEquations) = getfield(sys, :closure)
+
 Catalyst.speciesmap(sys::MomentEquations) = getfield(sys, :smap)
 Catalyst.speciesmap(sys::ClosedMomentEquations) = speciesmap(getfield(sys, :open_eqs))
-ModelingToolkit.get_iv(sys::MomentEquations) = get_iv(get_odes(sys))
-ModelingToolkit.get_eqs(sys::MomentEquations) = get_eqs(get_odes(sys))
-ModelingToolkit.unknowns(sys::MomentEquations) = unknowns(get_odes(sys))
-ModelingToolkit.get_ps(sys::MomentEquations) = get_ps(get_odes(sys))
+ModelingToolkitBase.get_iv(sys::MomentEquations) = get_iv(get_odes(sys))
+ModelingToolkitBase.get_eqs(sys::MomentEquations) = get_eqs(get_odes(sys))
+ModelingToolkitBase.unknowns(sys::MomentEquations) = unknowns(get_odes(sys))
+ModelingToolkitBase.get_ps(sys::MomentEquations) = get_ps(get_odes(sys))
