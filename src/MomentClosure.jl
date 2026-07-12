@@ -12,11 +12,11 @@ using Random
 using Distributions: Geometric
 
 using Symbolics: value, var_from_nested_derivative, map_subscripts,
-    setmetadata
+    setmetadata, scalarize
 using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
 using SymbolicUtils: BasicSymbolic, FnType, expand, simplify,
     operation, arguments, @rule, @acrule,
-    isterm, ismul, isadd, ispow, isdiv, scalarize
+    isterm, ismul, isadd, ispow, isdiv
 
 using DataStructures: OrderedDict
 using TupleTools: sort
