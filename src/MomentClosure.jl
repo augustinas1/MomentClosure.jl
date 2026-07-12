@@ -1,7 +1,8 @@
 module MomentClosure
 
 using ModelingToolkit
-using ModelingToolkit: get_noise_eqs, unknowns, get_eqs, get_iv, get_ps, System
+import ModelingToolkitBase
+using ModelingToolkitBase: get_noise_eqs, unknowns, get_eqs, get_iv, get_ps, System
 using SymbolicIndexingInterface: getname
 using Catalyst
 using Catalyst: speciesmap
