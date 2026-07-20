@@ -4,7 +4,6 @@ using JET
 run_qa(
     MomentClosure;
     explicit_imports = true,
-    api_docs_kwargs = (; rendered = true),
     ei_kwargs = (;
         # Genuine non-public internals of non-SciML / not-yet-`public`-declared
         # deps that MomentClosure explicitly imports. Re-checked empirically on
