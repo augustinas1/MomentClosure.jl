@@ -5,6 +5,7 @@ using Distributions: Geometric
 using Catalyst
 using Test
 using ModelingToolkit: t_nounits as t, D_nounits as D
+using ModelingToolkitBase: get_eqs, get_iv, get_ps, unknowns
 
 # --- check that expected values of stoichiometric coefficients are computed correctly ---
 

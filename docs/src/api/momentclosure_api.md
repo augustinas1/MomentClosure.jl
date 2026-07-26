@@ -46,21 +46,15 @@ We also define a few accessor functions that return system information from the 
 
 ```@docs
 get_odes
-get_eqs
-get_iv
-get_ps
-unknowns
-speciesmap
 get_closure
 ```
 
 * `MomentClosure.get_odes(sys::MomentEquations)`: The [`ODESystem`](https://mtk.sciml.ai/stable/systems/ODESystem/) of moment equations.
-* `ModelingToolkit.get_eqs(sys::MomentEquations)`: The set of all equations in the `ODESystem`.
-* `ModelingToolkit.get_iv(sys::MomentEquations)`: The independent variable used in the system.
-* `ModelingToolkit.get_ps(sys::MomentEquations)`: The parameters of the system.
-* `ModelingToolkit.unknowns(sys::MomentEquations)`: The set of unknowns (moments) in the equations.
-* `Catalyst.speciesmap(sys::MomentEquations)`: The dictionary mapping the chemical species in a `Catalyst.ReactionSystem` to their index within the corresponding moment equations.
 * `MomentClosure.get_closure(sys::ClosedMomentEquations)`: The dictionary of moment closure functions for each higher order moment.
+
+Moment equation systems also implement the standard `ModelingToolkitBase.get_eqs`,
+`ModelingToolkitBase.get_iv`, `ModelingToolkitBase.get_ps`, `ModelingToolkitBase.unknowns`,
+and `Catalyst.speciesmap` accessors. Import those functions from their owning packages.
 
 ## [Displaying Equations and Closures](@id visualisation_api)
 

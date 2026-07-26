@@ -2,12 +2,12 @@ using MomentClosure, ModelingToolkit
 using Documenter
 
 makedocs(;
-    modules = [MomentClosure, ModelingToolkit, Symbolics],
+    modules = [MomentClosure],
     authors = "Augustinas Sukys",
     repo = "https://github.com/SciML/MomentClosure.jl/blob/{commit}{path}#L{line}",
     sitename = "MomentClosure.jl",
-    doctest = false,
-    warnonly = [:docs_block, :missing_docs, :cross_references],
+    doctest = true,
+    checkdocs = :exports,
     format = Documenter.HTML(;
         mathengine = Documenter.Writers.HTMLWriter.MathJax3(),
         prettyurls = get(ENV, "CI", "false") == "true",

@@ -1,7 +1,7 @@
 name = "MomentClosure"
 uuid = "01a1b25a-ecf0-48c5-ae58-55bfd5393600"
 authors = ["Augustinas Sukys"]
-version = "0.4.4"
+version = "0.5.0"
 
 [deps]
 Catalyst = "479239e8-5488-4da2-87a7-35f2df7eef83"
@@ -11,14 +11,14 @@ DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 ModelingToolkitBase = "7771a370-6774-4173-bd38-47e70ca0b839"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+TermInterface = "8ea1fca8-c5ef-4a55-8b96-4e9afe9c9a3c"
 
 [compat]
 Catalyst = "16.2"
@@ -35,20 +35,22 @@ OrdinaryDiffEqTsit5 = "2.0.1"
 Random = "1"
 SafeTestsets = "0.1"
 SciMLBase = "3.21"
-SciMLTesting = "2.1"
+SciMLTesting = "2.4"
 SymbolicIndexingInterface = "0.3"
 SymbolicUtils = "4.35"
 Symbolics = "7.28"
+StatsBase = "0.34"
 Test = "1"
-TupleTools = "1.6"
+TermInterface = "2"
 julia = "1.10"
 
 [extras]
 JumpProcesses = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 OrdinaryDiffEqTsit5 = "b1df2697-797e-41e3-8120-5422d3b24e4a"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "SafeTestsets", "SciMLTesting", "JumpProcesses", "OrdinaryDiffEqTsit5"]
+test = ["Test", "SafeTestsets", "SciMLTesting", "JumpProcesses", "ModelingToolkit", "OrdinaryDiffEqTsit5"]

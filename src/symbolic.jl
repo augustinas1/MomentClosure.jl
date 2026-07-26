@@ -26,7 +26,21 @@ expand_div = Fixpoint(Prewalk(PassThrough(@rule(+(~~xs) / ~a => sum(map(x -> x /
 expand_mod = Fixpoint(Chain([expand_div, expand_expr]))
 
 # Build a moment variable `name(iv)` equivalent to `@variables name(iv)`.
-make_moment_var(name::Symbol, iv) = Symbolics.variable(name; T = FnType{Tuple, Real, Nothing})(iv)
+make_moment_var(name::Symbol, iv) = only(@variables $name(iv))
+
+const SUBSCRIPT_DIGITS = Dict(
+    '0' => '₀', '1' => '₁', '2' => '₂', '3' => '₃', '4' => '₄',
+    '5' => '₅', '6' => '₆', '7' => '₇', '8' => '₈', '9' => '₉',
+)
+subscript_indices(indices) = join(SUBSCRIPT_DIGITS[c] for c in string(indices))
+
+function derivative_variable(expr)
+    expr = value(expr)
+    while isterm(expr) && operation(expr) isa Differential
+        expr = first(arguments(expr))
+    end
+    return expr
+end
 
 function define_μ(iter::AbstractVector, iv::BasicSymbolic)
 
@@ -37,7 +51,7 @@ function define_μ(iter::AbstractVector, iv::BasicSymbolic)
         if sum(idx) == 0
             μs[idx] = 1
         else
-            sym_name = Symbol('μ', join(map_subscripts(indices[i])))
+            sym_name = Symbol('μ', subscript_indices(indices[i]))
             term_raw = make_moment_var(sym_name, iv)
             μs[idx] = setmetadata(
                 term_raw, Symbolics.VariableSource,
@@ -64,7 +78,7 @@ function define_M(iter::AbstractVector, iv::BasicSymbolic)
         elseif sum(idx) == 1
             Ms[idx] = 0
         else
-            sym_name = Symbol('M', join(map_subscripts(indices[i])))
+            sym_name = Symbol('M', subscript_indices(indices[i]))
             term_raw = make_moment_var(sym_name, iv)
             Ms[idx] = setmetadata(
                 term_raw, Symbolics.VariableSource,
@@ -88,7 +102,7 @@ function extract_variables(eqs::Array{Equation, 1}, μ, M = [])
     # get_variables changes the metadata so have to be careful here...
     intersect!(vars, eq_vars)
     # need this as get_variables does not extract var from `Differential(t)(var(t))`
-    diff_vars = [var_from_nested_derivative(eq.lhs)[1] for eq in eqs]
+    diff_vars = derivative_variable.(getproperty.(eqs, :lhs))
     # filter out the unique ones
     return unique(vcat(diff_vars, vars))
     # the correct ordering *should* be preserved
@@ -110,6 +124,7 @@ end
 =#
 
 isvar(x, vars) = any(isequal(x), vars)
+is_power(expr) = isterm(expr) && operation(expr) === (^)
 
 """
     Check that the given expression does NOT depend on the given variables `vars` (expr is constant wrt. vars)
@@ -153,7 +168,7 @@ end
 
 function split_factor(expr, iv, vars)
 
-    return if ispow(expr)
+    return if is_power(expr)
         split_factor_pow(expr, iv, vars)
     elseif ismul(expr)
         split_factor_mul(expr, iv, vars)

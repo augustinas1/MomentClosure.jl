@@ -6,4 +6,4 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 [compat]
 Documenter = "1.17.0"
 ModelingToolkit = "11.26.8"
-MomentClosure = "0.4.0"
+MomentClosure = "0.5"

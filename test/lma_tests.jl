@@ -1,8 +1,9 @@
 using MomentClosure
-using MomentClosure: define_μ, get_eqs
+using MomentClosure: define_μ
 using Symbolics: value
 using Catalyst
 using Test
+using ModelingToolkitBase: get_eqs
 
 t = default_t()
 @parameters σ_b, σ_u, ρ_b, ρ_u, σ_b_LMA

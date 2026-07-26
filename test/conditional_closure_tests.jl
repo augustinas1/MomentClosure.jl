@@ -4,6 +4,7 @@ using Symbolics: value, expand, substitute, get_variables
 using Distributions
 using Test
 using Catalyst
+using ModelingToolkitBase: get_eqs
 
 # Recent Symbolics keeps expressions such as `x^-1` and `(1 / x)` in distinct (but
 # mathematically equal) forms, so `isequal`/`simplify` no longer reliably proves two

@@ -19,6 +19,16 @@ Notes:
 - `smap` sets the variable ordering in the moment equations (which index corresponds to which species
   in the reaction network). By default, this is consistent with the internal system ordering
   accessible with [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap).
+
+# Examples
+```julia
+using Catalyst, MomentClosure
+
+rn = @reaction_network begin
+    k, X --> 2X
+end
+raw_eqs = generate_raw_moment_eqs(rn, 2)
+```
 """
 function generate_raw_moment_eqs(
         rn::ReactionSystem, m_order::Int;

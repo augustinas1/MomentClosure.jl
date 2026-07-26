@@ -3,6 +3,7 @@ using Test
 using Catalyst
 using OrdinaryDiffEqTsit5
 using ModelingToolkit: t_nounits as t
+using SciMLBase: ODEProblem
 
 @parameters k₁ k₂ k₃ k₄ k₅ k₆ k₇
 @species x(t) y(t) y₀(t)

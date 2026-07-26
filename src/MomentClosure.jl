@@ -1,36 +1,38 @@
 module MomentClosure
 
-using ModelingToolkit
 import ModelingToolkitBase
-using ModelingToolkitBase: get_noise_eqs, unknowns, get_eqs, get_iv, get_ps, System
+using ModelingToolkitBase: ODESystem, System, complete, equations, get_eqs, get_iv,
+    get_noise_eqs, get_ps, parameters, unknowns
 using SymbolicIndexingInterface: getname
-using Catalyst
-using Catalyst: speciesmap
-using SciMLBase, SciMLBase.EnsembleAnalysis
-using SciMLBase: NullParameters, ODEProblem
-using Random
+import Catalyst
+using Catalyst: ReactionSystem, default_t, jumpratelaw, numreactions, numspecies, reactions,
+    species, speciesmap, substoichmat
+import SciMLBase
+using SciMLBase: EnsembleSolution, NullParameters, ODEProblem, ODESolution
+using SciMLBase.EnsembleAnalysis: componentwise_vectors_timestep
 using Distributions: Geometric
 
-using Symbolics: value, var_from_nested_derivative, map_subscripts,
-    setmetadata, scalarize
-using SymbolicUtils.Rewriters: Chain, PassThrough, Prewalk, Fixpoint
-using SymbolicUtils: BasicSymbolic, FnType, expand, simplify,
-    operation, arguments, @rule, @acrule,
-    isterm, ismul, isadd, ispow, isdiv
+import Symbolics
+using Symbolics: Differential, Equation, Num, @variables, expand_derivatives, factors,
+    get_variables, scalarize, setmetadata, value
+import SymbolicUtils.Rewriters: Chain, Fixpoint, PassThrough, Prewalk
+using SymbolicUtils: @acrule, @rule, BasicSymbolic, arguments, expand, isadd, isdiv, ismul,
+    isterm, operation, simplify, substitute
+using TermInterface: iscall
 
 using DataStructures: OrderedDict
-using TupleTools: sort
-using Combinatorics
-using Cumulants
-using Latexify
+using Combinatorics: multiset_permutations, partitions
+using Cumulants: cumulants, naivecumulant, naivemoment
+import Latexify
+using Latexify: @latexrecipe
+using StatsBase: moment
 
-using DocStringExtensions
+using DocStringExtensions: FIELDS, TYPEDEF
 
 export generate_central_moment_eqs, generate_raw_moment_eqs, bernoulli_moment_eqs,
     propensities, get_stoichiometry, moment_closure, deterministic_IC,
     get_raw_moments, get_central_moments, get_cumulants, get_moments_FSP,
-    linear_mapping_approximation, ODEProblem,
-    get_odes, get_closure, get_iv, get_eqs, unknowns, get_ps, speciesmap
+    linear_mapping_approximation, get_odes, get_closure
 
 include("reaction_systems.jl")
 include("moment_equations.jl")

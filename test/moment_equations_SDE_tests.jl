@@ -1,5 +1,5 @@
 using MomentClosure, Symbolics, ModelingToolkit, Catalyst
-using ModelingToolkit: get_iv, get_eqs
+using ModelingToolkitBase: get_iv, get_eqs
 using MomentClosure: define_μ, define_M, central_to_raw_moments
 using Test
 using ModelingToolkit: t_nounits as t, D_nounits as D
