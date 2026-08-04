@@ -2,6 +2,7 @@ using MomentClosure
 using MomentClosure: define_M, define_μ
 using Test
 using Catalyst
+using ModelingToolkitBase: unknowns
 using Distributions
 using Symbolics: substitute, value, get_variables
 

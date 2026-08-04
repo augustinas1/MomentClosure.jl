@@ -37,7 +37,7 @@ function log_normal_closure(sys::MomentEquations, binary_vars::Array{Int, 1} = I
 
     iter_k = vcat(sys.iter_1, sys.iter_m) # iterator through all moments of lower order
     sub = Dict()
-    unique_iter_q = unique(sort(i) for i in sys.iter_q)
+    unique_iter_q = unique(Tuple(sort(collect(i))) for i in sys.iter_q)
 
     for i in unique_iter_q
         term = prod([μ[sys.iter_1[j]]^i[j] for j in 1:N])

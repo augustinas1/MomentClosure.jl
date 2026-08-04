@@ -55,7 +55,7 @@ function derivative_matching(sys::MomentEquations, binary_vars::Array{Int, 1} = 
         # initialise matrix needed for linear system defined below
         A = Matrix{Float64}(undef, length_k, length_k)
 
-        for m in unique(sort(i) for i in iter_order)
+        for m in unique(Tuple(sort(collect(i))) for i in iter_order)
 
             # each higher order moment μ_m is a product of lower order moments ∏ᵣ₌₁ᵏ(μ_mᵣ)^γᵣ
             # the coefficients γᵣ (contained in vector γ) are obtained by solving a system

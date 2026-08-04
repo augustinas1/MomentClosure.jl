@@ -34,7 +34,7 @@ function conditional_derivative_matching(
         # building the closed moment expressions order by order (due to such hierarchical functional dependency)
         iter_order = filter(x -> sum(x) == order, sys.iter_q)
 
-        for iter in unique(sort(i) for i in iter_order)
+        for iter in unique(Tuple(sort(collect(i))) for i in iter_order)
 
             # Two cases: (i) conditional (⟨gp^j⟩=⟨p^j|g=1⟩⟨g⟩) or (ii) basic non bernoulli (⟨p^j⟩)"
             # Here g is a bernoulli variable (e.g gene state), p is any other stochastic variable (e.g no. of proteins)
