@@ -27,7 +27,7 @@ function normal_closure(sys::MomentEquations, binary_vars::Array{Int, 1} = Int[]
 
         iter_r = filter(x -> sum(x) == order, sys.iter_q)
 
-        for r in unique(sort(i) for i in iter_r)
+        for r in unique(Tuple(sort(collect(i))) for i in iter_r)
             # the last term in the symbolic expression of cumulant κᵣ is Mᵣ (μᵣ)
             # therefore, as we here set κᵣ = 0, only simple manipulation is needed
             closed_moment = -(K[r] - moments[r])

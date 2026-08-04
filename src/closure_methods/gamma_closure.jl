@@ -97,8 +97,7 @@ function gamma_closure(sys::MomentEquations, binary_vars::Array{Int, 1} = Int[])
     # construct the raw moments that follow the multivariate gamma distribution
     iters = Vector(undef, N)
 
-    # TupleTools.sort comes in handy here
-    unique_iter_q = unique(sort(i) for i in sys.iter_q)
+    unique_iter_q = unique(Tuple(sort(collect(i))) for i in sys.iter_q)
     sub = Dict()
 
     iter_2nd_order = filter(x -> sum(x) == 2, sys.iter_m)
