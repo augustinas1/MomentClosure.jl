@@ -1,6 +1,7 @@
 module MomentClosure
 
 import ModelingToolkitBase
+using PrecompileTools: @compile_workload, @setup_workload
 using ModelingToolkitBase: ODESystem, System, complete, equations, get_eqs, get_iv,
     get_noise_eqs, get_ps, parameters, unknowns
 using SymbolicIndexingInterface: getname
@@ -55,5 +56,6 @@ include("closure_methods/derivative_matching.jl")
 include("closure_methods/conditional_gaussian.jl")
 include("closure_methods/conditional_derivative_matching.jl")
 include("closure_methods/linear_mapping_approximation.jl")
+include("precompile.jl")
 
 end
