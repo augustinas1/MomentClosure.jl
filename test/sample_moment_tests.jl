@@ -1,5 +1,6 @@
 using MomentClosure
 using MomentClosure: gen_iter
+using SciMLBase: DiscreteProblem, EnsembleProblem
 using SciMLBase.EnsembleAnalysis, JumpProcesses
 using Test
 
