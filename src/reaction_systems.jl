@@ -17,9 +17,9 @@ end
 Return the net stoichiometry matrix using the specified mapping of species to their indices.
 
 Notes:
-- This is a modification of [`Catalyst.netstoichmat`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.netstoichmat) 
+- This is a modification of [`Catalyst.netstoichmat`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.netstoichmat)
   that is used internally to deal with reactions involving symbolic stoichiometry coefficients.
-- The function also allows custom `smap`, so it is not limited to the default 
+- The function also allows custom `smap`, so it is not limited to the default
   [`Catalyst.speciesmap`](https://docs.sciml.ai/Catalyst/stable/api/core_api/#Catalyst.speciesmap) ordering.
 - TODO: remove once [this Catalyst issue](https://github.com/SciML/Catalyst.jl/issues/489)
   is resolved.

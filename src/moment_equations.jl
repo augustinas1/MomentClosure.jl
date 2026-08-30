@@ -90,17 +90,17 @@ end
 
 """
 ```julia
-SciMLBase.ODEProblem(sys::MomentEquations, u0, tspan, p=NullParameters(); 
+SciMLBase.ODEProblem(sys::MomentEquations, u0, tspan, p=NullParameters();
                      use_deterministic_IC::Bool=true, kwargs...)
 ```
 
 Generates a [`SciMLBase.ODEProblem`](https://docs.sciml.ai/DiffEqDocs/stable/types/ode_types/#SciMLBase.ODEProblem) from `MomentEquations`.
 
 Note that the initial condition `u0` can be defined as follows:
-- If `u0` contains the initial molecule numbers (either as a vector or a mapping) and `use_deterministic_IC` is set to `true`, 
-  `u0` will be mapped to the corresponding raw/central moments under the assumption of deterministic 
+- If `u0` contains the initial molecule numbers (either as a vector or a mapping) and `use_deterministic_IC` is set to `true`,
+  `u0` will be mapped to the corresponding raw/central moments under the assumption of deterministic
   initial conditions (using the function [`deterministic_IC`](@ref)). This is the default use case.
-- To handle a more complicated initial condition, `u0` can be defined with the initial values of each moment directly, 
+- To handle a more complicated initial condition, `u0` can be defined with the initial values of each moment directly,
   but `use_deterministic_IC` must be set to `false` to ensure correctness.
 """
 function SciMLBase.ODEProblem(
