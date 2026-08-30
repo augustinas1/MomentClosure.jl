@@ -11,7 +11,7 @@ Notes:
   [tutorial](@ref main_tutorial) and the [theory section](@ref raw_moment_eqs) for
   more details on how `q_order` is obtained.
 - if `langevin=true`, instead of the Chemical Master Equation the Chemical Langevin
-  Equation (diffusion approximation) is considered, and the moment equations are 
+  Equation (diffusion approximation) is considered, and the moment equations are
   constructed from the corresponding SDE formulation.
 - `combinatoric_ratelaws=true` uses binomials in calculating the propensity functions
   of a `ReactionSystem`, see the notes for [`Catalyst.jumpratelaw`]
